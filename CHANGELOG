@@ -38,3 +38,5 @@
 0.9.6
 	-First public release GPLv2, special thanks to Rackspace IPC, Brent Oswald, and Benjamin H. Graham
 	-Changed name to recap, added links for new repository
+	-Integrated recaptool
+	-Added simple installer - (tested on debian)

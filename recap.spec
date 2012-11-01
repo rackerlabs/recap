@@ -32,7 +32,8 @@ mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man5
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
 
 install -m 0755 recap $RPM_BUILD_ROOT%{_sbindir}/
-install -m 0644 README $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
+install -m 0755 recaptool $RPM_BUILD_ROOT%{_sbindir}/
+install -m 0644 README.md $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
 install -m 0644 TODO $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
 install -m 0644 CHANGELOG $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
 install -m 0644 COPYING $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
@@ -49,7 +50,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_datadir}/doc/recap-%{version}
 %dir %{_logdir}/recap
 %{_sbindir}/recap
-%doc %{_datadir}/doc/recap-%{version}/README
+%{_sbindir}/recaptool
+%doc %{_datadir}/doc/recap-%{version}/README.md
 %doc %{_datadir}/doc/recap-%{version}/TODO
 %doc %{_datadir}/doc/recap-%{version}/CHANGELOG
 %doc %{_datadir}/doc/recap-%{version}/COPYING
@@ -59,42 +61,23 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_mandir}/man8/recap.8.gz
 
 %post
-if [ -f /etc/sysconfig/recap.rpmsave ]
-then
-	echo "Found configuration file in old location (/etc/sysconfig/recap), moving it to the new location (/etc/recap)."
-	mv /etc/recap /etc/recap.rpmorig
-	mv /etc/sysconfig/recap.rpmsave /etc/recap
+if [ -f /etc/rs-sysmon ]; then
+        echo "Found configuration file in old location (/etc/rs-sysmon), moving it to the new location (/etc/recap)."
+        mv /etc/recap /etc/recap.orig
+        mv /etc/rs-sysmon /etc/recap
 fi
 echo
 echo "Checking for output directories..."
-if [ -d /var/log/recap ]
-then
-        if [ -d /var/log/recap/resources ]
-        then
-		echo
-		echo "Found old output directory: /var/log/recap/resources"
-                echo "Moving resources logs to /var/log/recap"
-                mv /var/log/recap/resources/* /var/log/recap
-		echo "Removing old output directory: /var/log/recap/resources"
-                rm -r /var/log/recap/resources
-		CONS=1
-        fi
-        if [ -d /var/log/recap/ps ]
-        then
-		echo
-		echo "Found old output directory: /var/log/recap/ps"
-                echo "Moving ps logs to /var/log/recap"
-                mv /var/log/recap/ps/* /var/log/recap
-		echo "Removing old output directory: /var/log/recap/ps"
-                rm -r /var/log/recap/ps
-		CONS=1
-        fi
 
-	if [ ! -z $CONS ]
-	then
-		echo
-        	echo "Your output files have been consolidated to /var/log/recap, and the old output directories have been removed. If you see any errors above, there may have been some unexpected files that prevented the old directories from being emptied."
-	fi
+if [ -d /var/log/rs-sysmon ]; then
+        echo
+        echo "Found old output directory: /var/log/rs-sysmon"
+        echo "Moving resources logs to /var/log/recap"
+        mv /var/log/rs-sysmon/* /var/log/recap
+        echo "Removing old output directory: /var/log/rs-sysmon"
+        rm -r /var/log/rs-sysmon
+        echo
+        echo "Your output files have been consolidated to /var/log/recap, and the old output directories have been removed. If you see any errors above, there may have been some unexpected files that prevented the old directories from being emptied."
 fi
 echo
 echo "The cron execution of recap is set to run every 10 minutes and at reboot by default."
@@ -105,6 +88,7 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 *Thu Nov 1 2012 Benjamin H. Graham <ben@administr8.me>
 -First public release GPLv2, special thanks to Rackspace IPC, Brent Oswald, and Benjamin H. Graham
 -Changed name to recap, added links for new repository
+-Added recaptool and installer
 *Tue Nov 16 2010 Jacob Walcik <jacob.walcik@rackspce.com>
 -Added COPYING file to specify license as GPL
 -Added full list of dependencies for basic reporting

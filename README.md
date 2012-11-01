@@ -27,6 +27,7 @@ DATE=`date +%Y-%m-%d_%H:%M:%S`
 ROTATE="7"
 
 DATE is the format of the date header at the top of the reports/email
+
 ROTATE is the number of files to maintain for rotation purposes
 
 Additional optional variables are as follows:
@@ -36,14 +37,21 @@ MAILTO
 ie:  MAILTO="username@domain.com"
 
 USEPS do you want to generate the ps.log? (no/yes) default yes
+
 USERESOURCES do you want to generate the resources.log? (no/yes) default yes
+
 USESAR do you want to generate sar reports? (no/yes) default no
+
 USESARR do you want to generate sar -r reports? (no/yes) default no
+
 USESARQ do you want to generate sar -q reports? (no/yes) default no
+
 USEFULLSTATUS do you want to generate "service httpd fullstatus" reports? (no/yes) default no
 
 See the recap man pages for additional optional reports. Some reports depend on 
-parent reports to generate the file they will write their output to. For
+parent reports to generate the file they will write their output to. 
+
+For
 instance, the USESAR reports above all rely on having USERESOURCES enabled.
 
 The script will never need to be modified for these variables, they
