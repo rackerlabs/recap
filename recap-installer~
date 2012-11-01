@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#   Package name:   recapinstaller
+#   Package name:   recapinstaller.sh
 #   Author:         Benjamin H. Graham
 #
 #   Maintainer:     Brent Oswald
@@ -10,7 +10,7 @@
 #
 #   Homepage:       https://github.com/rackspace/recap/
 #
-#   Installer for Debian and MacOSX currently.
+#   Debian installer
 #
 
 #Name: recap

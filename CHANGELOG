@@ -40,3 +40,4 @@
 	-Changed name to recap, added links for new repository
 	-Integrated recaptool
 	-Added simple installer - (tested on debian)
+	-Added MacOSX support to installer
