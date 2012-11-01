@@ -1,0 +1,715 @@
+#!/bin/bash
+#
+#   Package name:   recap
+#   Author:         Jacob Walcik
+#                   Carl Thompson
+#                   David King
+#
+#   Maintainer:     Brent Oswald
+#                   Benjamin Graham
+#
+#   License:        GPL 2.0
+#
+#   Homepage:   https://github.com/rackspace/recap/
+#
+#
+# The cron execution file is in /etc/cron.d
+#
+# The variable configuration file for recap is in /etc/recap
+#
+# All the variables defined here and several others can be defined in the variable
+# configuration file.  You can see more on these in /usr/share/doc/recap-{version}/README
+#
+# Define the default environment for recap
+# DO NOT change these values here, user-modifiable options can be tweaked through
+# /etc/recap
+#
+# Version: 0.9.6
+
+#####################################
+######### BASIC ENVIRONMENT #########
+#####################################
+
+# define our basic environment
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+BASEDIR="/var/log/recap"
+DATE=`date +%Y-%m-%d_%H:%M:%S`
+PS_FILE="$BASEDIR/ps.log"
+PSTREE_FILE="$BASEDIR/pstree.log"
+RESOURCES_FILE="$BASEDIR/resources.log"
+NETSTAT_FILE="$BASEDIR/netstat.log"
+MYSQL_FILE="$BASEDIR/mysql.log"
+ROTATELOGS="yes"
+SNAPSHOT="no"
+BACKUP="no"
+lockdir=/var/lock/recap.lock
+
+################################################
+######### DEFAULT VALUES FOR VARIABLES #########
+################################################
+
+# set defaults (can be overridden in /etc/recap
+USEPS="yes"
+USERESOURCES="yes"
+USESAR="no"
+USESARR="no"
+USESARQ="no"
+USEFULLSTATUS="no"
+ROTATE="7"
+USEPSTREE="no"
+USENETSTAT="no"
+USENETSTATSUM="no"
+USEMYSQL="no"
+USEMYSQLPROCESSLIST="no"
+USEDF="no"
+USESLAB="no"
+USEINNODB="no"
+
+# variables not currently documented for end users/not yet intended for use
+# if you change any of these, everything is likely to break in some ugly,
+# unpredictable way
+# set the permissions on the output directory, if we have to create it
+OUTPUTDIR_MODE="750"
+
+##############################################
+######### BEGIN FUNCTION DEFINITIONS #########
+##############################################
+
+# Create a Lock so that recap does not try to run over itself, and create errors:
+recaplock() {
+
+	if mkdir "$lockdir"
+	then
+		# Remove lockdir when the script finishes, or when it receives a signal
+		trap 'rm -rf "$lockdir"' 0    # remove directory when script finishes
+		trap "exit 2" 1 2 3 15        # terminate script when receiving signal
+	else
+		echo "Cannot acquire lock, giving up on $lockdir"
+		exit 0
+fi
+}
+
+# ensure our output directories exist before we start creating files
+create_output_dirs() {
+	# create directories if they don't exist
+	if [ ! -d $BASEDIR ]
+	then
+	  	mkdir -p $BASEDIR
+	  	chmod $OUTPUTDIR_MODE $BASEDIR
+	fi
+}
+
+# remove old log files
+rotate_output_file() {
+	#rotate old reports
+	OUTPUT_FILE=$1
+
+	for i in `seq $(($ROTATE-1)) -1 1`
+	do
+		if [ -e $OUTPUT_FILE.$i ]
+		then 
+			mv -f $OUTPUT_FILE.$i $OUTPUT_FILE.$(($i+1))
+		fi
+	done
+
+	# now move base files to basefile.1
+	if [ -e $OUTPUT_FILE ]
+	then
+		mv $OUTPUT_FILE $OUTPUT_FILE.1
+	fi
+
+	# finally check for extra file from the rotation, and remove if it exists
+	if [ -e $OUTPUT_FILE.$ROTATE ]
+	then
+		rm -f $OUTPUT_FILE.$ROTATE
+	fi
+}
+
+# print the usage definition for the script
+print_usage() {
+	echo "Usage: recap [OPTION]"
+	echo "Takes a snapshot of running processes and resource usage"
+	echo " "
+	echo "Optional flags: "
+	echo "-h, --help		print this help output"
+	echo "-S, --snapshot		take a timestamped snapshot outside of the regular output file rotation"
+	echo "-B, --backup		create a timestamped backup of the most recent report files"
+}
+
+# create the backup of a single report
+backup_file() {
+	BACKUP_FILE=$1
+	BACKUP_DESTINATION=$BACKUP_FILE"_backup_$DATE"
+
+	# before we begin, make sure the file to be backed up exist
+	if [ -f $BACKUP_FILE ]
+	then
+		# create the backup of the most recent version of this report
+		cp $BACKUP_FILE $BACKUP_DESTINATION
+
+		# make sure the destination file was created
+		if [ ! -f $BACKUP_FILE ]
+		then
+			echo "Unable to create backup: $BACKUP_DESTINATION"
+		fi
+	else
+		# we can't create backups when file's don't exist
+		echo "Unable to create backup, file does not exist: $BACKUP_FILE"
+	fi
+}
+
+# create output file
+create_output_file() {
+OUTPUT_FILE=$1
+
+if [ -d $OUTPUT_FILE ]
+then
+	echo "Target file already exists: $OUTPUT_FILE"
+	exit
+else
+	#print the data to the output file
+	echo "$DATE" > $OUTPUT_FILE
+fi
+}
+
+# check to see if the output directory exists
+check_output_file() {
+OUTPUT_FILE=$1
+
+if [ ! -f $OUTPUT_FILE ]
+then
+	echo "The output file does not exist: $OUTPUT_FILE"
+	exit
+fi
+}
+
+# print output of "ps auxww" to the PS_FILE
+print_ps() {
+	ps auxww >> $PS_FILE
+}
+
+# print output of "pstree" to PSTREE_FILE
+print_pstree() {
+	pstree >> $PSTREE_FILE
+}
+
+# print a blank line to the specified file
+print_blankline() {
+	echo " " >> $1
+}
+
+# print the output of "uptime" to the resources output file
+print_uptime() {
+	echo "UPTIME report" >> $RESOURCES_FILE
+	uptime >> $RESOURCES_FILE
+}
+
+# print the output of "free" to the resources file
+print_free() {
+	echo "FREE report" >> $RESOURCES_FILE
+	free >> $RESOURCES_FILE
+}
+
+# print the output of "vmstat" to the resources file
+print_vmstat() {
+	echo "VMSTAT report" >> $RESOURCES_FILE
+	vmstat >> $RESOURCES_FILE
+}
+
+# print the output of "iostat" to the resources file
+print_iostat() {
+	echo "IOSTAT report" >> $RESOURCES_FILE
+	iostat -x 2 2 -t  >> $RESOURCES_FILE
+}
+
+# print the output of sar to the resources file
+print_sar() {
+	# check to see if we're going to use any parameters for sar
+	if [ "$1" = "r" ]
+	then
+		FLAGS=" -r"
+	elif [ "$1" = "q" ]
+	then
+		FLAGS=" -q"
+	else
+		FLAGS=""
+	fi
+
+	# print the sar report to the resources file
+	echo "SAR$FLAGS report" >> $RESOURCES_FILE
+	sar$FLAGS >> $RESOURCES_FILE
+}
+
+# print the output of "service httpd fullstatus" to the resources file
+print_httpd_fullstatus() {
+	echo "Apache Status report" >> $RESOURCES_FILE
+	service httpd fullstatus >> $RESOURCES_FILE
+}
+
+# print the output of "netstat -ntulpae" to the netstat file
+print_netstat() {
+	echo "Network connections" >> $NETSTAT_FILE
+	netstat -ntulpae >> $NETSTAT_FILE
+}
+
+# print the output of "netstat -s" to the netstat file
+print_netstat_sum() {
+	echo "Network traffic summary" >> $NETSTAT_FILE
+	netstat -s >> $NETSTAT_FILE
+}
+
+# print the output of "mysqladmin status" to the mysql file
+print_mysql() {
+	echo "MySQL status" >> $MYSQL_FILE
+	mysqladmin status >> $MYSQL_FILE
+}
+
+# print the non-truncated innodb status to the mysql file
+print_mysql_innodb_status() {
+        # First, we establish which tmpdir and pid_file are in use, strip any
+        # trailing slash and populate the file with current information.
+        # We throw away the output of the "show engine innodb status" command as
+        # it is likely being truncated, which we attempt to work around:
+
+	echo "MySQL InnoDB status"  >> $MYSQL_FILE
+	unset MYVALS PID_FILE TMPDIR
+	MYVALS=($(IFS=$'\t' mysql -Bse "SHOW VARIABLES LIKE 'pid_file'; \
+                            SHOW VARIABLES LIKE 'tmpdir'; \
+                            SHOW ENGINE INNODB STATUS;" 2>/dev/null \
+                           | head -n 2))
+        PID_FILE=${MYVALS[1]%/}
+        TMPDIR=${MYVALS[3]%/}
+
+        # Next, we grab a list of descriptors in the tmpdir:
+
+        for name in "/proc/"$(cat $PID_FILE)"/fd/"*;
+
+        # We know that InnoDB's temporary files are always in the mysql tmpdir
+        # and start with the string 'ib' followed by a randomly generated series
+        # of characters.  Now we can compare the canonicalized path of fd to the
+        # tmpdir/ib* pattern:
+
+        do [[ $(readlink -f "$name") == "$TMPDIR"/ib* ]] &&
+
+        # If any files match that pattern, we see if the first line in the file
+        # starts with "===", which is the case in the particular InnoDB file we
+        # care about:
+
+        head -c8 "$name" | grep -q '^====' &&
+
+        # Finally, print out the information and append it to the mysql file:
+        cat "$name"  >> $MYSQL_FILE
+	done
+}
+
+# print the output of "mysqladmin processlist" to the mysql file
+print_mysql_procs() {
+	echo "MySQL processes" >> $MYSQL_FILE
+	mysqladmin -v processlist >> $MYSQL_FILE
+}
+
+# print the top 10 processes (by cpu usage) to the resources file
+print_top_10_cpu() {
+	echo "Top 10 cpu using processes" >> $RESOURCES_FILE
+	ps auxww --sort=-pcpu|head -11 >> $RESOURCES_FILE
+}
+
+# print the top 10 processes (by memory usage) to the resources file
+print_top_10_mem() {
+	echo "Top 10 memory using processes" >> $RESOURCES_FILE
+	ps auxww --sort=-rss|head -11 >> $RESOURCES_FILE
+}
+
+# print the disk utilization to the resources file
+print_df() {
+	echo "Disk Utilization" >> $RESOURCES_FILE
+	df -x nfs >> $RESOURCES_FILE
+}
+
+# print the slabinfo command to the resources file
+print_slabinfo() {
+	echo "Slab Information" >> $RESOURCES_FILE
+	printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> $RESOURCES_FILE; tail -n+2 /proc/slabinfo | awk 'size=$3*$4 {print $1"\t"$2"\t"$3"\t"$4"\t"size/1048576}' | sort -k5gr >> $RESOURCES_FILE
+}
+
+# send the report via email
+send_mail() {
+	# create a temp directory
+  	TEMPDIR=`mktemp -d /tmp/rs.XXXXXXXXXX`
+
+  	# echo report files into temporary file for mailing
+	if [ -f $PS_FILE ] && [ $USEPS = "yes" -o $USEPS = "YES" ]
+	then
+		echo "-----BEGIN PS REPORT-----" >> $TEMPDIR/report.log
+  		cat $PS_FILE >> $TEMPDIR/report.log
+		echo "-----END PS REPORT-----" >> $TEMPDIR/report.log
+		echo " " >> $TEMPDIR/report.log
+	fi
+
+	if [ -f $PSTREE_FILE ] && [ $USEPSTREE = "yes" -o $USEPSTREE = "YES" ]
+	then
+		echo "-----BEGIN PSTREE REPORT-----" >> $TEMPDIR/report.log
+  		cat $PSTREE_FILE >> $TEMPDIR/report.log
+		echo "-----END PSTREE REPORT-----" >> $TEMPDIR/report.log
+		echo " " >> $TEMPDIR/report.log
+	fi
+
+	if [ -f $RESOURCES_FILE ] && [ $USERESOURCES = "yes" -o $USERESOURCES = "YES" ]
+	then
+		echo "-----BEGIN RESOURCES REPORT-----" >> $TEMPDIR/report.log
+		cat $RESOURCES_FILE >> $TEMPDIR/report.log
+		echo "-----END RESOURCES REPORT-----" >> $TEMPDIR/report.log
+		echo " " >> $TEMPDIR/report.log
+	fi
+
+	if [ -f $NETSTAT_FILE ] && [ $USENETSTAT = "yes" -o $USENETSTAT = "YES" ]
+	then
+		echo "-----BEGIN NETSTAT REPORT-----" >> $TEMPDIR/report.log
+		cat $NETSTAT_FILE >> $TEMPDIR/report.log
+		echo "-----END RESOURCES REPORT-----" >> $TEMPDIR/report.log
+		echo " " >> $TEMPDIR/report.log
+	fi
+
+	if [ -f $MYSQL_FILE ] && [ $USEMYSQL = "yes" -o $USEMYSQL = "YES" ]
+	then
+		echo "-----BEGIN MYSQL REPORT-----" >> $TEMPDIR/report.log
+		cat $MYSQL_FILE >> $TEMPDIR/report.log
+		echo "-----END RESOURCES REPORT-----" >> $TEMPDIR/report.log
+		echo " " >> $TEMPDIR/report.log
+	fi
+
+  	# send email summary to MAILTO address
+	if [ -f $TEMPDIR/report.log ]
+	then
+		cat $TEMPDIR/report.log | mail -s "System Monitor Report - $HOSTNAME" $MAILTO
+
+  		# clean up after ourselves 
+		rm -f $TEMPDIR/report.log
+		rm -rf $TEMPDIR
+	fi
+}
+
+# manage ps report
+run_ps_report() {
+	recaplock
+	if [ $ROTATELOGS = "yes" ]
+	then
+		rotate_output_file $PS_FILE
+	fi
+
+	if [ $SNAPSHOT = "yes" ]
+	then
+		PS_FILE="$BASEDIR/ps.log_snapshot_$DATE";
+	fi
+
+	create_output_file $PS_FILE
+	check_output_file $PS_FILE
+	print_ps
+}
+
+# manage pstree report
+run_pstree_report() {
+	if [ $ROTATELOGS = "yes" ]
+	then
+		rotate_output_file $PSTREE_FILE
+	fi
+
+	if [ $SNAPSHOT = "yes" ]
+	then
+		PSTREE_FILE="$BASEDIR/pstree.log_snapshot_$DATE";
+	fi
+
+	create_output_file $PSTREE_FILE
+	check_output_file $PSTREE_FILE
+	print_pstree
+}
+
+# manage resources report
+run_resources_report() {
+	if [ $ROTATELOGS = "yes" ]
+        then
+                rotate_output_file $RESOURCES_FILE
+        fi
+
+	if [ $SNAPSHOT = "yes" ]
+	then
+		RESOURCES_FILE="$BASEDIR/resources.log_snapshot_$DATE";
+	fi
+
+	create_output_file $RESOURCES_FILE
+	check_output_file $RESOURCES_FILE
+	print_uptime
+	print_blankline $RESOURCES_FILE
+	print_free
+	print_blankline $RESOURCES_FILE
+	print_vmstat
+	print_blankline $RESOURCES_FILE
+	print_iostat
+	print_blankline $RESOURCES_FILE
+
+	# check to see if sar should be run
+	if [ $USESAR = "yes" -o $USESAR = "YES" ]
+	then 
+		#send sar output to the output file
+		print_blankline $RESOURCES_FILE
+		print_sar
+	fi
+
+	# check to see if sar -r should be run
+	if [ $USESARR = "yes" -o $USESARR = "YES" ]
+	then
+		# send sar -r output to output file
+		print_blankline $RESOURCES_FILE
+		print_sar "r"
+	fi
+
+	# check to see if sar -q should be run
+	if [ $USESARQ = "yes" -o $USESARQ = "YES" ]
+	then
+		# send sar -q output to output file
+		print_blankline $RESOURCES_FILE
+		print_sar q
+	fi
+	# check to see if service httpd fullstatus should be run
+	if [ $USEFULLSTATUS = "yes" -o $USEFULLSTATUS = "YES" ]
+	then
+		# send service httpd fullstatus output to output file
+		print_blankline $RESOURCES_FILE
+		print_httpd_fullstatus
+	fi
+
+	if [ $USEDF = "yes" -o $USEDF = "YES" ]
+	then
+		# send df -h output to output file
+		print_blankline $RESOURCES_FILE
+		print_df
+	fi
+
+	if [ $USESLAB = "yes" -o $USESLAB = "YES" ]
+	then
+	# send slabinfo output to output file
+	print_blankline $RESOURCES_FILE
+	print_slabinfo
+	fi
+
+	print_blankline $RESOURCES_FILE
+	print_top_10_cpu
+	print_blankline $RESOURCES_FILE
+	print_top_10_mem
+}
+
+# manage netstat report
+run_netstat_report() {
+	if [ $ROTATELOGS = "yes" ]
+	then
+		rotate_output_file $NETSTAT_FILE
+	fi
+
+	if [ $SNAPSHOT = "yes" ]
+	then
+		NETSTAT_FILE="$BASEDIR/netstat.log_snapshot_$DATE";
+	fi
+
+	create_output_file $NETSTAT_FILE
+	check_output_file $NETSTAT_FILE
+	print_netstat
+
+	# check to see if optional netstat summary report should be run
+	if [ ! -z $USENETSTATSUM ]
+	then
+		if [ $USENETSTATSUM = "yes" -o $USENETSTATSUM = "YES" ]
+		then
+			print_blankline $NETSTAT_FILE
+			print_netstat_sum
+		fi
+	fi
+}
+
+# manage mysql report
+run_mysql_report() {
+	if [ $ROTATELOGS = "yes" ]
+        then
+                rotate_output_file $MYSQL_FILE
+        fi
+
+	if [ $SNAPSHOT = "yes" ]
+	then
+		MYSQL_FILE="$BASEDIR/mysql.log_snapshot_$DATE";
+	fi
+
+	create_output_file $MYSQL_FILE
+	check_output_file $MYSQL_FILE
+	print_mysql
+
+	# check to see if the optional mysql process list should be generated
+	if [ ! -z $USEMYSQLPROCESSLIST ]
+	then
+		if [ $USEMYSQLPROCESSLIST = "yes" -o $USEMYSQLPROCESSLIST = "YES" ]
+		then
+			print_blankline $MYSQL_FILE
+			print_mysql_procs
+		fi
+	fi
+
+	if [ $USEINNODB = "yes" -o $USEINNODB = "YES" ]
+	then
+		# send df -h output to output file
+		print_blankline $MYSQL_FILE
+		print_mysql_innodb_status
+	fi
+}
+
+###############################################
+######### BEGIN EXECUTING SCRIPT HERE #########
+###############################################
+
+# verify that script is being run as root
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root."
+	exit
+fi
+
+# evaluate input flags
+# if we have more than one flag, print usage and exit
+if [ "$#" -gt 1 ]
+then
+	echo "Only one flag is allowed"
+        print_usage
+        exit
+fi
+
+# if we only have one flag, see if we know how to handle it.
+# otherwise, print usage and exit
+if [ "$#" -gt 0 ]
+then
+	case "$1" in
+		-h|--help)
+			# print usage
+			print_usage
+			exit
+			;;
+		-B|--backup)
+			# backup latest snapshots
+			BACKUP="yes"
+			;;
+		-S|--snapshot)
+			# take a snapshot outside of the regular output rotation
+			ROTATELOGS="no"
+			SNAPSHOT="yes"
+			;;
+		*)
+			# user entered an invalid flag, print warning and exit
+			echo "Invalid Input"
+			print_usage
+			exit
+	esac
+fi
+
+# check to see where the configuration file is located.
+# if the file is not at /etc/recap, make some noise to alert users
+if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
+then
+	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
+	. /etc/sysconfig/recap
+elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
+then
+	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
+	. /etc/sysconfig/recap
+elif [ ! -f /etc/recap ]
+then
+	echo "No configuration file found. Proceeding with defaults."
+else
+	. /etc/recap
+fi
+
+# proceed to report generation
+
+# grab the server's host name
+HOSTNAME=`hostname`
+
+# create output directory if it is not already present
+create_output_dirs
+
+###################################################################################
+# To add new reports, do the following:						  #
+# -Add a "USE[ string ]" variable at the top of this script to default the report #
+#  to on or off (yes or no).							  #
+# -Define a "run_[ string ]" function above that generates the report file	  #
+# -Define any supplemental functions necessary for generating the report	  #
+# -Add an "if" block below that calls the appropriate "run_[ string ]" function   #
+# -Update the documentation to reflect the new report				  #
+###################################################################################
+
+# run the ps report
+if [ $USEPS = "yes" -o $USEPS = "YES" ]
+then
+	# check to see if we're just creating a backup
+	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
+	then
+		backup_file $PS_FILE
+	else
+		# run the ps report
+		run_ps_report
+	fi
+fi
+
+# run the resources report
+if [ $USERESOURCES = "yes" -o $USERESOURCES = "YES" ]
+then
+	# check to see if we're just creating a backup
+	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
+	then
+		backup_file $RESOURCES_FILE
+	else
+		# run the resources report
+		run_resources_report
+	fi
+fi
+
+# check to see if pstree output should be gathered
+if [ $USEPSTREE = "yes" -o $USEPSTREE = "YES" ]
+then
+	# check to see if we're just creating a backup
+	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
+	then
+		backup_file $PSTREE_FILE
+	else
+		# run the pstree report
+		run_pstree_report
+	fi
+fi
+
+# check to see if netstat should be run
+if [ $USENETSTAT = "yes" -o $USENETSTAT = "YES" ]
+then
+	# check to see if we're just creating a backup
+	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
+	then
+		backup_file $NETSTAT_FILE
+	else
+		# run the netstat report
+		run_netstat_report
+	fi
+fi
+
+# check to see if mysqladmin should be run
+if [ $USEMYSQL = "yes" -o $USEMYSQL = "YES" ]
+then
+	# check to see if we're just creating a backup
+	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
+	then
+		backup_file $MYSQL_FILE
+	else
+		# run the mysql report
+		run_mysql_report
+	fi
+fi
+
+# check to see if report should be emailed
+if [ ! $MAILTO = '' ]
+then
+	send_mail
+fi
+
+# we're done, time to exit
+exit
