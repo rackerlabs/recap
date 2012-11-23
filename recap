@@ -240,10 +240,10 @@ print_sar() {
 	sar$FLAGS >> $RESOURCES_FILE
 }
 
-# print the output of "service httpd fullstatus" to the resources file
+# print the output of "apachectl fullstatus" to the resources file
 print_httpd_fullstatus() {
 	echo "Apache Status report" >> $RESOURCES_FILE
-	service httpd fullstatus >> $RESOURCES_FILE
+	apachectl fullstatus >> $RESOURCES_FILE
 }
 
 # print the output of "netstat -ntulpae" to the netstat file
@@ -470,10 +470,10 @@ run_resources_report() {
 		print_blankline $RESOURCES_FILE
 		print_sar q
 	fi
-	# check to see if service httpd fullstatus should be run
+	# check to see if apachectl fullstatus should be run
 	if [ $USEFULLSTATUS = "yes" -o $USEFULLSTATUS = "YES" ]
 	then
-		# send service httpd fullstatus output to output file
+		# send apachectl fullstatus output to output file
 		print_blankline $RESOURCES_FILE
 		print_httpd_fullstatus
 	fi
