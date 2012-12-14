@@ -27,6 +27,7 @@ rm -rf $RPM_BUILD_ROOT
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
+mkdir -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
 mkdir -p -m0700 $RPM_BUILD_ROOT%{_logdir}/recap
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man5
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
@@ -41,7 +42,7 @@ install -m 0644 recap.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/recap
 install -m 0644 recap.conf $RPM_BUILD_ROOT%{_sysconfdir}/recap
 install -m 0644 recap.5.gz $RPM_BUILD_ROOT%{_mandir}/man5
 install -m 0644 recap.8.gz $RPM_BUILD_ROOT%{_mandir}/man8
-install -m 0644 recap.conf.d %{_sysconfdir}/httpd/conf.d/recap
+install -m 0644 recap.conf.d $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/recap
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -56,6 +57,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/doc/recap-%{version}/CHANGELOG
 %doc %{_datadir}/doc/recap-%{version}/COPYING
 %config(noreplace) %{_sysconfdir}/cron.d/recap
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/recap
 %config(noreplace) %{_sysconfdir}/recap
 %doc %{_mandir}/man5/recap.5.gz
 %doc %{_mandir}/man8/recap.8.gz
