@@ -213,7 +213,7 @@ print_free() {
 # print the output of "vmstat" to the resources file
 print_vmstat() {
 	echo "VMSTAT report" >> $RESOURCES_FILE
-	vmstat >> $RESOURCES_FILE
+	vmstat -S M 1 2 >> $RESOURCES_FILE
 }
 
 # print the output of "iostat" to the resources file
