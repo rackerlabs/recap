@@ -11,7 +11,7 @@ Recap:
 #
 #   License:        GPL 2.0
 #
-#   Homepage:       https://github.com/rackspace/recap/
+#   Homepage:       https://github.com/rackerlabs/recap/
 #
 
 recap is a reporting script that generates reports of 
