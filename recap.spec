@@ -7,7 +7,6 @@ Release: 0
 License: GPLv2
 Group: Applications/System
 Vendor: Recap Team - https://github.com/rackspace/recap
-Packager: Benjamin H. Graham <ben@administr8.me>
 Source: %{name}-%{version}.tar.gz
 Distribution: RedHat
 BuildArch: noarch
