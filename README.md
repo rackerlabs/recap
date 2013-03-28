@@ -1,10 +1,7 @@
 Recap:
 
-#
 #   Package name:   recap
-#   Author:         Jacob Walcik
-#                   Carl Thompson
-#                   David King
+#   Author:         The Common Public
 #
 #   Maintainer:     Brent Oswald
 #                   Benjamin Graham
@@ -12,10 +9,18 @@ Recap:
 #   License:        GPL 2.0
 #
 #   Homepage:       https://github.com/rackerlabs/recap/
-#
 
 recap is a reporting script that generates reports of 
 various information about the server.
+
+Original authors at Rackspace (http://www.rackspace.com):
+                    -Jacob Walcik
+                    -Carl Thompson
+
+Past contributors at Rackspace:
+                    -David King
+                    -Hans duPlooy
+                    -All other should be defined in CHANGELOG
 
 The cron file (/etc/cron.d/recap) is used to determine
 the execution time of recap.  By default the cron execution
