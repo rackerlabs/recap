@@ -41,3 +41,9 @@
 	-Integrated recaptool
 	-Added simple installer - (tested on debian)
 	-Added MacOSX support to installer
+
+0.9.7	-Changed name schema of log files (xxx_YYYYmmdd-HHMMSS.log)
+	-Added recaplog script to compress and delete old log files
+	-Commands options configurable in /etc/recap
+	-Minor fixes
+

@@ -31,24 +31,39 @@
 #####################################
 
 # define our basic environment
+LOG_SUFFIX=$(date +%Y%m%d-%H%M%S)
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 BASEDIR="/var/log/recap"
+SNAPSHOTSDIR=${BASEDIR}"/snapshots"
 DATE=`date +%Y-%m-%d_%H:%M:%S`
-PS_FILE="$BASEDIR/ps.log"
-PSTREE_FILE="$BASEDIR/pstree.log"
-RESOURCES_FILE="$BASEDIR/resources.log"
-NETSTAT_FILE="$BASEDIR/netstat.log"
-MYSQL_FILE="$BASEDIR/mysql.log"
+PS_FILE="$BASEDIR/ps_${LOG_SUFFIX}.log"
+PSTREE_FILE="$BASEDIR/pstree_${LOG_SUFFIX}.log"
+RESOURCES_FILE="$BASEDIR/resources_${LOG_SUFFIX}.log"
+NETSTAT_FILE="$BASEDIR/netstat_${LOG_SUFFIX}.log"
+MYSQL_FILE="$BASEDIR/mysql_${LOG_SUFFIX}.log"
+FDISK_FILE="$BASEDIR/fdisk_${LOG_SUFFIX}.log"
 ROTATELOGS="yes"
 SNAPSHOT="no"
 BACKUP="no"
 lockdir=/var/lock/recap.lock
 
+# default command options
+OPTS_DF="-x nfs"
+OPTS_FDISK="-l"
+OPTS_FREE=""
+OPTS_IOSTAT="-t -x 1 3"
+OPTS_IOTOP="-b -o -t -n 3"
+OPTS_NETSTAT="-ntulpae"
+OPTS_NETSTAT_SUM="-s"
+OPTS_PS="auxfww"
+OPTS_PSTREE=""
+OPTS_VMSTAT="-S M 1 3"
+
 ################################################
 ######### DEFAULT VALUES FOR VARIABLES #########
 ################################################
 
-# set defaults (can be overridden in /etc/recap
+# set defaults (can be overridden in /etc/recap)
 USEPS="yes"
 USERESOURCES="yes"
 USESAR="no"
@@ -64,6 +79,13 @@ USEMYSQLPROCESSLIST="no"
 USEDF="no"
 USESLAB="no"
 USEINNODB="no"
+USEFDISK="no"
+MYSQL_PROCESS_LIST="table"
+
+###########################################
+######### DEFAULT COMMAND OPTIONS #########
+###########################################
+
 
 # variables not currently documented for end users/not yet intended for use
 # if you change any of these, everything is likely to break in some ugly,
@@ -77,7 +99,6 @@ OUTPUTDIR_MODE="750"
 
 # Create a Lock so that recap does not try to run over itself, and create errors:
 recaplock() {
-
 	if mkdir "$lockdir"
 	then
 		# Remove lockdir when the script finishes, or when it receives a signal
@@ -97,31 +118,10 @@ create_output_dirs() {
 	  	mkdir -p $BASEDIR
 	  	chmod $OUTPUTDIR_MODE $BASEDIR
 	fi
-}
-
-# remove old log files
-rotate_output_file() {
-	#rotate old reports
-	OUTPUT_FILE=$1
-
-	for i in `seq $(($ROTATE-1)) -1 1`
-	do
-		if [ -e $OUTPUT_FILE.$i ]
-		then 
-			mv -f $OUTPUT_FILE.$i $OUTPUT_FILE.$(($i+1))
-		fi
-	done
-
-	# now move base files to basefile.1
-	if [ -e $OUTPUT_FILE ]
+	if [ ! -d $SNAPSHOTSDIR ]
 	then
-		mv $OUTPUT_FILE $OUTPUT_FILE.1
-	fi
-
-	# finally check for extra file from the rotation, and remove if it exists
-	if [ -e $OUTPUT_FILE.$ROTATE ]
-	then
-		rm -f $OUTPUT_FILE.$ROTATE
+	  	mkdir -p $SNAPSHOTSDIR
+	  	chmod $OUTPUTDIR_MODE $SNAPSHOTSDIR
 	fi
 }
 
@@ -133,29 +133,6 @@ print_usage() {
 	echo "Optional flags: "
 	echo "-h, --help		print this help output"
 	echo "-S, --snapshot		take a timestamped snapshot outside of the regular output file rotation"
-	echo "-B, --backup		create a timestamped backup of the most recent report files"
-}
-
-# create the backup of a single report
-backup_file() {
-	BACKUP_FILE=$1
-	BACKUP_DESTINATION=$BACKUP_FILE"_backup_$DATE"
-
-	# before we begin, make sure the file to be backed up exist
-	if [ -f $BACKUP_FILE ]
-	then
-		# create the backup of the most recent version of this report
-		cp $BACKUP_FILE $BACKUP_DESTINATION
-
-		# make sure the destination file was created
-		if [ ! -f $BACKUP_FILE ]
-		then
-			echo "Unable to create backup: $BACKUP_DESTINATION"
-		fi
-	else
-		# we can't create backups when file's don't exist
-		echo "Unable to create backup, file does not exist: $BACKUP_FILE"
-	fi
 }
 
 # create output file
@@ -183,14 +160,14 @@ then
 fi
 }
 
-# print output of "ps auxww" to the PS_FILE
+# print output of "ps auxfww" to the PS_FILE
 print_ps() {
-	ps auxww >> $PS_FILE
+	ps $OPTS_PS >> $PS_FILE
 }
 
 # print output of "pstree" to PSTREE_FILE
 print_pstree() {
-	pstree >> $PSTREE_FILE
+	pstree $OPTS_PSTREE >> $PSTREE_FILE
 }
 
 # print a blank line to the specified file
@@ -207,19 +184,26 @@ print_uptime() {
 # print the output of "free" to the resources file
 print_free() {
 	echo "FREE report" >> $RESOURCES_FILE
-	free >> $RESOURCES_FILE
+	free $OPTS_FREE >> $RESOURCES_FILE
 }
 
 # print the output of "vmstat" to the resources file
 print_vmstat() {
 	echo "VMSTAT report" >> $RESOURCES_FILE
-	vmstat -S M 1 2 >> $RESOURCES_FILE
+	vmstat $OPTS_VMSTAT >> $RESOURCES_FILE
 }
 
 # print the output of "iostat" to the resources file
 print_iostat() {
 	echo "IOSTAT report" >> $RESOURCES_FILE
-	iostat -x 2 2 -t  >> $RESOURCES_FILE
+	iostat $OPTS_IOSTAT >> $RESOURCES_FILE
+}
+
+# print the output of "iotop" to the resources file
+print_iotop() {
+	which iotop >/dev/null 2>&1 || return 1
+	echo "IOTOP report" >> $RESOURCES_FILE
+	iotop $OPTS_IOTOP >> $RESOURCES_FILE
 }
 
 # print the output of sar to the resources file
@@ -249,19 +233,18 @@ print_httpd_fullstatus() {
 # print the output of "netstat -ntulpae" to the netstat file
 print_netstat() {
 	echo "Network connections" >> $NETSTAT_FILE
-	netstat -ntulpae >> $NETSTAT_FILE
+	netstat $OPTS_NETSTAT >> $NETSTAT_FILE
 }
 
 # print the output of "netstat -s" to the netstat file
 print_netstat_sum() {
 	echo "Network traffic summary" >> $NETSTAT_FILE
-	netstat -s >> $NETSTAT_FILE
+	netstat $OPTS_NETSTAT_SUM >> $NETSTAT_FILE
 }
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
 	echo "MySQL status" >> $MYSQL_FILE
-	mysqladmin status >> $MYSQL_FILE
 }
 
 # print the non-truncated innodb status to the mysql file
@@ -305,7 +288,11 @@ print_mysql_innodb_status() {
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
 	echo "MySQL processes" >> $MYSQL_FILE
-	mysqladmin -v processlist >> $MYSQL_FILE
+	if [ $MYSQL_PROCESS_LIST == "vertically" ]; then
+		mysql -e "show full processlist\G" >> $MYSQL_FILE
+	else
+		mysqladmin -v processlist >> $MYSQL_FILE
+	fi
 }
 
 # print the top 10 processes (by cpu usage) to the resources file
@@ -323,7 +310,13 @@ print_top_10_mem() {
 # print the disk utilization to the resources file
 print_df() {
 	echo "Disk Utilization" >> $RESOURCES_FILE
-	df -x nfs >> $RESOURCES_FILE
+	df $OPTS_DF >> $RESOURCES_FILE
+}
+
+# print the disk partitions to the fdisk file
+print_fdisk() {
+	echo "Disk partitions" >> $FDISK_FILE
+	fdisk $OPTS_FDISK >> $FDISK_FILE
 }
 
 # print the slabinfo command to the resources file
@@ -392,14 +385,10 @@ send_mail() {
 # manage ps report
 run_ps_report() {
 	recaplock
-	if [ $ROTATELOGS = "yes" ]
-	then
-		rotate_output_file $PS_FILE
-	fi
 
 	if [ $SNAPSHOT = "yes" ]
 	then
-		PS_FILE="$BASEDIR/ps.log_snapshot_$DATE";
+		PS_FILE="$SNAPSHOTSDIR/ps.log_snapshot_$DATE";
 	fi
 
 	create_output_file $PS_FILE
@@ -409,14 +398,9 @@ run_ps_report() {
 
 # manage pstree report
 run_pstree_report() {
-	if [ $ROTATELOGS = "yes" ]
-	then
-		rotate_output_file $PSTREE_FILE
-	fi
-
 	if [ $SNAPSHOT = "yes" ]
 	then
-		PSTREE_FILE="$BASEDIR/pstree.log_snapshot_$DATE";
+		PSTREE_FILE="$SNAPSHOTSDIR/pstree.log_snapshot_$DATE";
 	fi
 
 	create_output_file $PSTREE_FILE
@@ -424,16 +408,23 @@ run_pstree_report() {
 	print_pstree
 }
 
-# manage resources report
-run_resources_report() {
-	if [ $ROTATELOGS = "yes" ]
-        then
-                rotate_output_file $RESOURCES_FILE
-        fi
-
+# manage fdisk report
+run_fdisk_report() {
 	if [ $SNAPSHOT = "yes" ]
 	then
-		RESOURCES_FILE="$BASEDIR/resources.log_snapshot_$DATE";
+		FDISK_FILE="$SNAPSHOTSDIR/fdisk.log_snapshot_$DATE";
+	fi
+
+	create_output_file $FDISK_FILE
+	check_output_file $FDISK_FILE
+	print_fdisk
+}
+
+# manage resources report
+run_resources_report() {
+	if [ $SNAPSHOT = "yes" ]
+	then
+		RESOURCES_FILE="$SNAPSHOTSDIR/resources.log_snapshot_$DATE";
 	fi
 
 	create_output_file $RESOURCES_FILE
@@ -445,6 +436,10 @@ run_resources_report() {
 	print_vmstat
 	print_blankline $RESOURCES_FILE
 	print_iostat
+	print_blankline $RESOURCES_FILE
+	print_iotop
+	print_blankline $RESOURCES_FILE
+	print_df
 	print_blankline $RESOURCES_FILE
 
 	# check to see if sar should be run
@@ -500,14 +495,9 @@ run_resources_report() {
 
 # manage netstat report
 run_netstat_report() {
-	if [ $ROTATELOGS = "yes" ]
-	then
-		rotate_output_file $NETSTAT_FILE
-	fi
-
 	if [ $SNAPSHOT = "yes" ]
 	then
-		NETSTAT_FILE="$BASEDIR/netstat.log_snapshot_$DATE";
+		NETSTAT_FILE="$SNAPSHOTSDIR/netstat.log_snapshot_$DATE";
 	fi
 
 	create_output_file $NETSTAT_FILE
@@ -527,14 +517,9 @@ run_netstat_report() {
 
 # manage mysql report
 run_mysql_report() {
-	if [ $ROTATELOGS = "yes" ]
-        then
-                rotate_output_file $MYSQL_FILE
-        fi
-
 	if [ $SNAPSHOT = "yes" ]
 	then
-		MYSQL_FILE="$BASEDIR/mysql.log_snapshot_$DATE";
+		MYSQL_FILE="$SNAPSHOTSDIR/mysql.log_snapshot_$DATE";
 	fi
 
 	create_output_file $MYSQL_FILE
@@ -588,10 +573,6 @@ then
 			print_usage
 			exit
 			;;
-		-B|--backup)
-			# backup latest snapshots
-			BACKUP="yes"
-			;;
 		-S|--snapshot)
 			# take a snapshot outside of the regular output rotation
 			ROTATELOGS="no"
@@ -643,66 +624,43 @@ create_output_dirs
 # run the ps report
 if [ $USEPS = "yes" -o $USEPS = "YES" ]
 then
-	# check to see if we're just creating a backup
-	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
-	then
-		backup_file $PS_FILE
-	else
-		# run the ps report
-		run_ps_report
-	fi
+	# run the ps report
+	run_ps_report
 fi
 
 # run the resources report
 if [ $USERESOURCES = "yes" -o $USERESOURCES = "YES" ]
 then
-	# check to see if we're just creating a backup
-	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
-	then
-		backup_file $RESOURCES_FILE
-	else
-		# run the resources report
-		run_resources_report
-	fi
+	# run the resources report
+	run_resources_report
 fi
 
 # check to see if pstree output should be gathered
 if [ $USEPSTREE = "yes" -o $USEPSTREE = "YES" ]
 then
-	# check to see if we're just creating a backup
-	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
-	then
-		backup_file $PSTREE_FILE
-	else
-		# run the pstree report
-		run_pstree_report
-	fi
+	# run the pstree report
+	run_pstree_report
 fi
 
 # check to see if netstat should be run
 if [ $USENETSTAT = "yes" -o $USENETSTAT = "YES" ]
 then
-	# check to see if we're just creating a backup
-	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
-	then
-		backup_file $NETSTAT_FILE
-	else
-		# run the netstat report
-		run_netstat_report
-	fi
+	# run the netstat report
+	run_netstat_report
+fi
+
+# check to see if fdisk should be run
+if [ $USEFDISK = "yes" -o $USEFDISK = "YES" ]
+then
+	# run the fdisk report
+	run_fdisk_report
 fi
 
 # check to see if mysqladmin should be run
 if [ $USEMYSQL = "yes" -o $USEMYSQL = "YES" ]
 then
-	# check to see if we're just creating a backup
-	if [ $BACKUP = "yes" -o $BACKUP = "YES" ]
-	then
-		backup_file $MYSQL_FILE
-	else
-		# run the mysql report
-		run_mysql_report
-	fi
+	# run the mysql report
+	run_mysql_report
 fi
 
 # check to see if report should be emailed
