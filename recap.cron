@@ -29,3 +29,6 @@
 #Every 5 minutes
 #*/5 * * * * root /usr/sbin/recap
 
+# Pack and clear log files
+0 1 * * * root /usr/sbin/recaplog
+
