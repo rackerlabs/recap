@@ -34,6 +34,7 @@
 LOG_SUFFIX=$(date +%Y%m%d-%H%M%S)
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 BASEDIR="/var/log/recap"
+BACKUPDIR=${BASEDIR}/backups
 SNAPSHOTSDIR=${BASEDIR}"/snapshots"
 DATE=`date +%Y-%m-%d_%H:%M:%S`
 PS_FILE="$BASEDIR/ps_${LOG_SUFFIX}.log"
@@ -46,6 +47,7 @@ ROTATELOGS="yes"
 SNAPSHOT="no"
 BACKUP="no"
 lockdir=/var/lock/recap.lock
+BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 
 # default command options
 OPTS_DF="-x nfs"
@@ -123,6 +125,11 @@ create_output_dirs() {
 	  	mkdir -p $SNAPSHOTSDIR
 	  	chmod $OUTPUTDIR_MODE $SNAPSHOTSDIR
 	fi
+	if [ ! -d $BACKUPDIR ]
+	then
+	  	mkdir -p $BACKUPDIR
+	  	chmod $OUTPUTDIR_MODE $BACKUPDIR
+	fi
 }
 
 # print the usage definition for the script
@@ -132,6 +139,7 @@ print_usage() {
 	echo " "
 	echo "Optional flags: "
 	echo "-h, --help		print this help output"
+	echo "-B, --backup		copy the last log file set to '/var/log/recap/backups'"
 	echo "-S, --snapshot		take a timestamped snapshot outside of the regular output file rotation"
 }
 
@@ -288,7 +296,7 @@ print_mysql_innodb_status() {
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
 	echo "MySQL processes" >> $MYSQL_FILE
-	if [ $MYSQL_PROCESS_LIST == "vertically" ]; then
+	if [ $MYSQL_PROCESS_LIST == "vertical" ]; then
 		mysql -e "show full processlist\G" >> $MYSQL_FILE
 	else
 		mysqladmin -v processlist >> $MYSQL_FILE
@@ -544,6 +552,16 @@ run_mysql_report() {
 	fi
 }
 
+# copy the last log file set to $BACKUPDIR
+create_backup() {
+	for f in $BACKUP_ITEMS; do
+		ls -1t ${f}_*.log | \
+		grep ".*_[0-9]\{8\}-[0-9]\{6\}.log" | \
+		head -1 | \
+		xargs -I {} cp {} $BACKUPDIR
+	done
+}
+
 ###############################################
 ######### BEGIN EXECUTING SCRIPT HERE #########
 ###############################################
@@ -568,6 +586,10 @@ fi
 if [ "$#" -gt 0 ]
 then
 	case "$1" in
+		-B|--backup)
+			# backup latest log files
+			BACKUP="yes"
+			;;
 		-h|--help)
 			# print usage
 			print_usage
@@ -601,6 +623,12 @@ then
 	echo "No configuration file found. Proceeding with defaults."
 else
 	. /etc/recap
+fi
+
+# take a backup?
+if [ $BACKUP == "yes" -o $BACKUP == "YES" ]; then
+	create_backup
+	exit 0
 fi
 
 # proceed to report generation

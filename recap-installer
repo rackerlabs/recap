@@ -41,6 +41,7 @@ mkdir -p -m0755 $SBINDIR
 mkdir -p -m0755 $DATADIR/doc/recap-$VERSION
 mkdir -p -m0755 $SYSCONFDIR/cron.d
 mkdir -p -m0755 $LOGDIR/recap
+mkdir -p -m0755 $LOGDIR/recap/backups
 mkdir -p -m0755 $LOGDIR/recap/snapshots
 mkdir -p -m0755 $MANPATH/man5
 mkdir -p -m0755 $MANPATH/man8
