@@ -41,3 +41,7 @@
 	-Integrated recaptool
 	-Added simple installer - (tested on debian)
 	-Added MacOSX support to installer
+0.9.7
+    -command line options can be specified in 'Configuration stanza'
+    -timestamp is appended to log filenames
+    -implemented log rotation (see: 'recaplog', rotated log files can be Gzip'd)

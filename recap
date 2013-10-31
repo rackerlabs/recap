@@ -7,6 +7,7 @@
 #
 #   Maintainer:     Brent Oswald
 #                   Benjamin Graham
+#                   Simone Soldateschi
 #
 #   License:        GPL 2.0
 #
@@ -24,7 +25,7 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 #
-# Version: 0.9.6
+# Version: 0.9.7
 
 #####################################
 ######### BASIC ENVIRONMENT #########
