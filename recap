@@ -556,7 +556,7 @@ run_mysql_report() {
 # copy the last log file set to $BACKUPDIR
 create_backup() {
 	for f in $BACKUP_ITEMS; do
-		ls -1t ${f}_*.log | \
+		ls -1t ${BASEDIR}/${f}_*.log | \
 		grep ".*_[0-9]\{8\}-[0-9]\{6\}.log" | \
 		head -1 | \
 		xargs -I {} cp {} $BACKUPDIR
