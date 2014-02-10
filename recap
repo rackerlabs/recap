@@ -11,7 +11,7 @@
 #
 #   License:        GPL 2.0
 #
-#   Homepage:   https://github.com/rackspace/recap/
+#   Homepage:   https://github.com/rackerlabs/recap/
 #
 #
 # The cron execution file is in /etc/cron.d
