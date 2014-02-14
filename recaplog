@@ -1,0 +1,166 @@
+#!/bin/bash
+#
+#   Package name:   recap
+#   Author:         Simone Soldateschi
+#
+#   Maintainer:     
+#
+#   License:        GPL 2.0
+#
+#   Homepage:
+#
+#
+# The cron execution file is in /etc/cron.d
+#
+# The variable configuration file for 'recaplog' is in /etc/recap
+#
+# All the variables defined here and several others can be defined in the variable
+# configuration file.  You can see more on these in /usr/share/doc/recap-{version}/README
+#
+# Define the default environment for recap
+# DO NOT change these values here, user-modifiable options can be tweaked through
+# /etc/recap
+#
+# Version: 0.0.1
+
+###############################
+########## CONSTANTS ##########
+###############################
+DEBUG=4 INFORMATION=3 WARNING=2 ERROR=1 CRITICAL=0
+
+#####################################
+########### CONFIGURATION ###########
+#####################################
+# define our basic environment
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+BASEDIR="/var/log/recap"
+lockdir=/var/lock/recaplog.lock
+LOG_COMPRESS=1
+LOG_EXPIRY=0
+COMPRESS_ITEMS="fdisk mysql netstat ps pstree resources"
+ERRORLEVEL=DEBUG
+LOGFILE=${BASEDIR}/recaplog.log
+EMAIL_ON_ERROR=1
+EMAIL_ON_ERROR_RECIPIENTS="root@localhost"
+
+###############################
+########## FUNCTIONS ##########
+###############################
+
+# print message facility with pre-defined error-levels
+print_msg() {
+	if [ "$1" == "DEBUG" ]; then
+		PREFIX="[DD]"
+	elif [ "$1" == "INFORMATION" ]; then
+                PREFIX="[II]"
+	elif [ "$1" == "WARNING" ]; then
+                PREFIX="[WW]"
+	elif [ "$1" == "ERROR" ]; then
+                PREFIX="[EE]"
+	elif [ "$1" == "CRITICAL" ]; then
+                PREFIX="[CC]"
+	fi
+	if [[ $1 -le $ERRORLEVEL ]]; then
+		echo ${PREFIX}" "$2 | tee -a $LOGFILE
+	fi
+	# send email?
+	if [ $1 == "ERROR" -o $1 == "CRITICAL" ]; then
+		if [ $EMAIL_ON_ERROR -eq 1 ]; then
+			echo ${PREFIX}" "$2 | mutt -s $EMAIL_ON_ERROR_SUBJECT $EMAIL_ON_ERROR_RECIPIENTS
+		fi
+	fi
+}
+
+# delete log files older than LOG_EXPIRY days
+delete_old_logs() {
+	if [ $LOG_EXPIRY -eq 0 ]; then
+		print_msg INFORMATION "skipping old log file expiration..."
+	else
+		print_msg INFORMATION "deleting log files older than ${LOG_EXPIRY} days..."
+		# delete *.log files
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
+		# delete *.log.gz files
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
+	fi
+}
+
+# cat tiny log files into daily log files
+pack_old_logs() {
+	YESTERDAYDATE=$(date -d "now -1 day" "+%Y%m%d")
+	for item in $COMPRESS_ITEMS; do
+		print_msg DEBUG "packing ${item}..."
+		OUTPUTFILE=${BASEDIR}/${item}_daily_${YESTERDAYDATE}.log
+		#
+		if [ $LOG_COMPRESS -eq 1 ]; then
+			print_msg DEBUG "do compress old log files"
+			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | gzip > ${OUTPUTFILE}.gz
+			ERRCODE=$?
+			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE.gz
+		else
+			print_msg DEBUG "do not compress old log files"
+			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log > $OUTPUTFILE
+			ERRCODE=$?
+			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE
+		fi
+		if [ $ERRCODE -eq 0 ]; then
+			for f in $(ls ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | grep -v daily); do
+				print_msg DEBUG "deleting: $f"
+				rm -f $f
+			done 
+		else
+			print_msg ERROR "cat error, cannot delete old log files '"${BASEDIR}/${item}_${YESTERDAYDATE}-*.log"'"
+		fi
+	done
+}
+
+# Create a Lock so that recap does not try to run over itself, and create errors:
+recaploglock() {
+
+        if mkdir "$lockdir"
+        then
+                # Remove lockdir when the script finishes, or when it receives a signal
+                trap 'rm -rf "$lockdir"' 0    # remove directory when script finishes
+                trap "exit 2" 1 2 3 15        # terminate script when receiving signal
+        else
+                print_msg ERROR "Cannot acquire lock, giving up on $lockdir"
+                exit 0
+fi
+}
+
+##########################
+########## MAIN ##########
+##########################
+
+# parse configuration file
+# check to see where the configuration file is located.
+# if the file is not at /etc/recap, make some noise to alert users
+if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
+then
+        print_msg WARNING "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
+        . /etc/sysconfig/recap
+elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
+then
+        print_msg WARNING "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
+        . /etc/sysconfig/recap
+elif [ ! -f /etc/recap ]
+then
+        print_msg WARNING "No configuration file found. Proceeding with defaults."
+else
+        . /etc/recap
+fi
+
+# DO STUFF...
+
+recaploglock
+
+pack_old_logs
+
+delete_old_logs
+
+# test email
+#print_msg ERROR "ERROR thrown"
+#print_msg CRITICAL "CRITICAL thrown"
+
+exit 0

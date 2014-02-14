@@ -2,7 +2,7 @@
 
 Summary: System status reporting
 Name: recap
-Version: 0.9.6
+Version: 0.9.7
 Release: 0
 License: GPLv2
 Group: Applications/System

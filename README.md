@@ -2,7 +2,7 @@ Recap:
 
 #   Package name:   recap
 #   Author:         The Common Public
-#   Maintainers:    Brent Oswald, Benjamin Graham
+#   Maintainers:    Brent Oswald, Benjamin Graham, Simone Soldateschi
 #   License:        GPL 2.0
 #   Homepage:       https://github.com/rackerlabs/recap/
 
