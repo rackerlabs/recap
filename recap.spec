@@ -6,7 +6,7 @@ Version: 0.9.7
 Release: 0
 License: GPLv2
 Group: Applications/System
-Vendor: Recap Team - https://github.com/rackspace/recap
+Vendor: Recap Team - https://github.com/rackerlabs/recap
 Source: %{name}-%{version}.tar.gz
 Distribution: RedHat
 BuildArch: noarch
