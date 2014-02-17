@@ -82,13 +82,13 @@ USEMYSQLPROCESSLIST="no"
 USEDF="no"
 USESLAB="no"
 USEINNODB="no"
+DOTMYDOTCNF="/root/.my.cnf"
 USEFDISK="no"
 MYSQL_PROCESS_LIST="table"
 
 ###########################################
 ######### DEFAULT COMMAND OPTIONS #########
 ###########################################
-
 
 # variables not currently documented for end users/not yet intended for use
 # if you change any of these, everything is likely to break in some ugly,
@@ -253,6 +253,11 @@ print_netstat_sum() {
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
+        for cnf in $DOTMYDOTCNF
+	do
+		echo "MySQL $cnf status" >> $MYSQL_FILE
+		mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+	done
 	echo "MySQL status" >> $MYSQL_FILE
 }
 
@@ -296,6 +301,11 @@ print_mysql_innodb_status() {
 
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
+	for cnf in $DOTMYDOTCNF
+        do
+                echo "MySQL $cnf processes" >> $MYSQL_FILE
+        	mysqladmin --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
+        done
 	echo "MySQL processes" >> $MYSQL_FILE
 	if [ $MYSQL_PROCESS_LIST == "vertical" ]; then
 		mysql -e "show full processlist\G" >> $MYSQL_FILE
