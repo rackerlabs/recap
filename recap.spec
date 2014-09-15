@@ -10,7 +10,7 @@ Vendor: Recap Team - https://github.com/rackerlabs/recap
 Source: %{name}-%{version}.tar.gz
 Distribution: RedHat
 BuildArch: noarch
-BuildRoot: %{_tmppath}/%{name}-buildroot
+%{?el5:BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)}
 Requires: sysstat, coreutils, procps, grep, gawk
 
 
@@ -25,7 +25,7 @@ optional reporting on Apache, MySQL, and network connections.
 
 
 %install
-rm -rf $RPM_BUILD_ROOT
+%{?el5:%{__rm} -rf %{buildroot}}
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}
 mkdir -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
@@ -46,8 +46,8 @@ install -m 0644 recap.8.gz $RPM_BUILD_ROOT%{_mandir}/man8
 install -m 0644 recap.conf.d $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/recap
 
 
-%clean
-rm -rf $RPM_BUILD_ROOT
+%{?el5:%clean}
+%{?el5:%{__rm} -rf %{buildroot}}
 
 
 %files
