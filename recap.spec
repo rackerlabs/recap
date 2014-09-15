@@ -26,24 +26,24 @@ optional reporting on Apache, MySQL, and network connections.
 
 %install
 %{?el5:%{__rm} -rf %{buildroot}}
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
-mkdir -p -m0700 $RPM_BUILD_ROOT%{_logdir}/recap
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man5
-mkdir -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
-install -m 0755 recap $RPM_BUILD_ROOT%{_sbindir}/
-install -m 0755 recaptool $RPM_BUILD_ROOT%{_sbindir}/
-install -m 0644 README.md $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-install -m 0644 TODO $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-install -m 0644 CHANGELOG $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-install -m 0644 COPYING $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-install -m 0644 recap.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/recap
-install -m 0644 recap.conf $RPM_BUILD_ROOT%{_sysconfdir}/recap
-install -m 0644 recap.5.gz $RPM_BUILD_ROOT%{_mandir}/man5
-install -m 0644 recap.8.gz $RPM_BUILD_ROOT%{_mandir}/man8
-install -m 0644 recap.conf.d $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/recap
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
+%{__mkdir} -p -m0700 $RPM_BUILD_ROOT%{_logdir}/recap
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man5
+%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
+%{__install} -m 0755 recap $RPM_BUILD_ROOT%{_sbindir}/
+%{__install} -m 0755 recaptool $RPM_BUILD_ROOT%{_sbindir}/
+%{__install} -m 0644 README.md $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
+%{__install} -m 0644 TODO $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
+%{__install} -m 0644 CHANGELOG $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
+%{__install} -m 0644 COPYING $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
+%{__install} -m 0644 recap.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/recap
+%{__install} -m 0644 recap.conf $RPM_BUILD_ROOT%{_sysconfdir}/recap
+%{__install} -m 0644 recap.5.gz $RPM_BUILD_ROOT%{_mandir}/man5
+%{__install} -m 0644 recap.8.gz $RPM_BUILD_ROOT%{_mandir}/man8
+%{__install} -m 0644 recap.conf.d $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/recap
 
 
 %{?el5:%clean}
