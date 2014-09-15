@@ -26,19 +26,14 @@ optional reporting on Apache, MySQL, and network connections.
 
 %install
 %{?el5:%{__rm} -rf %{buildroot}}
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
-%{__mkdir} -p -m0700 $RPM_BUILD_ROOT%{_logdir}/recap
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man5
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
-%{__install} -m 0755 recap $RPM_BUILD_ROOT%{_sbindir}/
-%{__install} -m 0755 recaptool $RPM_BUILD_ROOT%{_sbindir}/
-%{__install} -m 0644 recap.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/recap
-%{__install} -m 0644 recap.conf $RPM_BUILD_ROOT%{_sysconfdir}/recap
-%{__install} -m 0644 recap.5.gz $RPM_BUILD_ROOT%{_mandir}/man5
-%{__install} -m 0644 recap.8.gz $RPM_BUILD_ROOT%{_mandir}/man8
-%{__install} -m 0644 recap.conf.d $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d/recap
+%{__install} -Dm0755 recap %{buildroot}%{_sbindir}/recap
+%{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
+%{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
+%{__install} -Dm0644 recap.cron %{buildroot}%{_sysconfdir}/cron.d/recap
+%{__install} -Dm0644 recap.conf.d %{buildroot}%{_sysconfdir}/httpd/conf.d/recap
+%{__install} -Dm0644 recap.5.gz %{buildroot}%{_mandir}/man5/recap.5.gz
+%{__install} -Dm0644 recap.8.gz %{buildroot}%{_mandir}/man8/recap.8.gz
+%{__install} -dm0700 %{buildroot}%{_logdir}/recap
 
 
 %{?el5:%clean}
