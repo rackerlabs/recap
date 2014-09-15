@@ -27,7 +27,6 @@ optional reporting on Apache, MySQL, and network connections.
 %install
 %{?el5:%{__rm} -rf %{buildroot}}
 %{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sbindir}
-%{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}
 %{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/cron.d
 %{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
 %{__mkdir} -p -m0700 $RPM_BUILD_ROOT%{_logdir}/recap
@@ -35,10 +34,6 @@ optional reporting on Apache, MySQL, and network connections.
 %{__mkdir} -p -m0755 $RPM_BUILD_ROOT%{_mandir}/man8
 %{__install} -m 0755 recap $RPM_BUILD_ROOT%{_sbindir}/
 %{__install} -m 0755 recaptool $RPM_BUILD_ROOT%{_sbindir}/
-%{__install} -m 0644 README.md $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-%{__install} -m 0644 TODO $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-%{__install} -m 0644 CHANGELOG $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
-%{__install} -m 0644 COPYING $RPM_BUILD_ROOT%{_datadir}/doc/recap-%{version}/
 %{__install} -m 0644 recap.cron $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/recap
 %{__install} -m 0644 recap.conf $RPM_BUILD_ROOT%{_sysconfdir}/recap
 %{__install} -m 0644 recap.5.gz $RPM_BUILD_ROOT%{_mandir}/man5
@@ -51,19 +46,15 @@ optional reporting on Apache, MySQL, and network connections.
 
 
 %files
-%dir %{_datadir}/doc/recap-%{version}
+%doc README.md TODO CHANGELOG COPYING
 %dir %{_logdir}/recap
 %{_sbindir}/recap
 %{_sbindir}/recaptool
-%doc %{_datadir}/doc/recap-%{version}/README.md
-%doc %{_datadir}/doc/recap-%{version}/TODO
-%doc %{_datadir}/doc/recap-%{version}/CHANGELOG
-%doc %{_datadir}/doc/recap-%{version}/COPYING
 %config(noreplace) %{_sysconfdir}/cron.d/recap
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/recap
 %config(noreplace) %{_sysconfdir}/recap
-%doc %{_mandir}/man5/recap.5.gz
-%doc %{_mandir}/man8/recap.8.gz
+%{_mandir}/man5/recap.5.gz
+%{_mandir}/man8/recap.8.gz
 
 
 %post
