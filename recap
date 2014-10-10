@@ -568,11 +568,12 @@ create_backup() {
 ###############################################
 
 # Quit if load is higher than MAXLOAD
-LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | cut -d" " -f2 | cut -d"," -f1)
-QUIT=$(echo $LOAD'<'$MAXLOAD | bc -l)
+LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | cut -d" " -f4 | cut -d"," -f1)
+QUIT=$(echo $LOAD'>'$MAXLOAD | bc -l)
 if [ $QUIT -eq 1 ]
 then
     echo "QUIT (LOAD:"$LOAD", MAXLOAD:"$MAXLOAD")"
+    exit 1
 fi
 
 # verify that script is being run as root
