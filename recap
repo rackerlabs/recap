@@ -49,6 +49,7 @@ SNAPSHOT="no"
 BACKUP="no"
 lockdir=/var/lock/recap.lock
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
+MAXLOAD=0.8
 
 # default command options
 OPTS_DF="-x nfs"
@@ -576,6 +577,15 @@ create_backup() {
 ###############################################
 ######### BEGIN EXECUTING SCRIPT HERE #########
 ###############################################
+
+# Quit if load is higher than MAXLOAD
+LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | cut -d" " -f2 | cut -d"," -f1)
+QUIT=$(echo $LOAD'>'$MAXLOAD | bc -l)
+if [ $QUIT -eq 1 ]
+then
+    echo "QUIT (LOAD:"$LOAD", MAXLOAD:"$MAXLOAD")"
+    exit 1
+fi
 
 # verify that script is being run as root
 if [ "$(id -u)" != "0" ]; then
