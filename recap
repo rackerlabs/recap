@@ -236,8 +236,11 @@ print_sar() {
 
 # print the output of "apachectl fullstatus" to the resources file
 print_httpd_fullstatus() {
-	echo "Apache Status report" >> $RESOURCES_FILE
-	apachectl fullstatus >> $RESOURCES_FILE
+	type -p 'apachectl' > /dev/null 
+	if [[ $? -eq 0 ]]; then
+		echo "Apache Status report" >> $RESOURCES_FILE
+		apachectl fullstatus >> $RESOURCES_FILE
+	fi
 }
 
 # print the output of "netstat -ntulpae" to the netstat file
@@ -254,12 +257,15 @@ print_netstat_sum() {
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-        for cnf in $DOTMYDOTCNF
-	do
-		echo "MySQL $cnf status" >> $MYSQL_FILE
-		mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
-	done
-	echo "MySQL status" >> $MYSQL_FILE
+	type -p 'mysqladmin' > /dev/null
+	if [[ $? -eq 0 ]]; then
+        	for cnf in $DOTMYDOTCNF
+		do
+			echo "MySQL $cnf status" >> $MYSQL_FILE
+			mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+		done
+		echo "MySQL status" >> $MYSQL_FILE
+	fi
 }
 
 # print the non-truncated innodb status to the mysql file
