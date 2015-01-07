@@ -1,5 +1,3 @@
-%define _logdir /var/log
-
 Summary: System status reporting
 Name: recap
 Version: 0.9.7
@@ -33,7 +31,7 @@ optional reporting on Apache, MySQL, and network connections.
 %{__install} -Dm0644 recap.conf.d %{buildroot}%{_sysconfdir}/httpd/conf.d/recap
 %{__install} -Dm0644 recap.5.gz %{buildroot}%{_mandir}/man5/recap.5.gz
 %{__install} -Dm0644 recap.8.gz %{buildroot}%{_mandir}/man8/recap.8.gz
-%{__install} -dm0700 %{buildroot}%{_logdir}/recap
+%{__install} -dm0700 %{buildroot}%{_localstatedir}/log/recap
 
 
 %{?el5:%clean}
@@ -42,7 +40,7 @@ optional reporting on Apache, MySQL, and network connections.
 
 %files
 %doc README.md TODO CHANGELOG COPYING
-%dir %{_logdir}/recap
+%dir %{_localstatedir}/log/recap
 %{_sbindir}/recap
 %{_sbindir}/recaptool
 %config(noreplace) %{_sysconfdir}/cron.d/recap
