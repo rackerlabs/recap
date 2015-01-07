@@ -42,6 +42,10 @@
 	-Added simple installer - (tested on debian)
 	-Added MacOSX support to installer
 0.9.7
-    -command line options can be specified in 'Configuration stanza'
-    -timestamp is appended to log filenames
-    -implemented log rotation (see: 'recaplog', rotated log files can be Gzip'd)
+	-command line options can be specified in 'Configuration stanza'
+	-timestamp is appended to log filenames
+	-implemented log rotation (see: 'recaplog', rotated log files can be Gzip'd)
+0.9.8
+	-Fix #12 (custom .my.cnf, multi-mysql support)
+	-Fix #13 (log files not being copied to /var/log/recap/backups)
+	-Fix #15/22 (ensure apachectl and mysqladmin are available)

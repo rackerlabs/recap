@@ -1,6 +1,6 @@
 Name: recap
-Version: 0.9.7
-Release: 0
+Version: 0.9.8
+Release: 1%{?dist}
 Summary: System status reporting
 Group: Applications/System
 License: GPLv2
@@ -74,6 +74,9 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
+* Wed Jan 07 2015 Carl George <carl.george@rackspace.com> - 0.9.8-1
+- Latest version
+
 * Thu Nov 1 2012 Benjamin H. Graham <ben@administr8.me>
 -First public release GPLv2, special thanks to Rackspace IPC, Brent Oswald, and Benjamin H. Graham
 -Changed name to recap, added links for new repository

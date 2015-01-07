@@ -25,7 +25,7 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 #
-# Version: 0.9.7
+# Version: 0.9.8
 
 #####################################
 ######### BASIC ENVIRONMENT #########
