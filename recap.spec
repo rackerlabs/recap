@@ -75,39 +75,39 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
-*Thu Nov 1 2012 Benjamin H. Graham <ben@administr8.me>
+* Thu Nov 1 2012 Benjamin H. Graham <ben@administr8.me>
 -First public release GPLv2, special thanks to Rackspace IPC, Brent Oswald, and Benjamin H. Graham
 -Changed name to recap, added links for new repository
 -Added recaptool and installer
 
-*Tue Nov 16 2010 Jacob Walcik <jacob.walcik@rackspce.com>
+* Tue Nov 16 2010 Jacob Walcik <jacob.walcik@rackspce.com>
 -Added COPYING file to specify license as GPL
 -Added full list of dependencies for basic reporting
 -Updated description
 
-*Thu May 27 2010 David King <david.king@rackspace.com>
+* Thu May 27 2010 David King <david.king@rackspace.com>
 -Changed version number of recap release and added a configuration file for apache to access recap logs
 
-*Tue Oct 20 2009 David King <david.king@rackspace.com>
+* Tue Oct 20 2009 David King <david.king@rackspace.com>
 -Changed /etc/cron.d/recap and /etc/recap to be config noreplace files
 
-*Thu Nov 13 2008 Jacob Walcik <jacob.walcik@rackspace.com>
+* Thu Nov 13 2008 Jacob Walcik <jacob.walcik@rackspace.com>
 -modified default mode of the output directory
 
-*Thu Nov 01 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Thu Nov 01 2007 Carl Thompson <carl.thompson@rackspace.com>
 -added support for service httpd fullstatus by Jacob Walcik <jacob.walcik@rackspace.com>
 
-*Wed Sep 12 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Wed Sep 12 2007 Carl Thompson <carl.thompson@rackspace.com>
 -added man pages created by Jacob Walcik <jacob.walcik@rackspace.com>
 
-*Thu Jul 12 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Thu Jul 12 2007 Carl Thompson <carl.thompson@rackspace.com>
 -Added pstree support
 
-*Tue Jul 10 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Tue Jul 10 2007 Carl Thompson <carl.thompson@rackspace.com>
 -Fixed permissions on cron file, added 2 cron tasks for @reboot in cron file
 
-*Tue Jul 10 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Tue Jul 10 2007 Carl Thompson <carl.thompson@rackspace.com>
 -Added sar -q and inline documentation, relocated doc to recap-version
 
-*Mon Jul 09 2007 Carl Thompson <carl.thompson@rackspace.com>
+* Mon Jul 09 2007 Carl Thompson <carl.thompson@rackspace.com>
 -Initial build of package
