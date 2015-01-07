@@ -1,12 +1,11 @@
-Summary: System status reporting
 Name: recap
 Version: 0.9.7
 Release: 0
-License: GPLv2
+Summary: System status reporting
 Group: Applications/System
-Vendor: Recap Team - https://github.com/rackerlabs/recap
-Source: %{name}-%{version}.tar.gz
-Distribution: RedHat
+License: GPLv2
+Url: https://github.com/rackerlabs/%{name}
+Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
 %{?el5:BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)}
 Requires: sysstat, coreutils, procps, grep, gawk
