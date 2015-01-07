@@ -254,7 +254,7 @@ print_netstat_sum() {
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-        for cnf in $DOTMYDOTCNF
+	for cnf in $DOTMYDOTCNF
 	do
 		echo "MySQL $cnf status" >> $MYSQL_FILE
 		mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
@@ -486,7 +486,8 @@ run_resources_report() {
 		print_sar q
 	fi
 	# check to see if apachectl fullstatus should be run
-	if [ $USEFULLSTATUS = "yes" -o $USEFULLSTATUS = "YES" ]
+        type -p 'apachectl' > /dev/null
+	if [[ $? -eq 0 ]] && [ $USEFULLSTATUS = "yes" -o $USEFULLSTATUS = "YES" ]
 	then
 		# send apachectl fullstatus output to output file
 		print_blankline $RESOURCES_FILE
@@ -706,7 +707,8 @@ then
 fi
 
 # check to see if mysqladmin should be run
-if [ $USEMYSQL = "yes" -o $USEMYSQL = "YES" ]
+type -p 'mysqladmin' > /dev/null
+if [[ $? -eq 0 ]] && [ $USEMYSQL = "yes" -o $USEMYSQL = "YES" ]
 then
 	# run the mysql report
 	run_mysql_report
