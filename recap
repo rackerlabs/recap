@@ -86,6 +86,7 @@ USEINNODB="no"
 DOTMYDOTCNF="/root/.my.cnf"
 USEFDISK="no"
 MYSQL_PROCESS_LIST="table"
+MIN_FREE_SPACE=0
 
 ###########################################
 ######### DEFAULT COMMAND OPTIONS #########
@@ -575,6 +576,19 @@ create_backup() {
 	done
 }
 
+# check enough disk space is free
+check_disk_space() {
+        if [[ $MIN_FREE_SPACE -eq 0 ]]; then
+            return 0
+        else
+            FREE_SPACE=$(df -BM $BASEDIR)
+            FREE_SPACE=${FREESPACE##M}
+            if [[ $MIN_FREE_SPACE -le $FREE_SPACE ]]; then
+                wall "Unable to run recap due to not enough disk space"
+            fi
+        fi
+}
+
 ###############################################
 ######### BEGIN EXECUTING SCRIPT HERE #########
 ###############################################
@@ -587,6 +601,9 @@ then
     echo "QUIT (LOAD:"$LOAD", MAXLOAD:"$MAXLOAD")"
     exit 1
 fi
+
+# Quit if not enough free disk space
+check_disk_space()
 
 # verify that script is being run as root
 if [ "$(id -u)" != "0" ]; then
