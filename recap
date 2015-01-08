@@ -579,13 +579,13 @@ create_backup() {
 # check enough disk space is free
 check_disk_space() {
         if [[ $MIN_FREE_SPACE -eq 0 ]]; then
-            return 0
+        	return 0
         else
-            FREE_SPACE=$(df -BM $BASEDIR)
-            FREE_SPACE=${FREESPACE##M}
-            if [[ $MIN_FREE_SPACE -le $FREE_SPACE ]]; then
-                wall "Unable to run recap due to not enough disk space"
-            fi
+        	FREE_SPACE=$(df -BM $BASEDIR|grep -v 1M-blocks|awk '{print $4}')
+        	FREE_SPACE=${FREE_SPACE%M}
+        	if [[ $MIN_FREE_SPACE -ge $FREE_SPACE ]]; then
+        		wall "Unable to run recap due to not enough disk space"
+        	fi
         fi
 }
 
@@ -601,9 +601,6 @@ then
     echo "QUIT (LOAD:"$LOAD", MAXLOAD:"$MAXLOAD")"
     exit 1
 fi
-
-# Quit if not enough free disk space
-check_disk_space()
 
 # verify that script is being run as root
 if [ "$(id -u)" != "0" ]; then
@@ -663,6 +660,8 @@ then
 else
 	. /etc/recap
 fi
+
+check_disk_space
 
 # take a backup?
 if [ $BACKUP == "yes" -o $BACKUP == "YES" ]; then
