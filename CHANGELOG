@@ -49,3 +49,6 @@
 	-Fix #12 (custom .my.cnf, multi-mysql support)
 	-Fix #13 (log files not being copied to /var/log/recap/backups)
 	-Fix #15/22 (ensure apachectl and mysqladmin are available)
+0.9.9-development
+	-Fix #17 by merging plesk check into print_mysql_procs and print_mysql
+	-Created branch for development and tags for stable and development versions
