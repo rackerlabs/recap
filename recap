@@ -49,7 +49,7 @@ SNAPSHOT="no"
 BACKUP="no"
 lockdir=/var/lock/recap.lock
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
-MAXLOAD=0.8
+MAXLOAD=$(grep -c MHz /proc/cpuinfo)
 
 # default command options
 OPTS_DF="-x nfs"
@@ -616,6 +616,23 @@ check_disk_space() {
 ######### BEGIN EXECUTING SCRIPT HERE #########
 ###############################################
 
+# check to see where the configuration file is located.
+# if the file is not at /etc/recap, make some noise to alert users
+if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
+then
+	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
+	. /etc/sysconfig/recap
+elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
+then
+	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
+	. /etc/sysconfig/recap
+elif [ ! -f /etc/recap ]
+then
+	echo "No configuration file found. Proceeding with defaults."
+else
+	. /etc/recap
+fi
+
 # Quit if load is higher than MAXLOAD
 LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | cut -d" " -f2 | cut -d"," -f1)
 QUIT=$(echo $LOAD'>'$MAXLOAD | bc -l)
@@ -666,23 +683,6 @@ then
 			print_usage
 			exit
 	esac
-fi
-
-# check to see where the configuration file is located.
-# if the file is not at /etc/recap, make some noise to alert users
-if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
-then
-	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
-	. /etc/sysconfig/recap
-elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
-then
-	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
-	. /etc/sysconfig/recap
-elif [ ! -f /etc/recap ]
-then
-	echo "No configuration file found. Proceeding with defaults."
-else
-	. /etc/recap
 fi
 
 check_disk_space
