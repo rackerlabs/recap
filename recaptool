@@ -8,7 +8,7 @@ procs_mem() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do 
+	for i in `ls $RECAPPATH/ps_*.log*`; do 
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
@@ -21,7 +21,7 @@ procs() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do 
+	for i in `ls $RECAPPATH/ps_*.log*`; do 
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c >> $TMP
 	done
@@ -33,7 +33,7 @@ mem() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do
+	for i in `ls $RECAPPATH/ps_*.log*`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
 	done
@@ -46,7 +46,7 @@ net() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/netstat.log*`; do
+	for i in `ls $RECAPPATH/netstat_*.log*`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep ":$PORT " $i -c >> $TMP 
 	done
@@ -58,7 +58,7 @@ netestab() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/netstat.log*`; do
+	for i in `ls $RECAPPATH/netstat_*.log*`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep ":$PORT .*ESTAB" $i -c >> $TMP 
 	done
@@ -69,7 +69,7 @@ netestab() {
 querycount() {
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/mysql.log*`; do
+	for i in `ls $RECAPPATH/mysql_*.log*`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		grep "Query" -c $i >> $TMP 
 	done
