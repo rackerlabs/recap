@@ -49,7 +49,7 @@ SNAPSHOT="no"
 BACKUP="no"
 lockdir=/var/lock/recap.lock
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
-MAXLOAD=$(grep -c MHz /proc/cpuinfo)
+MAXLOAD="1000"
 
 # default command options
 OPTS_DF="-x nfs"
