@@ -87,6 +87,7 @@ DOTMYDOTCNF="/root/.my.cnf"
 USEFDISK="no"
 MYSQL_PROCESS_LIST="table"
 MIN_FREE_SPACE=0
+LOGINPATH="recap"
 
 ###########################################
 ######### DEFAULT COMMAND OPTIONS #########
@@ -261,6 +262,9 @@ print_mysql() {
         if [ -d /etc/psa/.psa.shadow ]
         then
                 mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` --defaults-extra-file=$cnf status >> $MYSQL_FILE
+        elif [ -f /root/.mylogin.cnf ]
+        then
+                 mysqladmin --login-path=$LOGINPATH status >> $MYSQL_FILE
         else
 	            mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
         fi
@@ -314,6 +318,9 @@ print_mysql_procs() {
 	        if [ -d /etc/psa/.psa.shadow ]
 	        then
 	                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
+            elif [ -f /root/.mylogin.cnf ]
+            then
+                    mysqladmin --login-path=$LOGINPATH status >> $MYSQL_FILE
 	        else
 		        	mysqladmin --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
 	        fi
@@ -331,6 +338,9 @@ print_mysql_procs() {
         if [ -d /etc/psa/.psa.shadow ]
 		then
                 mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
+        elif [ -f /root/.mylogin.cnf ]
+        then
+                    mysqladmin --login-path=$LOGINPATH status >> $MYSQL_FILE
         else
 	        	mysqladmin -v processlist >> $MYSQL_FILE
         fi
