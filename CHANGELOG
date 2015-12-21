@@ -52,3 +52,6 @@
 0.9.9-development
 	-Fix #17 by merging plesk check into print_mysql_procs and print_mysql
 	-Created branch for development and tags for stable and development versions
+0.9.10
+	-Adjusted Default MAXLOAD value
+	-Fixed #27 (Document MAXLOAD)
