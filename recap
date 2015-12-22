@@ -342,7 +342,8 @@ print_mysql_procs() {
                                 fi
                                 if [ $MYSQL_PROCESS_LIST == "vertical" ]
                                 then
-                                        mysql -e "show full processlist\G" >> $MYSQL_FILE
+                                	# This doesnt seem to work right
+                                	mysqladmin --defaults-extra-file=$cnf --vertical processlist
                                 fi
                                 print_blankline $MYSQL_FILE
                         else
