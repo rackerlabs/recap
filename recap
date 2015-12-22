@@ -255,17 +255,26 @@ print_netstat_sum() {
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-	for cnf in $DOTMYDOTCNF
-	do
-        echo "MySQL $cnf status" >> $MYSQL_FILE
-        if [ -d /etc/psa/.psa.shadow ]
+        # We only support a single DOTMYDOTCNF for MySQL when running Plesk
+        if [ -f /etc/psa/.psa.shadow ]
         then
-                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                echo "MySQL status" >> $MYSQL_FILE
+                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` status >> $MYSQL_FILE
+                print_blankline $MYSQL_FILE
         else
-	            mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                for cnf in $DOTMYDOTCNF
+                do
+                        if [ -f $cnf ]
+                        then
+                                echo "MySQL $cnf status" >> $MYSQL_FILE
+                                mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                                print_blankline $MYSQL_FILE
+                        else
+                                echo "MySQL $cnf for status does not exist. Please check DOTMYDOTCNF in /etc/recap" >> $MYSQL_FILE
+                                print_blankline $MYSQL_FILE
+                        fi
+                done
         fi
-    done
-	echo "MySQL status" >> $MYSQL_FILE
 }
 
 # print the non-truncated innodb status to the mysql file
