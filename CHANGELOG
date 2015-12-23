@@ -55,3 +55,5 @@
 0.9.10
 	-Adjusted Default MAXLOAD value
 	-Fixed #27 (Document MAXLOAD)
+0.9.11
+	-updates to handling multiple DOTMYDOTCNF logic
