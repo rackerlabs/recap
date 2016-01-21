@@ -8,11 +8,13 @@ various information about the server.
 * bc - arithmetic calculations
 * elinks (or another cli web browser) - apache fullstatus
 * net-tools - netstat report
+* sysstat - provides 'iostat' for  I/O statistics
+* iotop - simple top-like I/O monitor
 
 ## Installation
 1. Install the required dependencies:
-  * Debian/Ubuntu - `apt-get install git bc elinks net-tools`
-  * RHEL/CentOS - `yum install git bc elinks net-tools`
+  * Debian/Ubuntu - `apt-get install git bc elinks net-tools sysstat iotop`
+  * RHEL/CentOS - `yum install git bc elinks net-tools sysstat iotop`
 2. Clone this repository: `git clone https://github.com/rackerlabs/recap.git`
 3. Change into the new directory: `cd recap`
 4. Run the installer: `./recap-installer`
