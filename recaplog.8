@@ -1,0 +1,46 @@
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.TH RECAPLOG 8 "October 31, 2013"
+.SH NAME
+recaplog \- compress and delete recap log files
+.SH SYNOPSIS
+.BI "recaplog"
+.SH DESCRIPTION
+recaplog is a user-configurable script that run periodically out of cron to compress recap log files older than one day, and delete log files older than a configurable amount of days.
+
+The configuration file is
+.IR /etc/recap "."
+The compressed log files are written to
+.IR /var/log/recap "."
+.TP
+.SH FILES
+.nf
+/etc/cron.d/recap
+/etc/recap
+.SH AUTHOR
+The recaplog script is writtern and maintained by Simone Soldateschi (simone.soldateschi@rackspace.co.uk). If you have any questions, comments, or concerns, please let him know (https://github.com/siso/recap).
+
+.SH "SEE ALSO"
+.BR recap (5),
+.BR crontab (5)
+
+
