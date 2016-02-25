@@ -3,11 +3,21 @@
 recap is a reporting script that generates reports of 
 various information about the server.
 
+## Dependencies
+* git - Installation
+* bc - arithmetic calculations
+* elinks (or another cli web browser) - apache fullstatus
+* net-tools - netstat report
+* sysstat - provides 'iostat' for  I/O statistics
+* iotop - simple top-like I/O monitor
+
 ## Installation
-1. Install git if you don't already have it. On Debian systems, `apt-get install git`
-1. Clone this repository: `git clone https://github.com/rackerlabs/recap.git`
-1. Change into the new directory: `cd recap`
-1. Run the installer: `./recap-installer`
+1. Install the required dependencies:
+  * Debian/Ubuntu - `apt-get install git bc elinks net-tools sysstat iotop`
+  * RHEL/CentOS - `yum install git bc elinks net-tools sysstat iotop`
+2. Clone this repository: `git clone https://github.com/rackerlabs/recap.git`
+3. Change into the new directory: `cd recap`
+4. Run the installer: `./recap-installer`
 
 The information captured will be found in log files in the `/var/log/recap/` directory.
 

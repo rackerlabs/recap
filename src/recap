@@ -255,17 +255,26 @@ print_netstat_sum() {
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-	for cnf in $DOTMYDOTCNF
-	do
-        echo "MySQL $cnf status" >> $MYSQL_FILE
-        if [ -d /etc/psa/.psa.shadow ]
+        # We only support a single DOTMYDOTCNF for MySQL when running Plesk
+        if [ -f /etc/psa/.psa.shadow ]
         then
-                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                echo "MySQL status" >> $MYSQL_FILE
+                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` status >> $MYSQL_FILE
+                print_blankline $MYSQL_FILE
         else
-	            mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                for cnf in $DOTMYDOTCNF
+                do
+                        if [ -f $cnf ]
+                        then
+                                echo "MySQL $cnf status" >> $MYSQL_FILE
+                                mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                                print_blankline $MYSQL_FILE
+                        else
+                                echo "MySQL $cnf for status does not exist. Please check DOTMYDOTCNF in /etc/recap" >> $MYSQL_FILE
+                                print_blankline $MYSQL_FILE
+                        fi
+                done
         fi
-    done
-	echo "MySQL status" >> $MYSQL_FILE
 }
 
 # print the non-truncated innodb status to the mysql file
@@ -308,33 +317,41 @@ print_mysql_innodb_status() {
 
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
-	for cnf in $DOTMYDOTCNF
-    	do
-			echo "MySQL $cnf processes" >> $MYSQL_FILE
-	        if [ -d /etc/psa/.psa.shadow ]
-	        then
-	                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
-	        else
-		        	mysqladmin --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
-	        fi
-        done
-	echo "MySQL processes" >> $MYSQL_FILE
-	if [ $MYSQL_PROCESS_LIST == "vertical" ]
-	then
-	    if [ -d /etc/psa/.psa.shadow ]
-		then
-	            mysql -uadmin -p`cat /etc/psa/.psa.shadow` -e "show full processlist\G" >> $MYSQL_FILE
-	    else
-				mysql -e "show full processlist\G" >> $MYSQL_FILE
-	    fi
-	else
-        if [ -d /etc/psa/.psa.shadow ]
-		then
-                mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
+        # We only support a single DOTMYDOTCNF for MySQL when running Plesk
+        if [ -f /etc/psa/.psa.shadow ]
+        then
+                echo "MySQL processes" >> $MYSQL_FILE
+                if [ $MYSQL_PROCESS_LIST == "table" ]
+                then
+                        mysqladmin -uadmint -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
+                fi
+                if [ $MYSQL_PROCESS_LIST == "vertical" ]
+                then
+                        mysql -uadmin -p`cat /etc/psa/.psa.shadow` -e "show full processlist\G" >> $MYSQL_FILE
+                fi
+                print_blankline $MYSQL_FILE
         else
-	        	mysqladmin -v processlist >> $MYSQL_FILE
+                for cnf in $DOTMYDOTCNF
+                do
+                        if [ -f $cnf ]
+                        then
+                                echo "MySQL $cnf processes" >> $MYSQL_FILE
+                                if [ $MYSQL_PROCESS_LIST == "table" ]
+                                then
+                                        mysqladmin --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
+                                fi
+                                if [ $MYSQL_PROCESS_LIST == "vertical" ]
+                                then
+                                	# This doesnt seem to work right
+                                	mysqladmin --defaults-extra-file=$cnf --vertical processlist
+                                fi
+                                print_blankline $MYSQL_FILE
+                        else
+                                echo "MySQL $cnf for processes does not exist. Please check DOTMYDOTCNF in /etc/recap" >> $MYSQL_FILE
+                                print_blankline $MYSQL_FILE
+                        fi
+                done
         fi
-	fi
 }
 
 # print the top 10 processes (by cpu usage) to the resources file
