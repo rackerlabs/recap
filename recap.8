@@ -1,0 +1,50 @@
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.TH RECAP 8 "October 31, 2013"
+.SH NAME
+recap \- dumps periodic information about running applications and resource usage
+.SH SYNOPSIS
+.BI "recap " [OPTION]
+.SH DESCRIPTION
+recap is a user-configurable script that can be run once, or run periodically out of cron to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
+
+The default values for which reports are generated and how many reports are stored can be
+.IR /etc/recap "."
+The output files from the script are written to
+.IR /var/log/recap "."
+.TP
+\fB\-B\fR, \fB\-\-backup\fR
+This will perform a "backup". It will copy the latest log files from the last execution to "/var/log/recap/backups". The files will be identified by a timestamp in the name.
+.TP
+\fB\-S\fR, \fB\-\-snapshot\fR
+This will perform a "snapshot" report. It will generate a set of output files outside of the standard rotation. The files will be identified by a timestamp in the name.
+.TP
+.SH FILES
+.nf
+/etc/cron.d/recap
+/etc/recap
+.SH AUTHOR
+The recap script is maintained by Brent Oswald (brent.oswald@rackspace.com) and Benjamin H. Graham (ben@administr8.me). If you have any questions, comments, or concerns, please let them know or post them to https://github.com/rackerlabs/recap/issues.
+
+.SH "SEE ALSO"
+.BR recap (5),
+.BR crontab (5)

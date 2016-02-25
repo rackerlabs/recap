@@ -1,0 +1,163 @@
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.TH RECAP 5 "October 31, 2013"
+.SH NAME
+recap \- dumps periodic information about running applications and resource usage
+.SH SYNOPSIS
+.BI "recap"
+.SH DESCRIPTION
+recap is a user-configurable script that can be run once, or run periodically out of cron to dump information about running processes and resource usage. It is useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
+
+The default values for which reports are generated and how many reports are stored can be
+.IR /etc/recap "."
+The output files from the script are written to
+.IR /var/log/recap "."
+.SH OPTIONS
+.LP
+.IP \fBMAILTO\fR
+.br
+Define this variable if you would like the reports to be sent via email
+
+.IP \fBMYSQL_PROCESS_LIST\fR
+.br
+"table" to display MySQL process list as a table, "vertical" to display process list vertically
+(default: table)
+
+.IP \fBROTATE\fR
+.br
+By default, the last seven result sets will be stored. If you define this value you can set it equal to any integer in order to keep a larger or smaller set of data.
+
+.IP \fBUSEFDISK\fR
+.br
+Can be set to yes or no to enable or not the fdisk.log. (default: no)
+
+.IP \fBUSEPS\fR
+.br
+Can be set to yes or no to enable or disable the ps.log. (default: yes)
+
+.IP \fBUSERESOURCES\fR
+.br
+Can be set to yes or no to enable or disable the resources.log. (default: yes)
+
+.IP \fBUSESAR\fR
+.br
+Can be set to yes or no depending on whether or not "sar" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+
+.IP \fBUSESARR\fR
+.br
+Can be set to yes or no depending on whether or not "sar -r" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+
+.IP \fBUSESARQ\fR
+.br
+Can be set to yes or no depending on whether or not "sar -q" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+
+.IP \fBUSEFULLSTATUS\fR
+.br
+Can be set to yes or no depending on whether or not the output of "service httpd fullstatus" should be recorded. Before enabling this option, please make sure that the http://localhost/server-status URL is accessible and that the ExtendedStatus directive is turned on in the Apache configuration. This requires that USERESOURCES be set to yes. (default: no)
+
+.IP \fBUSEPSTREE\fR
+.br
+Can be set to yes or no depending on whether or not the output of the "pstree" command should be recorded. Please note that this output is written to a separate file in
+.IR /var/log/recap/
+named
+.IR pstree.log
+(default: no)
+
+.IP \fBUSENETSTAT\fR
+.br
+Can be set to yes or no depending on whether or not the output of "netstat -ntulpae" command should be recorded. Please note that this output is written to a separate file in
+.IR /var/log/recap/
+named
+.IR netstat.log
+(default: no)
+
+.IP \fBUSENETSTATSUM\fR
+.br
+Can be set to yes or no depending on whether or not the output of "netstat -s" command should be recorded. This report requires that USENETSTAT be set to "yes". Please note that this output is written to a separate file in
+.IR /var/log/recap/
+named
+.IR netstat.log
+(default: no)
+
+.IP \fBUSEMYSQL\fR
+.br
+Can be set to yes or no depending on whether or not the output of "mysqladmin status" command should be recorded. Before enabling this option, please make sure that the ~root/.my.cnf has appropriate credentials for accessing MySQL. Please note that this output is written to a separate file in
+.IR /var/log/recap/
+named
+.IR mysql.log
+(default: no)
+
+.IP \fBUSEMYSQLPROCESSLIST\fR
+.br
+Can be set to yes or no depending on whether or not the output of "mysqladmin status" command should be recorded. This report requires that USEMYSQL be set to "yes". Please note that this output is written to a separate file in
+.IR /var/log/recap/
+named
+.IR mysql.log
+(default: no)
+
+.SH DEFAULT COMMAND LINE OPTIONS
+.LP
+.IP \fBOPTS_DF\fR
+.br
+df options
+
+.IP \fBOPTS_FDISK\fR
+.br
+fdisk options
+
+.IP \fBOPTS_FREE\fR
+.br
+free options
+
+.IP \fBOPTS_IOSTAT\fR
+.br
+iostat options
+
+.IP \fBOPTS_IOTOP\fR
+.br
+iotop options
+
+.IP \fBOPTS_NETSTAT\fR
+.br
+netstat options
+
+.IP \fBOPTS_NETSTAT_SUM\fR
+.br
+netstat statics options
+
+.IP \fBOPTS_PS\fR
+.br
+ps options
+
+.IP \fBOPTS_PSTREE\fR
+.br
+pstree options
+
+.IP \fBOPTS_VMSTAT\fR
+.br
+vmstat options
+
+.SH AUTHOR
+The recap script is maintained by Brent Oswald (brent.oswald@rackspace.com) and Benjamin H. Graham (ben@administr8.me). If you have any questions, comments, or concerns, please let them know or post them to https://github.com/rackerlabs/recap/issues.
+.SH "SEE ALSO"
+.BR recap (8),
+.BR crontab (5)
