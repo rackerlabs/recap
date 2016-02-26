@@ -85,13 +85,13 @@ install:
 
 manpage:
 		# Zip it up
-		${ZIPPIT} recap.5
-		${ZIPPIT} recap.8	
+		${ZIPPIT} src/recap.5
+		${ZIPPIT} src/recap.8	
 		# place man pages
 		${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
-		${COPY} recap.5.gz ${DESTDIR}/${MANDIR}/man5
+		${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
 		${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
-		${COPY} recap.8.gz ${DESTDIR}/${MANDIR}/man8
+		${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
 		
 		
 doc:
