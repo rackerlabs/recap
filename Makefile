@@ -68,28 +68,28 @@ all: install manpage doc
 
 install:
 		@echo "install debug stub"
-		# make a directory
+		${QUIET}echo "make a directory"
 		${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
-		# copy recap & freinds to sbin
+		${QUIET}echo "recap & freinds to sbin"
 		${QUIET}${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
 		${QUIET}${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
 		${QUIET}${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
 
-		# make some directories for persistant logs & reports
+		${QUIET}echo "make some directories for persistant logs & reports"
 		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
 		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
 
-		# make directory & copy config file
+		${QUIET}echo "make directory & copy config file"
 		${QUIET}${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
 		${QUIET}${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
 
 
 
 manpage:
-		# Zip it up
+		${QUIET}echo "Zip it up"
 		${QUIET}${ZIPPIT} src/recap.5
 		${QUIET}${ZIPPIT} src/recap.8	
-		# place man pages
+		${QUIET}echo "place man pages"
 		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
 		${QUIET}${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
 		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
@@ -97,7 +97,7 @@ manpage:
 		
 		
 doc:
-		# copy documentation to the proper place
+		${QUIET}echo "copy documentation to the proper place"
 		${QUIET}${MAKEDIR} ${DOCDIR}
 		${QUIET}${COPY} README.md ${DOCDIR}
 		${QUIET}${COPY} TODO ${DOCDIR}
@@ -112,16 +112,16 @@ clean:
 
 		
 uninstall:
-		#get rid of binaries
+		${QUIET}echo "getting rid of binaries"
 		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
 		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
 		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
-		#get rid of man pages
+		${QUIET}echo "get rid of man pages"
 		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
 		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
-		#get rid of docs
+		${QUIET}echo "get rid of docs"
 		${QUIET}${DELETE} -rf ${DOCDIR}
-		#we'll leave the conf directory
+		${QUIET}echo "we'll leave the conf directory"
 
 
 #
