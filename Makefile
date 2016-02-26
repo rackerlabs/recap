@@ -45,7 +45,7 @@ SYSCONFDIR=             /etc
 COPY=                   cp
 
 # The make directory (hierarchy) command
-MAKEDIR=                mkdirhier
+MAKEDIR=                mkdir -p
 
 # The file move command (move and delete original)
 MOVE=                   mv
