@@ -62,64 +62,64 @@ ZIPPIT=                 gzip
 ################################################################################
 
 all: install manpage doc
-        @echo "make all output stub"
+		@echo "make all output stub"
 
 install:
-        @echo "install debug stub"
-        # make a directory
-        ${MAKEDIR} ${DESTDIR}/${SBINDIR}
-        # copy recap & freinds to sbin
-        ${COPY} ${NAME} ${DESTDIR}/${SBINDIR}
-        ${COPY} recaplog ${DESTDIR}/${SBINDIR}
-        ${COPY} recaptool ${DESTDIR}/${SBINDIR}
+		@echo "install debug stub"
+		# make a directory
+		${MAKEDIR} ${DESTDIR}/${SBINDIR}
+		# copy recap & freinds to sbin
+		${COPY} ${NAME} ${DESTDIR}/${SBINDIR}
+		${COPY} recaplog ${DESTDIR}/${SBINDIR}
+		${COPY} recaptool ${DESTDIR}/${SBINDIR}
 
-        # make some directories for persistant logs & reports
-        ${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
-        ${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
+		# make some directories for persistant logs & reports
+		${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
+		${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
 
-        # make directory & copy config file
-        ${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
-        ${COPY} recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
+		# make directory & copy config file
+		${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
+		${COPY} recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
 
 
 
 manpage:
-	    # Zip it up
-	    ${ZIPPIT} recap.5
-	    ${ZIPPIT} recap.8	
-        # place man pages
-        ${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
-        ${COPY} recap.5.gz ${DESTDIR}/${MANDIR}/man5
-        ${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
-        ${COPY} recap.8.gz ${DESTDIR}/${MANDIR}/man8
-        
-        
+		# Zip it up
+		${ZIPPIT} recap.5
+		${ZIPPIT} recap.8	
+		# place man pages
+		${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
+		${COPY} recap.5.gz ${DESTDIR}/${MANDIR}/man5
+		${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
+		${COPY} recap.8.gz ${DESTDIR}/${MANDIR}/man8
+		
+		
 doc:
-        # copy documentation to the proper place
-        ${MAKEDIR} ${DOCDIR}
-        ${COPY} README.md ${DOCDIR}
-        ${COPY} TODO ${DOCDIR}
-        ${COPY} CHANGELOG ${DOCDIR}
-        ${COPY} COPYING ${DOCDIR}
+		# copy documentation to the proper place
+		${MAKEDIR} ${DOCDIR}
+		${COPY} README.md ${DOCDIR}
+		${COPY} TODO ${DOCDIR}
+		${COPY} CHANGELOG ${DOCDIR}
+		${COPY} COPYING ${DOCDIR}
 
 
 
 clean:
-        @echo "We're clean!"
+		@echo "We're clean!"
 
 
-        
+		
 uninstall:
-        #get rid of binaries
-        ${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
-        ${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
-        ${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
-        #get rid of man pages
-        ${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
-        ${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.8.gz
-        #get rid of docs
-        ${DELETE} -rf ${DOCDIR}
-        #we'll leave the conf directory
+		#get rid of binaries
+		${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
+		${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
+		${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
+		#get rid of man pages
+		${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
+		${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.8.gz
+		#get rid of docs
+		${DELETE} -rf ${DOCDIR}
+		#we'll leave the conf directory
 
 
 #
