@@ -56,6 +56,9 @@ DELETE=                 rm
 # this is here
 ROOT_UID=               0
 
+# The File gzip command
+ZIPPIT=                 gzip
+
 ################################################################################
 
 all: install manpage doc
@@ -81,6 +84,9 @@ install:
 
 
 manpage:
+	    # Zip it up
+	    ${ZIPPIT} recap.5
+	    ${ZIPPIT} recap.8	
         # place man pages
         ${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
         ${COPY} recap.5.gz ${DESTDIR}/${MANDIR}/man5
