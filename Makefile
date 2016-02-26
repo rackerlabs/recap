@@ -18,7 +18,7 @@ COMMENT=                Script that generates reports of various usage statistic
 LICENSE=                GPLv2
 
 # DESTDIR used for sandbox testing. Replace with /
-DESTDIR=                /home/syah/sandbox/recap
+DESTDIR=                /
 
 #Where logs live
 LOGDIR=                 /var/log
