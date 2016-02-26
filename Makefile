@@ -17,6 +17,8 @@ COMMENT=                Script that generates reports of various usage statistic
 
 LICENSE=                GPLv2
 
+QUIET=                  @
+
 # DESTDIR used for sandbox testing. Replace with /
 DESTDIR=                /
 
@@ -67,40 +69,40 @@ all: install manpage doc
 install:
 		@echo "install debug stub"
 		# make a directory
-		${MAKEDIR} ${DESTDIR}/${SBINDIR}
+		${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
 		# copy recap & freinds to sbin
-		${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
-		${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
-		${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
+		${QUIET}${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
+		${QUIET}${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
+		${QUIET}${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
 
 		# make some directories for persistant logs & reports
-		${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
-		${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
+		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
+		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
 
 		# make directory & copy config file
-		${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
-		${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
+		${QUIET}${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
+		${QUIET}${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
 
 
 
 manpage:
 		# Zip it up
-		${ZIPPIT} src/recap.5
-		${ZIPPIT} src/recap.8	
+		${QUIET}${ZIPPIT} src/recap.5
+		${QUIET}${ZIPPIT} src/recap.8	
 		# place man pages
-		${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
-		${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
-		${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
-		${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
+		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
+		${QUIET}${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
+		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
+		${QUIET}${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
 		
 		
 doc:
 		# copy documentation to the proper place
-		${MAKEDIR} ${DOCDIR}
-		${COPY} README.md ${DOCDIR}
-		${COPY} TODO ${DOCDIR}
-		${COPY} CHANGELOG ${DOCDIR}
-		${COPY} COPYING ${DOCDIR}
+		${QUIET}${MAKEDIR} ${DOCDIR}
+		${QUIET}${COPY} README.md ${DOCDIR}
+		${QUIET}${COPY} TODO ${DOCDIR}
+		${QUIET}${COPY} CHANGELOG ${DOCDIR}
+		${QUIET}${COPY} COPYING ${DOCDIR}
 
 
 
@@ -111,14 +113,14 @@ clean:
 		
 uninstall:
 		#get rid of binaries
-		${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
-		${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
-		${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
+		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
+		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
+		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
 		#get rid of man pages
-		${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
-		${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
+		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
+		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
 		#get rid of docs
-		${DELETE} -rf ${DOCDIR}
+		${QUIET}${DELETE} -rf ${DOCDIR}
 		#we'll leave the conf directory
 
 
