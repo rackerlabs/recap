@@ -61,6 +61,9 @@ ROOT_UID=               0
 # The File gzip command
 ZIPPIT=                 gzip
 
+# The command to unzip
+UNZIPPIT=				gunzip
+
 ################################################################################
 
 all: install manpage doc
@@ -107,6 +110,9 @@ doc:
 
 
 clean:
+		@echo "Unzipping man pages"
+		${UNZIPPIT} src/recap.5.gz
+		${UNZIPPIT} src/recap.8.gz
 		@echo "We're clean!"
 
 
