@@ -69,9 +69,9 @@ install:
 		# make a directory
 		${MAKEDIR} ${DESTDIR}/${SBINDIR}
 		# copy recap & freinds to sbin
-		${COPY} ${NAME} ${DESTDIR}/${SBINDIR}
-		${COPY} recaplog ${DESTDIR}/${SBINDIR}
-		${COPY} recaptool ${DESTDIR}/${SBINDIR}
+		${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
+		${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
+		${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
 
 		# make some directories for persistant logs & reports
 		${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
@@ -79,7 +79,7 @@ install:
 
 		# make directory & copy config file
 		${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
-		${COPY} recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
+		${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
 
 
 
