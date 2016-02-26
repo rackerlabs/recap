@@ -116,7 +116,7 @@ uninstall:
 		${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
 		#get rid of man pages
 		${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
-		${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.8.gz
+		${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
 		#get rid of docs
 		${DELETE} -rf ${DOCDIR}
 		#we'll leave the conf directory
