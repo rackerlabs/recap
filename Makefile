@@ -67,9 +67,12 @@ UNZIPPIT=				gunzip
 ################################################################################
 
 all: install manpage doc
-		@echo "make all output stub"
+		@echo "Nothing to compile, run make install"
 
-install:
+install: binary manpage doc
+	@echo "Installing everything"
+
+binary:
 		@echo "install debug stub"
 		${QUIET}echo "make a directory"
 		${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
