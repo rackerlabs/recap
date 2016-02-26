@@ -59,9 +59,6 @@ ROOT_UID=               0
 # The File gzip command
 ZIPPIT=                 gzip
 
-# Delete file command
-RMIT=                 rm 
-
 ################################################################################
 
 all: install manpage doc
@@ -114,14 +111,14 @@ clean:
         
 uninstall:
         #get rid of binaries
-        ${RMIT} ${DESTDIR}/${SBINDIR}/${NAME}
-        ${RMIT} ${DESTDIR}/${SBINDIR}/recaplog
-        ${RMIT} ${DESTDIR}/${SBINDIR}/recaptool
+        ${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
+        ${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
+        ${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
         #get rid of man pages
-        ${RMIT} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
-        ${RMIT} ${DESTDIR}/${MANDIR}/man5/recap.8.gz
+        ${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
+        ${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.8.gz
         #get rid of docs
-        ${RMIT} -rf ${DOCDIR}
+        ${DELETE} -rf ${DOCDIR}
         #we'll leave the conf directory
 
 
