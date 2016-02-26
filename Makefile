@@ -66,7 +66,7 @@ UNZIPPIT=				gunzip
 
 ################################################################################
 
-all: install manpage doc
+all:
 		@echo "Nothing to compile, run make install"
 
 install: binary manpage doc
