@@ -95,14 +95,18 @@ pack_old_logs() {
 		#
 		if [ $LOG_COMPRESS -eq 1 ]; then
 			print_msg DEBUG "do compress old log files"
-			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | gzip > ${OUTPUTFILE}.gz
+			mkdir ${BASEDIR}/${item}_${YESTERDAYDATE}
+			mv ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log ${BASEDIR}/${item}_${YESTERDAYDATE}
+			tar cvfz ${OUTPUTFILE}.tgz ${BASEDIR}/${item}_${YESTERDAYDATE}
+			rm -fr ${BASEDIR}/${item}_${YESTERDAYDATE}
 			ERRCODE=$?
-			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE.gz
+			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE.tgz
 		else
 			print_msg DEBUG "do not compress old log files"
-			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log > $OUTPUTFILE
+			mkdir ${BASEDIR}/${item}_${YESTERDAYDATE}
+			mv ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log ${BASEDIR}/${item}_${YESTERDAYDATE}
 			ERRCODE=$?
-			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE
+			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE ${BASEDIR}/${item}_${YESTERDAYDATE}
 		fi
 		if [ $ERRCODE -eq 0 ]; then
 			for f in $(ls ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | grep -v daily); do
