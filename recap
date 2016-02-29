@@ -357,7 +357,7 @@ print_mysql_procs() {
 # print the top 10 processes (by cpu usage) to the resources file
 print_top_10_cpu() {
 	echo "Top 10 cpu using processes" >> $RESOURCES_FILE
-	ps auxww --sort=-pcpu|head -11 >> $RESOURCES_FILE
+	pidstat 2 2 | egrep "^Average:" | head -11 >> $RESOURCES_FILE
 }
 
 # print the top 10 processes (by memory usage) to the resources file
