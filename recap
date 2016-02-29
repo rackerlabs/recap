@@ -357,7 +357,8 @@ print_mysql_procs() {
 # print the top 10 processes (by cpu usage) to the resources file
 print_top_10_cpu() {
 	echo "Top 10 cpu using processes" >> $RESOURCES_FILE
-	pidstat | sed -n '3p'; pidstat -l 2 2 | grep -v '%system' | egrep ^Average: | sort -nr -k 6 | head -11 >> $RESOURCES_FILE
+	pidstat | sed -n '3p' >> $RESOURCES_FILE     # capture header
+        pidstat -l 2 2 | grep -v '%system' | egrep ^Average: | sort -nr -k 6 | head -11 >> $RESOURCES_FILE
 }
 
 # print the top 10 processes (by memory usage) to the resources file
