@@ -58,9 +58,6 @@ DELETE=                 rm
 # this is here
 ROOT_UID=               0
 
-# The File gzip command
-ZIPPIT=                 gzip
-
 # The command to unzip
 UNZIPPIT=				gunzip
 
@@ -92,14 +89,11 @@ binary:
 
 
 manpage:
-	${QUIET}echo "Zip it up"
-	${QUIET}${ZIPPIT} src/recap.5
-	${QUIET}${ZIPPIT} src/recap.8	
 	${QUIET}echo "place man pages"
 	${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
-	${QUIET}${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
+	${QUIET}${COPY} src/recap.5 ${DESTDIR}/${MANDIR}/man5
 	${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
-	${QUIET}${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
+	${QUIET}${COPY} src/recap.8 ${DESTDIR}/${MANDIR}/man8
 		
 		
 doc:
@@ -109,14 +103,6 @@ doc:
 	${QUIET}${COPY} TODO ${DOCDIR}
 	${QUIET}${COPY} CHANGELOG ${DOCDIR}
 	${QUIET}${COPY} COPYING ${DOCDIR}
-
-
-
-clean:
-	@echo "Unzipping man pages"
-	${UNZIPPIT} src/recap.5.gz
-	${UNZIPPIT} src/recap.8.gz
-	@echo "We're clean!"
 
 
 		
