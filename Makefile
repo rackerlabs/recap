@@ -64,13 +64,13 @@ UNZIPPIT=				gunzip
 ################################################################################
 
 all:
-	@echo "Nothing to compile, run make install"
+	${QUIET}echo "Nothing to compile, run make install"
 
 install: binary manpage doc
-	@echo "Installing everything"
+	${QUIET}echo "Installing everything"
 
 binary:
-	@echo "install debug stub"
+	${QUIET}echo "install debug stub"
 	${QUIET}echo "make a directory"
 	${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
 	${QUIET}echo "recap & freinds to sbin"
