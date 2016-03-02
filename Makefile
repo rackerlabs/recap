@@ -67,70 +67,70 @@ UNZIPPIT=				gunzip
 ################################################################################
 
 all:
-		@echo "Nothing to compile, run make install"
+	@echo "Nothing to compile, run make install"
 
 install: binary manpage doc
 	@echo "Installing everything"
 
 binary:
-		@echo "install debug stub"
-		${QUIET}echo "make a directory"
-		${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
-		${QUIET}echo "recap & freinds to sbin"
-		${QUIET}${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
-		${QUIET}${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
-		${QUIET}${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
+	@echo "install debug stub"
+	${QUIET}echo "make a directory"
+	${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
+	${QUIET}echo "recap & freinds to sbin"
+	${QUIET}${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
+	${QUIET}${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
+	${QUIET}${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
 
-		${QUIET}echo "make some directories for persistant logs & reports"
-		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
-		${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
+	${QUIET}echo "make some directories for persistant logs & reports"
+	${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/backups
+	${QUIET}${MAKEDIR} ${DESTDIR}/${LOGDIR}/${NAME}/snapshots
 
-		${QUIET}echo "make directory & copy config file"
-		${QUIET}${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
-		${QUIET}${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
+	${QUIET}echo "make directory & copy config file"
+	${QUIET}${MAKEDIR} ${DESTDIR}/${SYSCONFDIR}/${NAME}
+	${QUIET}${COPY} src/recap.conf ${DESTDIR}/${SYSCONFDIR}/${NAME}
 
 
 
 manpage:
-		${QUIET}echo "Zip it up"
-		${QUIET}${ZIPPIT} src/recap.5
-		${QUIET}${ZIPPIT} src/recap.8	
-		${QUIET}echo "place man pages"
-		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
-		${QUIET}${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
-		${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
-		${QUIET}${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
+	${QUIET}echo "Zip it up"
+	${QUIET}${ZIPPIT} src/recap.5
+	${QUIET}${ZIPPIT} src/recap.8	
+	${QUIET}echo "place man pages"
+	${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man5
+	${QUIET}${COPY} src/recap.5.gz ${DESTDIR}/${MANDIR}/man5
+	${QUIET}${MAKEDIR} ${DESTDIR}/${MANDIR}/man8
+	${QUIET}${COPY} src/recap.8.gz ${DESTDIR}/${MANDIR}/man8
 		
 		
 doc:
-		${QUIET}echo "copy documentation to the proper place"
-		${QUIET}${MAKEDIR} ${DOCDIR}
-		${QUIET}${COPY} README.md ${DOCDIR}
-		${QUIET}${COPY} TODO ${DOCDIR}
-		${QUIET}${COPY} CHANGELOG ${DOCDIR}
-		${QUIET}${COPY} COPYING ${DOCDIR}
+	${QUIET}echo "copy documentation to the proper place"
+	${QUIET}${MAKEDIR} ${DOCDIR}
+	${QUIET}${COPY} README.md ${DOCDIR}
+	${QUIET}${COPY} TODO ${DOCDIR}
+	${QUIET}${COPY} CHANGELOG ${DOCDIR}
+	${QUIET}${COPY} COPYING ${DOCDIR}
 
 
 
 clean:
-		@echo "Unzipping man pages"
-		${UNZIPPIT} src/recap.5.gz
-		${UNZIPPIT} src/recap.8.gz
-		@echo "We're clean!"
+	@echo "Unzipping man pages"
+	${UNZIPPIT} src/recap.5.gz
+	${UNZIPPIT} src/recap.8.gz
+	@echo "We're clean!"
 
 
 		
 uninstall:
-		${QUIET}echo "getting rid of binaries"
-		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
-		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
-		${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
-		${QUIET}echo "get rid of man pages"
-		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
-		${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
-		${QUIET}echo "get rid of docs"
-		${QUIET}${DELETE} -rf ${DOCDIR}
-		${QUIET}echo "we'll leave the conf directory"
+	${QUIET}echo "getting rid of binaries"
+	${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/${NAME}
+	${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaplog
+	${QUIET}${DELETE} ${DESTDIR}/${SBINDIR}/recaptool
+	${QUIET}echo "get rid of man pages"
+	${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man5/recap.5.gz
+	${QUIET}${DELETE} ${DESTDIR}/${MANDIR}/man8/recap.8.gz
+	${QUIET}echo "get rid of docs"
+	${QUIET}${DELETE} -rf ${DOCDIR}
+	${QUIET}echo "we'll leave the conf directory"
 
 
 #
