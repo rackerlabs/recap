@@ -24,7 +24,7 @@ optional reporting on Apache, MySQL, and network connections.
 %install
 %{?el5:%{__rm} -rf %{buildroot}}
 %{__install} -Dm0755 recap %{buildroot}%{_sbindir}/recap
-%{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaplog
+%{__install} -Dm0755 recaplog %{buildroot}%{_sbindir}/recaplog
 %{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
 %{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
 %{__install} -Dm0644 recap.cron %{buildroot}%{_sysconfdir}/cron.d/recap
