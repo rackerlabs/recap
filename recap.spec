@@ -8,7 +8,7 @@ Url: https://github.com/rackerlabs/%{name}
 Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
 %{?el5:BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)}
-Requires: sysstat, coreutils, procps, grep, gawk, bc, net-tools
+Requires: sysstat, coreutils, procps, grep, gawk, bc, net-tools, mailx, findutils
 
 
 %description
@@ -24,6 +24,7 @@ optional reporting on Apache, MySQL, and network connections.
 %install
 %{?el5:%{__rm} -rf %{buildroot}}
 %{__install} -Dm0755 recap %{buildroot}%{_sbindir}/recap
+%{__install} -Dm0755 recaplog %{buildroot}%{_sbindir}/recaplog
 %{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
 %{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
 %{__install} -Dm0644 recap.cron %{buildroot}%{_sysconfdir}/cron.d/recap
@@ -41,6 +42,7 @@ optional reporting on Apache, MySQL, and network connections.
 %doc README.md TODO CHANGELOG COPYING
 %dir %{_localstatedir}/log/recap
 %{_sbindir}/recap
+%{_sbindir}/recaplog
 %{_sbindir}/recaptool
 %config(noreplace) %{_sysconfdir}/cron.d/recap
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/recap
