@@ -56,8 +56,16 @@ install -m 0644 TODO $DATADIR/doc/recap-$VERSION/
 install -m 0644 CHANGELOG $DATADIR/doc/recap-$VERSION/
 install -m 0644 COPYING $DATADIR/doc/recap-$VERSION/
 
-gzip recap.5
-gzip recap.8
+if [ -e recap.5 ]; then
+        gzip recap.5
+else
+        :
+fi
+if [ -e recap.8 ]; then
+        gzip recap.8
+else
+        :
+fi
 install -m 0644 recap.5.gz $MANPATH/man5
 install -m 0644 recap.8.gz $MANPATH/man8
 
