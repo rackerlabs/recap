@@ -6,14 +6,6 @@ VERSION=                0.9.8
 
 MAINTAINER=             recap@lists.rackspace.com
 COMMENT=                Script that generates reports of various usage statistics about a server
-# Created by: Ryan Stark
-# rackerlabs/recap/Makefile
-
-NAME=                   recap
-VERSION=                0.9.8
-
-MAINTAINER=             recap@lists.rackspace.com
-COMMENT=                Script that generates reports of various usage statistics about a server
 
 LICENSE=                GPLv2
 
