@@ -8,7 +8,7 @@ procs_mem() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do 
+	for i in `ls "${RECAPPATH}/ps_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
@@ -21,7 +21,7 @@ procs() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do 
+	for i in `ls "${RECAPPATH}/ps_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c >> $TMP
 	done
@@ -33,7 +33,7 @@ mem() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/ps.log*`; do
+	for i in `ls "${RECAPPATH}/ps_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
 	done
@@ -46,9 +46,9 @@ net() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/netstat.log*`; do
+	for i in `ls "${RECAPPATH}/netstat_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep ":$PORT " $i -c >> $TMP 
+		egrep ":$PORT " $i -c >> $TMP
 	done
 	sort $TMP
 	rm -f $TMP
@@ -58,9 +58,9 @@ netestab() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/netstat.log*`; do
+	for i in `ls "${RECAPPATH}/netstat_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep ":$PORT .*ESTAB" $i -c >> $TMP 
+		egrep ":$PORT .*ESTAB" $i -c >> $TMP
 	done
 	sort $TMP
 	rm -f $TMP
@@ -69,9 +69,9 @@ netestab() {
 querycount() {
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls $RECAPPATH/mysql.log*`; do
+	for i in `ls "${RECAPPATH}/mysql_.*\.log"`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
-		grep "Query" -c $i >> $TMP 
+		grep "Query" -c $i >> $TMP
 	done
 	sort $TMP
 	rm -f $TMP
@@ -92,7 +92,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		-d)
 			if [ -d $2 ]; then
-				RECAPPATH=$2
+				{RECAPPATH}=$2
 				shift 2
 			else
 				echo "Error: $2 is not a valid directory."
@@ -134,7 +134,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-echo "Information: Using $RECAPPATH as recap log path"
+echo "Information: Using ${RECAPPATH} as recap log path"
 echo "Information: Executing $cmds"
 
 $cmds
