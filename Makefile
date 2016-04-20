@@ -2,7 +2,7 @@
 # rackerlabs/recap/Makefile
 
 NAME=                   recap
-VERSION=                0.9.8
+VERSION=                0.9.11
 
 MAINTAINER=             recap@lists.rackspace.com
 COMMENT=                Script that generates reports of various usage statistics about a server
