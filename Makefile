@@ -65,7 +65,7 @@ binary:
 	${QUIET}echo "install debug stub"
 	${QUIET}echo "make a directory"
 	${QUIET}${MAKEDIR} ${DESTDIR}/${SBINDIR}
-	${QUIET}echo "recap & freinds to sbin"
+	${QUIET}echo "recap & friends to sbin"
 	${QUIET}${COPY} src/${NAME} ${DESTDIR}/${SBINDIR}
 	${QUIET}${COPY} src/recaplog ${DESTDIR}/${SBINDIR}
 	${QUIET}${COPY} src/recaptool ${DESTDIR}/${SBINDIR}
