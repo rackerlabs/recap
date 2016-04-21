@@ -27,7 +27,7 @@ optional reporting on Apache, MySQL, and network connections.
 %{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
 %{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
 %{__install} -Dm0644 recap.cron %{buildroot}%{_sysconfdir}/cron.d/recap
-%{__install} -Dm0644 recap.conf.d %{buildroot}%{_sysconfdir}/httpd/conf.d/recap
+%{__install} -Dm0644 recap.httpd.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/recap.conf
 %{__install} -Dm0644 recap.5.gz %{buildroot}%{_mandir}/man5/recap.5.gz
 %{__install} -Dm0644 recap.8.gz %{buildroot}%{_mandir}/man8/recap.8.gz
 %{__install} -dm0700 %{buildroot}%{_localstatedir}/log/recap
