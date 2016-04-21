@@ -17,7 +17,7 @@ various information about the server.
   * RHEL/CentOS - `yum install git bc elinks net-tools sysstat iotop`
 2. Clone this repository: `git clone https://github.com/rackerlabs/recap.git`
 3. Change into the new directory: `cd recap`
-4. Run the installer: `./recap-installer`
+4. Install the program: `make install`
 
 The information captured will be found in log files in the `/var/log/recap/` directory.
 
