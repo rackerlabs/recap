@@ -7,7 +7,7 @@ License: GPLv2
 Url: https://github.com/rackerlabs/%{name}
 Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
-%{?el5:BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)}
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: sysstat, coreutils, procps, grep, gawk, bc, net-tools
 
 
@@ -22,7 +22,7 @@ optional reporting on Apache, MySQL, and network connections.
 
 
 %install
-%{?el5:%{__rm} -rf %{buildroot}}
+%{__rm} -rf %{buildroot}
 %{__install} -Dm0755 recap %{buildroot}%{_sbindir}/recap
 %{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
 %{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
@@ -33,8 +33,8 @@ optional reporting on Apache, MySQL, and network connections.
 %{__install} -dm0700 %{buildroot}%{_localstatedir}/log/recap
 
 
-%{?el5:%clean}
-%{?el5:%{__rm} -rf %{buildroot}}
+%clean
+%{__rm} -rf %{buildroot}
 
 
 %files
@@ -77,6 +77,9 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 * Mon Dec 21 2015 Carl George <carl.george@rackspace.com> - 0.9.10-1
 - Latest version
 - Update dependencies
+
+* Fri Jun 12 2015 Carl George <carl.george@rackspace.com> - 0.9.8-2
+- Fix EL5 COPR build
 
 * Wed Jan 07 2015 Carl George <carl.george@rackspace.com> - 0.9.8-1
 - Latest version
