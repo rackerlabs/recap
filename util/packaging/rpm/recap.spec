@@ -1,6 +1,6 @@
 Name: recap
-Version: 0.9.10
-Release: 1%{?dist}
+Version: 0.9.11
+Release: 3.rs%{?dist}
 Summary: System status reporting
 Group: Applications/System
 License: GPLv2
@@ -24,10 +24,10 @@ optional reporting on Apache, MySQL, and network connections.
 %install
 %{__rm} -rf %{buildroot}
 %{__install} -Dm0755 recap %{buildroot}%{_sbindir}/recap
+%{__install} -Dm0755 recaplog %{buildroot}%{_sbindir}/recaplog
 %{__install} -Dm0755 recaptool %{buildroot}%{_sbindir}/recaptool
 %{__install} -Dm0644 recap.conf %{buildroot}%{_sysconfdir}/recap
 %{__install} -Dm0644 recap.cron %{buildroot}%{_sysconfdir}/cron.d/recap
-%{__install} -Dm0644 recap.httpd.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/recap.conf
 %{__install} -Dm0644 recap.5.gz %{buildroot}%{_mandir}/man5/recap.5.gz
 %{__install} -Dm0644 recap.8.gz %{buildroot}%{_mandir}/man8/recap.8.gz
 %{__install} -dm0700 %{buildroot}%{_localstatedir}/log/recap
@@ -38,12 +38,14 @@ optional reporting on Apache, MySQL, and network connections.
 
 
 %files
-%doc README.md TODO CHANGELOG COPYING
+%{!?_licensedir:%global license %%doc}
+%license COPYING
+%doc README.md TODO CHANGELOG
 %dir %{_localstatedir}/log/recap
 %{_sbindir}/recap
+%{_sbindir}/recaplog
 %{_sbindir}/recaptool
 %config(noreplace) %{_sysconfdir}/cron.d/recap
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/recap
 %config(noreplace) %{_sysconfdir}/recap
 %{_mandir}/man5/recap.5.gz
 %{_mandir}/man8/recap.8.gz
@@ -74,6 +76,17 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
+* Tue Apr 12 2016 Carl George <carl.george@rackspace.com> - 0.9.11-3.rs
+- Add missing recaplog file
+- Use appropriate license directory when possible
+- Remove httpd example configuration
+
+* Mon Apr 11 2016 Carl George <carl.george@rackspace.com> - 0.9.11-2.rs
+- Add rs to release
+
+* Wed Jan 06 2016 Carl George <carl.george@rackspace.com> - 0.9.11-1
+- Latest version
+
 * Mon Dec 21 2015 Carl George <carl.george@rackspace.com> - 0.9.10-1
 - Latest version
 - Update dependencies
