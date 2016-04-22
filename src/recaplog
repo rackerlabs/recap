@@ -21,7 +21,7 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 #
-# Version: 0.0.1
+# Version: 0.9.12
 
 ###############################
 ########## CONSTANTS ##########

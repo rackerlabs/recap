@@ -20,7 +20,7 @@
 # Force the shell to exit immediately if something goes wrong
 set -e
 
-VERSION="0.9.8"
+VERSION="0.9.12"
 LOGDIR="/var/log"
 MANPATH="/usr/share/man"
 SBINDIR="/usr/sbin"

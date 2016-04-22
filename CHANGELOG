@@ -57,3 +57,7 @@
 	-Fixed #27 (Document MAXLOAD)
 0.9.11
 	-updates to handling multiple DOTMYDOTCNF logic
+0.9.12
+	-Fix #41 (add sysstat and iotop to dependencies)
+	-Fix #49 (reorg and Makefile)
+	-Fix #51 (typo on recaptool suffix path on log files)

@@ -1,6 +1,6 @@
 Name: recap
-Version: 0.9.11
-Release: 3.rs%{?dist}
+Version: 0.9.12
+Release: 1.rs%{?dist}
 Summary: System status reporting
 Group: Applications/System
 License: GPLv2
@@ -71,6 +71,10 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
+* Fri Apr 22 2016 Carl George <carl.george@rackspace.com> - 0.9.12-1.rs
+- Latest version
+- Use Makefile to install
+
 * Tue Apr 12 2016 Carl George <carl.george@rackspace.com> - 0.9.11-3.rs
 - Add missing recaplog file
 - Use appropriate license directory when possible
