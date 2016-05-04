@@ -61,3 +61,6 @@
 	-Fix #41 (add sysstat and iotop to dependencies)
 	-Fix #49 (reorg and Makefile)
 	-Fix #51 (typo on recaptool suffix path on log files)
+0.9.13
+	-Fix #52 recaptool globbing
+	-Fix #54 install recaplog man page

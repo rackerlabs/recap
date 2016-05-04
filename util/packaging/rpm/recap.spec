@@ -1,5 +1,5 @@
 Name: recap
-Version: 0.9.12
+Version: 0.9.13
 Release: 1.rs%{?dist}
 Summary: System status reporting
 Group: Applications/System
@@ -72,6 +72,10 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
+* Wed May 04 2016 Carl George <carl.george@rackspace.com> - 0.9.13-1.rs
+- Latest version
+- Install recaplog man page
+
 * Fri Apr 22 2016 Carl George <carl.george@rackspace.com> - 0.9.12-1.rs
 - Latest version
 - Use Makefile to install

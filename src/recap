@@ -24,8 +24,6 @@
 # Define the default environment for recap
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
-#
-# Version: 0.9.12
 
 #####################################
 ######### BASIC ENVIRONMENT #########
