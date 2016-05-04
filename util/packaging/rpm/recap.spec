@@ -44,6 +44,7 @@ DESTDIR=%{buildroot} make install
 %config(noreplace) %{_sysconfdir}/recap
 %{_mandir}/man5/recap.5.gz
 %{_mandir}/man8/recap.8.gz
+%{_mandir}/man8/recaplog.8.gz
 
 
 %post
