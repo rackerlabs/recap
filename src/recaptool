@@ -4,7 +4,7 @@ ME=`basename $0`
 RECAPPATH="/var/log/recap"
 cmds=""
 
-procs_mem() {
+memproc() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
@@ -17,7 +17,7 @@ procs_mem() {
 	rm -f $TMP
 }
 
-procs() {
+proc() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
@@ -40,7 +40,6 @@ mem() {
 	sort $TMP
 	rm -f $TMP
 }
-
 
 net() {
 	PORT="$1"
@@ -102,28 +101,10 @@ while [ $# -gt 0 ]; do
 			;;
 		memproc|proc|mem|net|netestab)
 			cmds="${cmds}$1 $2 "
-			#procs_mem $2
 			shift 2
 			;;
-		#proc)
-			#procs $2
-			#shift 2
-			#;;
-		#mem)
-			#mem $2
-			#shift 2
-			#;;
-		#net)
-			#net $2
-			#shift 2
-			#;;
-		#netestab)
-			#netestab $2
-			#shift 2
-			#;;
 		querycount)
 			cmds="${cmds}$1 "
-			#querycount
 			shift
 			;;
 		*)
