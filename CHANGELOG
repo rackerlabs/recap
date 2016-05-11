@@ -64,3 +64,5 @@
 0.9.13
 	-Fix #52 recaptool globbing
 	-Fix #54 install recaplog man page
+0.9.14
+	-Fix #55 Code clean up, typos fixed and functions renamed
