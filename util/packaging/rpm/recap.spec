@@ -66,6 +66,13 @@ if [ -d /var/log/rs-sysmon ]; then
         echo
         echo "Your output files have been consolidated to /var/log/recap, and the old output directories have been removed. If you see any errors above, there may have been some unexpected files that prevented the old directories from being emptied."
 fi
+if [ -w /etc/cron.d/rs-sysmon ]; then
+        echo
+        echo "Found old cronjob /etc/cron.d/rs-sysmon"
+        echo "Disabling all cronjobs available"
+        sed -i "s/^\([^#].*\)/#\1/" /etc/cron.d/rs-sysmon
+        echo
+        echo "All cronjobs are now disabled in /etc/cron.d/rs-sysmon"
 echo
 echo "The cron execution of recap is set to run every 10 minutes and at reboot by default."
 echo "Edit /etc/cron.d/recap to change cron execution."
