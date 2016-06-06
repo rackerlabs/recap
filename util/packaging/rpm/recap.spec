@@ -9,7 +9,7 @@ Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: sysstat, coreutils, procps, grep, gawk, bc, elinks, net-tools, iotop
-Conflicts: rs-sysmon
+Obsoletes: rs-sysmon
 
 
 %description
