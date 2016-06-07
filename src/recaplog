@@ -79,8 +79,8 @@ delete_old_logs() {
 		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
 		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
 		# delete *.log.gz files
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[a-z]*_[0-9]*.log.gz" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
+		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[a-z]*_[0-9]*.log.gz" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
 	fi
 }
 
