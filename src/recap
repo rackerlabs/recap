@@ -321,7 +321,7 @@ print_mysql_procs() {
                 echo "MySQL processes" >> $MYSQL_FILE
                 if [ $MYSQL_PROCESS_LIST == "table" ]
                 then
-                        mysqladmin -uadmint -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
+                        mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
                 fi
                 if [ $MYSQL_PROCESS_LIST == "vertical" ]
                 then
