@@ -321,7 +321,7 @@ print_mysql_procs() {
                 echo "MySQL processes" >> $MYSQL_FILE
                 if [ $MYSQL_PROCESS_LIST == "table" ]
                 then
-                        mysqladmin -uadmint -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
+                        mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` -v processlist >> $MYSQL_FILE
                 fi
                 if [ $MYSQL_PROCESS_LIST == "vertical" ]
                 then
@@ -354,8 +354,17 @@ print_mysql_procs() {
 
 # print the top 10 processes (by cpu usage) to the resources file
 print_top_10_cpu() {
+    #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
+    local version_strings="$(pidstat -V 2>&1 | awk '{if(NR==1){print$NF}}') 10.1.4"
+    local sorted_versions="$(echo $version_strings|tr ' ' '\n'|sort --version-sort|tr '\n' ' ')"
+    if [[ "$version_strings" == "$sorted_versions" ]]; then
+        local pidstat_cpufield=6
+    else
+        local pidstat_cpufield=7
+    fi
 	echo "Top 10 cpu using processes" >> $RESOURCES_FILE
-	ps auxww --sort=-pcpu|head -11 >> $RESOURCES_FILE
+	pidstat | sed -n '3p' >> $RESOURCES_FILE     # capture header
+        pidstat -l 2 2 | grep -v '%system' | egrep ^Average: | sort -nr -k $pidstat_cpufield | head -11 >> $RESOURCES_FILE
 }
 
 # print the top 10 processes (by memory usage) to the resources file
