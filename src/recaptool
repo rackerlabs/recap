@@ -91,7 +91,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 		-d)
 			if [ -d $2 ]; then
-				{RECAPPATH}=$2
+				RECAPPATH=$2
 				shift 2
 			else
 				echo "Error: $2 is not a valid directory."
