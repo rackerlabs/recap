@@ -9,26 +9,27 @@
 #Only uncomment or create one active line per installation
 
 #At 2am every day
-#0 2 * * * root /usr/sbin/recap
+#0 2 * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #At 2am and 2pm every day
-#0 2,14 * * * root /usr/sbin/recap
+#0 2,14 * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #At 2am, 8am, 2pm, 8pm every day
-#0 2,8,14,20 * * * root /usr/sbin/recap
+#0 2,8,14,20 * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #Every hour
-#0 * * * * root /usr/sbin/recap
+#0 * * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #Every 30 minutes
-#*/30 * * * * root /usr/sbin/recap
+#*/30 * * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #Every 10 minutes
-*/10 * * * * root /usr/sbin/recap
+*/10 * * * * root /usr/sbin/recap >/dev/null 2>&1
 
 #Every 5 minutes
-#*/5 * * * * root /usr/sbin/recap
+#*/5 * * * * root /usr/sbin/recap >/dev/null 2>&1
 
 # Pack and clear log files
-0 1 * * * root /usr/sbin/recaplog
+0 1 * * * root /usr/sbin/recaplog >/dev/null 2>&1
+
 
