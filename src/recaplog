@@ -3,7 +3,7 @@
 #   Package name:   recap
 #   Author:         Simone Soldateschi
 #
-#   Maintainer:     
+#   Maintainer:
 #
 #   License:        GPL 2.0
 #
@@ -20,145 +20,252 @@
 # Define the default environment for recap
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
+#
+#~ Options:
+#~   -h             Print this help.
+#~   -n             Dry run.
+#~   -v             Verbose.
+#~
+#~ recaplog will not produce output if no tty is found, this is useful when
+#~ running from cron.
 
-###############################
-########## CONSTANTS ##########
-###############################
-DEBUG=4 INFORMATION=3 WARNING=2 ERROR=1 CRITICAL=0
 
-#####################################
-########### CONFIGURATION ###########
-#####################################
-# define our basic environment
+## DEFAULT CONFIG ##
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 BASEDIR="/var/log/recap"
-lockdir=/var/lock/recaplog.lock
+LOCKFILE=/var/lock/recaplog.lock
 LOG_COMPRESS=1
 LOG_EXPIRY=0
-COMPRESS_ITEMS="fdisk mysql netstat ps pstree resources"
-ERRORLEVEL=DEBUG
+BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 LOGFILE=${BASEDIR}/recaplog.log
 EMAIL_ON_ERROR=1
+EMAIL_ON_ERROR_SUBJECT="recaplog error"
 EMAIL_ON_ERROR_RECIPIENTS="root@localhost"
 
-###############################
-########## FUNCTIONS ##########
-###############################
+## FUNCTIONS ##
 
-# print message facility with pre-defined error-levels
-print_msg() {
-	if [ "$1" == "DEBUG" ]; then
-		PREFIX="[DD]"
-	elif [ "$1" == "INFORMATION" ]; then
-                PREFIX="[II]"
-	elif [ "$1" == "WARNING" ]; then
-                PREFIX="[WW]"
-	elif [ "$1" == "ERROR" ]; then
-                PREFIX="[EE]"
-	elif [ "$1" == "CRITICAL" ]; then
-                PREFIX="[CC]"
-	fi
-	if [[ $1 -le $ERRORLEVEL ]]; then
-		echo ${PREFIX}" "$2 | tee -a $LOGFILE
-	fi
-	# send email?
-	if [ $1 == "ERROR" -o $1 == "CRITICAL" ]; then
-		if [ $EMAIL_ON_ERROR -eq 1 ]; then
-			echo ${PREFIX}" "$2 | mutt -s $EMAIL_ON_ERROR_SUBJECT $EMAIL_ON_ERROR_RECIPIENTS
-		fi
-	fi
+# Function to generate timestamps
+ts() {
+  TS_FLAGS='--rfc-3339=seconds'
+  date ${TS_FLAGS}
 }
 
-# delete log files older than LOG_EXPIRY days
+# Function to log messages
+log() {
+  # does not work in a while-loop as spawns a new shell
+  local msg_type=$1
+  shift
+  local log_entry="$*"
+  ## This avoids sending any output to stdout when executed through cron
+  ## is helpful to avoid emails submitted, instead the logs contain the possible ERRORS
+  if ! tty -s; then
+    echo $( eval ts ) [${msg_type}] ${log_entry} 2>&1 >> ${LOGFILE}
+  else
+    if [[ ${VERBOSE} ]]; then
+      echo $( eval ts ) [${msg_type}] ${log_entry} 2>&1 | tee -a ${LOGFILE}
+    else
+      if [[ ${msg_type} =~ "ERROR" ||
+            ${msg_type} =~ "WARNING" ]]; then
+        echo $( eval ts ) [${msg_type}] ${log_entry} 2>&1 | tee -a ${LOGFILE}
+      else
+        echo $( eval ts ) [${msg_type}] ${log_entry} 2>&1 >> ${LOGFILE}
+      fi
+    fi
+  fi
+}
+
+# Function to delete log files older than LOG_EXPIRY days
 delete_old_logs() {
-	if [ $LOG_EXPIRY -eq 0 ]; then
-		print_msg INFORMATION "skipping old log file expiration..."
-	else
-		print_msg INFORMATION "deleting log files older than ${LOG_EXPIRY} days..."
-		# delete *.log files
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
-		# delete *.log.gz files
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec echo rm {} \;  | tee -a $LOGFILE
-		find $BASEDIR -maxdepth 1 -regextype grep -regex "${BASEDIR}/[a-z]*_[0-9]\{8\}-[0-9]\{6\}.log.gz" -type f -mtime +$LOG_EXPIRY -exec rm {} \;
-	fi
+  local prefix_msg='Deleting:'
+  local matched_files=''
+  local empty_dirs=''
+  local count_files=0
+  local count_dirs=0
+  if [[ ${LOG_EXPIRY} -eq 0 ]]; then
+    log INFO "Skipping old log file expiration..."
+  else
+    log INFO "Deleting log files older than ${LOG_EXPIRY} days..."
+    if [[ ${DRYRUN} ]]; then
+      prefix_msg="Would delete:"
+    fi
+    # Deleting files and empty directories if any.
+    # Using now posix-extended regex flavor to ease the matching of logs/gzips/tarballs
+    matched_files=$(
+      find ${BASEDIR} -maxdepth 2 -regextype posix-extended \
+        -type f -mtime +${LOG_EXPIRY} -regex \
+        "^${BASEDIR}/(.*/)?[a-z]+_([a-z]+_)?[0-9]{8}(-[0-9]{6})?\.log(\.tar)?(\.gz)?$"
+    )
+    if [[ -n ${matched_files} ]]; then
+      count_files=$( wc -l <<<"${matched_files}" )
+    fi
+    log INFO "${prefix_msg} ${count_files} log files."
+    if [[ ! ${DRYRUN} ]]; then
+      # Deleting old logs, compressed/tarballs and empty dirs.
+      for matched_file in ${matched_files}; do
+        rm -f ${matched_file}
+      done
+      # Deleting empty dirs generated by recaplog when no compressing logs.
+      empty_dirs=$( find ${BASEDIR} -maxdepth 1 -regextype posix-extended \
+                      -regex "^${BASEDIR}/[a-z]+_[a-z]+_[0-9]{8}$" -empty \
+                      -type d )
+      if [[ -n ${empty_dirs} ]]; then
+        count_dirs=$( wc -l <<<"${empty_dirs}" )
+      fi
+      log INFO "${prefix_msg} ${count_dirs} empty directories."
+      for empty_dir in ${empty_dirs}; do
+        rmdir "${empty_dir}"
+      done
+    fi
+  fi
 }
 
-# cat tiny log files into daily log files
+# Function to compress/move daily log files
+# Previously the logs were concatenated and could be compressed, that is a
+# problem for parsing them at a later time as reported in:
+# https://github.com/rackerlabs/recap/pull/28
+# The new behaviour is to move the log files to a directory then opt for
+# compression, if compressed then it will delete the original logs.
 pack_old_logs() {
-	YESTERDAYDATE=$(date -d "now -1 day" "+%Y%m%d")
-	for item in $COMPRESS_ITEMS; do
-		print_msg DEBUG "packing ${item}..."
-		OUTPUTFILE=${BASEDIR}/${item}_daily_${YESTERDAYDATE}.log
-		#
-		if [ $LOG_COMPRESS -eq 1 ]; then
-			print_msg DEBUG "do compress old log files"
-			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | gzip > ${OUTPUTFILE}.gz
-			ERRCODE=$?
-			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE.gz
-		else
-			print_msg DEBUG "do not compress old log files"
-			cat ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log > $OUTPUTFILE
-			ERRCODE=$?
-			touch -t ${YESTERDAYDATE}0000 $OUTPUTFILE
-		fi
-		if [ $ERRCODE -eq 0 ]; then
-			for f in $(ls ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | grep -v daily); do
-				print_msg DEBUG "deleting: $f"
-				rm -f $f
-			done 
-		else
-			print_msg ERROR "cat error, cannot delete old log files '"${BASEDIR}/${item}_${YESTERDAYDATE}-*.log"'"
-		fi
-	done
+  local -a errors
+  local YESTERDAYDATE=$( date -d "now -1 day" "+%Y%m%d" )
+  if [[ ${LOG_COMPRESS} -eq 1 ]]; then
+    log INFO "Compressing old log files"
+  else
+    log INFO "Not compressing old log files"
+  fi
+  # Backing up only items defined in the config
+  for item in ${BACKUP_ITEMS}; do
+    YESTERDAY_ITEM_DIR="${BASEDIR}/${item}_daily_${YESTERDAYDATE}"
+    err=''
+    log INFO "Packing ${item}..."
+    log_count=$(
+      {
+        ls -1 ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log | wc -l
+      } 2>&1; exit ${PIPESTATUS[0]}
+    )
+    if [[ $? -ne 0 ]]; then
+      log ERROR "An error ocurred while reading logs: ${log_count}, "\
+                "skipping..."
+      continue
+    fi
+    # Moving logs to yesterday item's directory
+    if [[ ${DRYRUN} ]]; then
+      log INFO "Would move ${log_count} logs to: ${YESTERDAY_ITEM_DIR}"
+    else
+      log INFO "Moving ${log_count} logs to: ${YESTERDAY_ITEM_DIR}"
+      err=$(
+        {
+          mkdir -p "${YESTERDAY_ITEM_DIR}";
+          mv ${BASEDIR}/${item}_${YESTERDAYDATE}-*.log \
+             ${YESTERDAY_ITEM_DIR};
+        } 2>&1
+      )
+      if [[ ! -z ${err} ]]; then
+        log ERROR "An error ocurred while attempting to move logs ${err}"\
+                  ", skipping..."
+        continue
+      fi
+    fi
+    # Compressing logs
+    if [[ ${LOG_COMPRESS} -eq 1 ]]; then
+      OUTPUTFILE="${YESTERDAY_ITEM_DIR}.log.tar.gz"
+      if [[ ${DRYRUN} ]]; then
+        log INFO "Would compress ${log_count} logs into: ${OUTPUTFILE}"
+      else
+        log INFO "Compressing ${log_count} logs into: ${OUTPUTFILE}"
+        err=$(
+          {
+            tar czf ${OUTPUTFILE} \
+                    ${YESTERDAY_ITEM_DIR}/*.log 2>/dev/null &&
+            touch -t ${YESTERDAYDATE}0000 ${OUTPUTFILE};
+          } 2>&1
+        )
+        if [[ ! -z ${err} ]]; then
+          log ERROR "An error ocurred while attempting to compress logs "\
+                    "${err}, skipping..."
+          continue
+        fi
+        log INFO "Deleting ${log_count} logs."
+        rm_err=$( { rm -Rf "${YESTERDAY_ITEM_DIR}"; } 2>&1 >/dev/null )
+        if [[ ! -z "${rm_err}" ]]; then
+          log ERROR "An error ocurred while deleting logs ${rm_err}, "\
+                    "skipping..."
+          continue
+        fi
+      fi
+    fi
+  done
 }
 
-# Create a Lock so that recap does not try to run over itself, and create errors:
+# Create a Lock so that recaplog does not try to run over itself.
 recaploglock() {
-
-        if mkdir "$lockdir"
-        then
-                # Remove lockdir when the script finishes, or when it receives a signal
-                trap 'rm -rf "$lockdir"' 0    # remove directory when script finishes
-                trap "exit 2" 1 2 3 15        # terminate script when receiving signal
-        else
-                print_msg ERROR "Cannot acquire lock, giving up on $lockdir"
-                exit 0
-fi
+  if mkdir "${LOCKFILE}"; then
+    # Remove LOCKFILE when the script finishes, or when it receives a signal
+    trap 'rm -rf "${LOCKFILE}"' 0  # remove directory when script finishes
+    trap "exit 2" 1 2 3 15         # terminate script when receiving signal
+  else
+    log ERROR "Cannot acquire lock, giving up on ${LOCKFILE}"
+    exit 1
+  fi
 }
 
-##########################
-########## MAIN ##########
-##########################
+## MAIN ##
+while getopts hnv flag; do
+  case ${flag} in
+    n)
+      DRYRUN=1
+      VERBOSE=1
+      ;;
+    v)
+      VERBOSE=1
+      ;;
+    h|*)
+      echo "Usage: $( basename $0 ) [-hnv]"
+      grep -E '^#~' $0|sed -e 's/^#~//'
+      exit 1
+      ;;
+ esac
+done
 
-# parse configuration file
+# Verify running as root
+if [ "$( id -u )" != "0" ]
+then
+  echo "This script must be run as root." >&2
+  exit 1
+fi
+
+# Parse configuration file
 # check to see where the configuration file is located.
 # if the file is not at /etc/recap, make some noise to alert users
-if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
-then
-        print_msg WARNING "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
-        . /etc/sysconfig/recap
-elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
-then
-        print_msg WARNING "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
-        . /etc/sysconfig/recap
-elif [ ! -f /etc/recap ]
-then
-        print_msg WARNING "No configuration file found. Proceeding with defaults."
+if [[ -f /etc/sysconfig/recap &&
+      -f /etc/recap ]]; then
+  log WARNING "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
+  source /etc/sysconfig/recap
+elif [[ -f /etc/sysconfig/recap &&
+        ! -f /etc/recap ]]; then
+  log WARNING "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
+  source /etc/sysconfig/recap
+elif [[ ! -f /etc/recap ]]; then
+  log WARNING "No configuration file found. Proceeding with defaults."
 else
-        . /etc/recap
+  source /etc/recap
 fi
 
-# DO STUFF...
-
+# Aquire lock
 recaploglock
+# Define the headers for the run
+if [[ ${DRYRUN} ]]; then
+  banner_start="--- Starting dry run ---"
+  banner_end="--- Ending dry run ---"
+else
+  banner_start="--- Starting run ---"
+  banner_end="--- Ending run ---"
+fi
 
+# recap the logs
+log INFO ${banner_start}
 pack_old_logs
-
 delete_old_logs
-
-# test email
-#print_msg ERROR "ERROR thrown"
-#print_msg CRITICAL "CRITICAL thrown"
+log INFO ${banner_end}
 
 exit 0
