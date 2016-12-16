@@ -1,6 +1,6 @@
 Name: recap
 Version: 0.9.14
-Release: 1.rs%{?dist}
+Release: 2.rs%{?dist}
 Summary: System status reporting
 Group: Applications/System
 License: GPLv2
@@ -45,6 +45,7 @@ DESTDIR=%{buildroot} make install
 %{_mandir}/man5/recap.5.gz
 %{_mandir}/man8/recap.8.gz
 %{_mandir}/man8/recaplog.8.gz
+%{_mandir}/man8/recaptool.8.gz
 
 
 %post
@@ -72,6 +73,9 @@ echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
+* Fri Dec 16 2016 Tony Garcia <tony.garcia@rackspace.com> - 0.9.14-2.rs
+- Install recaptool man page
+
 * Wed May 11 2016 Ben Harper <ben.harper@rackspace.com> - 0.9.14-1.rs
 - Latest version
 - Fixing typos, removing commented old code, renaming functions
