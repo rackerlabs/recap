@@ -1,0 +1,126 @@
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.TH "RECAPTOOL" "8" "October 3, 2016"
+
+
+.SH NAME
+.PP
+recaptool \- parses the logs and prints specific information about memory,
+processes, network connections or queries to a mysql db.
+
+
+.SH SYNOPSIS
+.BR "recaptool " "{proc|mem|procmen} "
+.I PROCESS_NAME
+
+.BR "recaptool " "{net|netestab}"
+.I PORT
+
+.BR "recaptool " "querycount"
+
+.BR "recaptool " "-d"
+.I PATH
+
+.SH DESCRIPTION
+recaptool  is a parsing tool for recap logs that shows specific information
+like processes, memory, network or querycount. Useful for seeing trends on
+a particular option in the logs.
+
+.SH "OPTIONS"
+.TP
+.BI "mem " "PROCESS_NAME"
+.RI "Shows the memory consumption for " "PROCESS_NAME" " from the logs."
+
+.TP
+.BI "proc " "PROCESS_NAME"
+.RI "Shows the amount of processes found for " "PROCESS_NAME" " from the logs."
+
+.TP
+.BI "procmem " "PROCESS_NAME"
+.RI "Shows both(process and memory) for " "PROCESS_NAME" " from the logs."
+
+.TP
+.BI "net " "PORT"
+.RI "Shows the amount of connections to " "PORT" " from the logs."
+
+.TP
+.BI "netestab " "PORT"
+.RB "Shows the amount of " "ESTABLISHED" " connections to "
+.IR "PORT" " from the logs."
+
+.TP
+.BI "querycount"
+.RB "Shows the amount of " "mysql" " connections from the logs."
+
+.TP
+.BI "-d " "PATH" 
+.RB "Specify the recap log " "PATH" ". Default is"
+.I /var/log/recap/
+
+.SH FILES
+.I /var/log/recap/*.log
+
+.SH EXAMPLES
+.TP
+Show the memory and amount of processes running for httpd:
+.nf
+$ sudo recaptool memproc http
+Information: Using /var/log/recap as recap log path
+Information: Executing memproc http 
+2016-10-07_00:00:01     1101    3032.535 M
+2016-10-07_00:10:01     1120    3132.832 M
+2016-10-07_00:20:01     1128    3186.153 M
+.fi
+
+.TP
+.RB "Show the amount of " "established " "connections on port 443:"
+.nf
+$ sudo recaptool netestab 443
+Information: Using /var/log/recap as recap log path
+Information: Executing netestab 443 
+2016-10-07_00:00:01     302
+2016-10-07_00:10:01     311
+2016-10-07_00:20:01     312
+.fi
+
+.TP
+Show the amount of query connections to the mysql db:
+.nf
+$ sudo recaptool querycount
+Information: Using /var/log/recap as recap log path
+Information: Executing querycount 
+2016-10-07_00:00:01     124
+2016-10-07_00:10:01     125
+2016-10-07_00:20:01     128
+.fi
+
+.SH "REPORTING BUGS"
+Bugs and issues to be submitted via github
+<https://github.com/rackerlabs/recap/issues>.
+
+.SH AUTHOR
+The recaptool script was initially created by "Benjamin H. Graham"
+<ben@administr8.me>.
+
+.SH "SEE ALSO"
+.BR recap (5),
+.BR recap (8),
