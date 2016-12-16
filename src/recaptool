@@ -77,9 +77,19 @@ querycount() {
 }
 
 usage() {
-	echo -e "Usage:\t$ME {proc|mem|memproc} process_name"
-	echo    "  $ME {net|netestab} port"
-	echo    "  $ME querycount"
+  echo -e "Usage: ${ME} ( {proc|mem|memproc} PROCESS_NAME |"
+  echo "                   {net|netestab} PORT |"
+  echo "                   querycount |"
+  echo "                   -d PATH )"
+  echo
+  echo "Parsing tool for recap logs to show specific information."
+  echo
+  echo "optional arguments:"
+  echo "  {proc|mem|memproc} PROCESS_NAME  Show proc/mem info of PROCESS_NAME."
+  echo "  {net|netestab} PORT              Show network connections of a PORT."
+  echo "  querycount                       Show mysql connections."
+  echo "  -d PATH                          Specify the recap log PATH."
+  echo
 }
 
 if [ $# -eq 0 ]; then
