@@ -265,7 +265,7 @@ print_mysql() {
                         if [ -f $cnf ]
                         then
                                 echo "MySQL $cnf status" >> $MYSQL_FILE
-                                mysqladmin --defaults-extra-file=$cnf status >> $MYSQL_FILE
+                                mysqladmin --defaults-file=$cnf status >> $MYSQL_FILE
                                 print_blankline $MYSQL_FILE
                         else
                                 echo "MySQL $cnf for status does not exist. Please check DOTMYDOTCNF in /etc/recap" >> $MYSQL_FILE
@@ -336,12 +336,12 @@ print_mysql_procs() {
                                 echo "MySQL $cnf processes" >> $MYSQL_FILE
                                 if [ $MYSQL_PROCESS_LIST == "table" ]
                                 then
-                                        mysqladmin --defaults-extra-file=$cnf -v processlist >> $MYSQL_FILE
+                                  mysqladmin --defaults-file=$cnf -v processlist >> $MYSQL_FILE
                                 fi
                                 if [ $MYSQL_PROCESS_LIST == "vertical" ]
                                 then
                                 	# This doesnt seem to work right
-                                	mysqladmin --defaults-extra-file=$cnf --vertical processlist
+                                  mysqladmin --defaults-file=$cnf --vertical processlist
                                 fi
                                 print_blankline $MYSQL_FILE
                         else
