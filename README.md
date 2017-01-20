@@ -23,9 +23,10 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 ## Configuration
 
-The cron file (/etc/cron.d/recap) is used to determine
-the execution time of recap.  By default the cron execution
-of the program is not enabled.
+The cron file (`/etc/cron.d/recap`) is used to determine the execution time of
+`recap` and `recaplog`.  By default the cron execution for `recap` is enabled
+to run every 10 min. and `recaplog` is expected to run
+every day at 1 am, but those can be adjusted as needed.
 
 The following variables are defined with defaults inside the 
 script but can be overwritten if these variables are defined
