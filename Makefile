@@ -17,6 +17,7 @@ install:
 	@install -Dm0644 src/recap.5 $(MANDIR)/man5/recap.5
 	@install -Dm0644 src/recap.8 $(MANDIR)/man8/recap.8
 	@install -Dm0644 src/recaplog.8 $(MANDIR)/man8/recaplog.8
+	@install -Dm0644 src/recaptool.8 $(MANDIR)/man8/recaptool.8
 	@echo "Installing configuration..."
 	@install -Dm0644 src/recap.conf $(SYSCONFDIR)/recap
 	@echo "Installing cron job..."
@@ -35,6 +36,7 @@ uninstall:
 	@rm -f $(MANDIR)/man5/recap.5
 	@rm -f $(MANDIR)/man8/recap.8
 	@rm -f $(MANDIR)/man8/recaplog.8
+	@rm -f $(MANDIR)/man8/recaptool.8
 	@echo "Removing configuration..."
 	@rm -f $(SYSCONFDIR)/recap
 	@echo "Removing cron job..."
