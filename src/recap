@@ -505,8 +505,6 @@ run_resources_report() {
 	print_blankline $RESOURCES_FILE
 	print_iotop
 	print_blankline $RESOURCES_FILE
-	print_df
-	print_blankline $RESOURCES_FILE
 
 	# check to see if sar should be run
 	if [ $USESAR = "yes" -o $USESAR = "YES" ]
