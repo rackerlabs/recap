@@ -260,7 +260,7 @@ print_mysql() {
                 mysqladmin -uadmin -p`cat /etc/psa/.psa.shadow` status >> $MYSQL_FILE
                 print_blankline $MYSQL_FILE
         else
-                for cnf in $DOTMYDOTCNF
+                for cnf in $( sed -e 's/,/ /g' <<<"${DOTMYDOTCNF}" )
                 do
                         if [ -f $cnf ]
                         then
@@ -329,7 +329,7 @@ print_mysql_procs() {
                 fi
                 print_blankline $MYSQL_FILE
         else
-                for cnf in $DOTMYDOTCNF
+                for cnf in $( sed -e 's/,/ /g' <<<"${DOTMYDOTCNF}" )
                 do
                         if [ -f $cnf ]
                         then
