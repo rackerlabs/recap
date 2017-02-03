@@ -9,6 +9,8 @@ Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: sysstat, coreutils, procps, grep, gawk, bc, elinks, net-tools, iotop
+Obsoletes: rs-sysmon < 0.9.5-2
+Provides: rs-sysmon = %{version}-%{release}
 
 
 %description
@@ -45,30 +47,6 @@ DESTDIR=%{buildroot} make install
 %{_mandir}/man5/recap.5.gz
 %{_mandir}/man8/recap.8.gz
 %{_mandir}/man8/recaplog.8.gz
-
-
-%post
-if [ -f /etc/rs-sysmon ]; then
-        echo "Found configuration file in old location (/etc/rs-sysmon), moving it to the new location (/etc/recap)."
-        mv /etc/recap /etc/recap.orig
-        mv /etc/rs-sysmon /etc/recap
-fi
-echo
-echo "Checking for output directories..."
-
-if [ -d /var/log/rs-sysmon ]; then
-        echo
-        echo "Found old output directory: /var/log/rs-sysmon"
-        echo "Moving resources logs to /var/log/recap"
-        mv /var/log/rs-sysmon/* /var/log/recap
-        echo "Removing old output directory: /var/log/rs-sysmon"
-        rm -r /var/log/rs-sysmon
-        echo
-        echo "Your output files have been consolidated to /var/log/recap, and the old output directories have been removed. If you see any errors above, there may have been some unexpected files that prevented the old directories from being emptied."
-fi
-echo
-echo "The cron execution of recap is set to run every 10 minutes and at reboot by default."
-echo "Edit /etc/cron.d/recap to change cron execution."
 
 
 %changelog
