@@ -397,8 +397,9 @@ send_mail() {
   # echo report files into temporary file for mailing
   for item in ${BACKUP_ITEMS}; do
     ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
-    ITEM_USE=$( eval "echo \${USE${item^^}}" )
-    if [[ -r "${ITEM_FILE}" && "${ITEM_USE,,}" == "yes" ]]; then
+    # Build the variable to use and then use indirect ref to obtain its value
+    ITEM_USE="USE${item^^}"
+    if [[ -r "${ITEM_FILE}" && "${!ITEM_USE,,}" == "yes" ]]; then
       echo "-----BEGIN ${item^^} REPORT-----" >> "${REPORT}"
       cat "${ITEM_FILE}" >> "${REPORT}"
       echo "-----END ${item^^} REPORT-----" >> "${REPORT}"
