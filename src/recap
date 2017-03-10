@@ -114,7 +114,7 @@ create_output_dirs() {
   OUTPUT_DIRS+=( "${BACKUPDIR}" )
   OUTPUT_DIRS+=( "${SNAPSHOTSDIR}" )
   for OUTPUT_DIR in ${OUTPUT_DIRS[@]}; do
-    if [[ ! -d ${OUTPUT_DIR} ]]; then
+    if [[ ! -d "${OUTPUT_DIR}" ]]; then
       mkdir -p "${OUTPUT_DIR}"
       chmod ${OUTPUTDIR_MODE} "${OUTPUT_DIR}"
     fi
@@ -134,7 +134,7 @@ print_usage() {
 
 # create output file
 create_output_file() {
-  local OUTPUT_FILE=$1
+  local OUTPUT_FILE="$1"
   if [[ -d "${OUTPUT_FILE}" ]]; then
     echo "Target file already exists: ${OUTPUT_FILE}"
     exit
@@ -146,8 +146,8 @@ create_output_file() {
 
 # check to see if the output directory exists
 check_output_file() {
-  local OUTPUT_FILE=$1
-  if [[ ! -f "${OUTPUT_FILE}" ]]; then
+  local OUTPUT_FILE="$1"
+  if [[ ! -r "${OUTPUT_FILE}" ]]; then
     echo "The output file does not exist: ${OUTPUT_FILE}"
     exit
   fi
@@ -155,100 +155,99 @@ check_output_file() {
 
 # print output of "ps auxfww" to the specified file
 print_ps() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   ps ${OPTS_PS} >> "${LOGFILE}"
 }
 
 # print output of "pstree" to specified file
 print_pstree() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   pstree ${OPTS_PSTREE} >> "${LOGFILE}"
 }
 
 # print a blank line to the specified file
 print_blankline() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo " " >> "${LOGFILE}"
 }
 
 # print the output of "uptime" to the specified file
 print_uptime() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "UPTIME report" >> "${LOGFILE}"
   uptime >> "${LOGFILE}"
 }
 
 # print the output of "free" to the specified file
 print_free() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "FREE report" >> "${LOGFILE}"
   free ${OPTS_FREE} >> "${LOGFILE}"
 }
 
 # print the output of "vmstat" to the specified file
 print_vmstat() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "VMSTAT report" >> "${LOGFILE}"
   vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
 }
 
 # print the output of "iostat" to the specified file
 print_iostat() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "IOSTAT report" >> "${LOGFILE}"
   iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
 }
 
 # print the output of "iotop" to the specified file
 print_iotop() {
-  local LOGFILE=$1
-  which iotop >/dev/null 2>&1 || return 1
+  local LOGFILE="$1"
   echo "IOTOP report" >> "${LOGFILE}"
   iotop ${OPTS_IOTOP} >> "${LOGFILE}"
 }
 
 # print the output of sar to the specified file
 print_sar() {
-  local OPTION=$1
-  local LOGFILE=$2
+  local LOGFILE="$1"
+  local OPTION="$2"
   local FLAGS=''
   # check to see if we're going to use any parameters for sar
-  if [[ ${OPTION} == "r" ]]; then
-    FLAGS=" -r"
-  elif [[ ${OPTION} == "q" ]]; then
-    FLAGS=" -q"
+  if [[ "${OPTION}" == "r" ]]; then
+    FLAGS="-r"
+  elif [[ "${OPTION}" == "q" ]]; then
+    FLAGS="-q"
   else
     FLAGS=""
   fi
 
   echo "SAR${FLAGS} report" >> "${LOGFILE}"
-  sar${FLAGS} >> "${LOGFILE}"
+  sar "${FLAGS}" >> "${LOGFILE}"
 }
 
 # print the output of "apachectl fullstatus" to the specified file
 print_httpd_fullstatus() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Apache Status report" >> "${LOGFILE}"
   apachectl fullstatus >> "${LOGFILE}"
 }
 
 # print the output of "netstat -ntulpae" to the specified file
 print_netstat() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Network connections" >> "${LOGFILE}"
   netstat ${OPTS_NETSTAT} >> "${LOGFILE}"
 }
 
 # print the output of "netstat -s" to the specified file
 print_netstat_sum() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
   netstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
 }
 
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   # We only support a single DOTMYDOTCNF for MySQL when running Plesk
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
@@ -271,7 +270,7 @@ print_mysql() {
 
 # print the non-truncated innodb status to the mysql file
 print_mysql_innodb_status() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   # First, we establish which tmpdir and pid_file are in use, strip any
   # trailing slash and populate the file with current information.
   # We throw away the output of the "show engine innodb status" command as
@@ -283,8 +282,8 @@ print_mysql_innodb_status() {
                                     SHOW VARIABLES LIKE 'tmpdir'; \
                                     SHOW ENGINE INNODB STATUS;" 2>/dev/null \
                 | head -n 2 ) )
-  PID_FILE=${MYVALS[1]%/}
-  TMPDIR=${MYVALS[3]%/}
+  PID_FILE="${MYVALS[1]%/}"
+  TMPDIR="${MYVALS[3]%/}"
 
   # Next, we grab a list of descriptors in the tmpdir:
   for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
@@ -292,25 +291,24 @@ print_mysql_innodb_status() {
     # and start with the string 'ib' followed by a randomly generated series
     # of characters.  Now we can compare the canonicalized path of fd to the
     # tmpdir/ib* pattern:
-    [[ $(readlink -f "${name}") == "${TMPDIR}"/ib* ]] &&
-    # If any files match that pattern, we see if the first line in the file
-    # starts with "===", which is the case in the particular InnoDB file we
-    # care about:
-      head -c8 "${name}" | grep -q '^====' &&
-    # Finally, print out the information and append it to the mysql file:
-    cat "${name}"  >> "${LOGFILE}"
+    if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
+      # If any files match that pattern, we see if the first line in the file
+      # starts with "===", which is the case in the particular InnoDB file we
+      # care about:
+      head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
+    fi
   done
 }
 
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   # We only support a single DOTMYDOTCNF for MySQL when running Plesk
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin -uadmin -p$( cat "${PLEASK_FILE}" ) -v processlist >> "${LOGFILE}"
+      mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist >> "${LOGFILE}"
     fi
     if [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
       mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" >> "${LOGFILE}"
@@ -318,14 +316,13 @@ print_mysql_procs() {
     print_blankline "${LOGFILE}"
   else
     for cnf in $( sed -e 's/,/ /g' <<<"${DOTMYDOTCNF}" ); do
-      if [[ -f "${cnf}" ]]; then
+      if [[ -r "${cnf}" ]]; then
         echo "MySQL ${cnf} processes" >> "${LOGFILE}"
         if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
           mysqladmin --defaults-extra-file="${cnf}" -v processlist >> "${LOGFILE}"
-        fi
-        if [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
+        elif [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
           # This doesnt seem to work right
-          mysqladmin --defaults-extra-file="${cnf}" --vertical processlist
+          mysqladmin --defaults-extra-file="${cnf}" -e "show full processlist\G"
         fi
         print_blankline "${LOGFILE}"
       else
@@ -338,7 +335,7 @@ print_mysql_procs() {
 
 # print the top 10 processes (by cpu usage) to the defined file
 print_top_10_cpu() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   local pidstat_cpufield=0
   #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
   local version_strings="$( pidstat -V 2>&1 |
@@ -360,28 +357,28 @@ print_top_10_cpu() {
 
 # print the top 10 processes (by memory usage) to the defined file
 print_top_10_mem() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Top 10 memory using processes" >> "${LOGFILE}"
   ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
 }
 
 # print the disk utilization to the defined file
 print_df() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Disk Utilization" >> "${LOGFILE}"
   df ${OPTS_DF} >> "${LOGFILE}"
 }
 
 # print the disk partitions to the fdisk file
 print_fdisk() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Disk partitions" >> "${LOGFILE}"
   fdisk ${OPTS_FDISK} >> "${LOGFILE}"
 }
 
 # print the slabinfo command to the defined file
 print_slabinfo() {
-  local LOGFILE=$1
+  local LOGFILE="$1"
   echo "Slab Information" >> "${LOGFILE}"
   printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
   tail -n+2 /proc/slabinfo |
@@ -401,7 +398,7 @@ send_mail() {
   for item in ${BACKUP_ITEMS}; do
     ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
     ITEM_USE=$( eval "echo \${USE${item^^}}" )
-    if [[ -f "${ITEM_FILE}" && ${ITEM_USE,,} == "yes" ]]; then
+    if [[ -r "${ITEM_FILE}" && "${ITEM_USE,,}" == "yes" ]]; then
       echo "-----BEGIN ${item^^} REPORT-----" >> "${REPORT}"
       cat "${ITEM_FILE}" >> "${REPORT}"
       echo "-----END ${item^^} REPORT-----" >> "${REPORT}"
@@ -422,13 +419,13 @@ run_item_report() {
   local item="$1"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
-  if [[ ${SNAPSHOT,,} == "yes" ]]; then
+  if [[ "${SNAPSHOT,,}" == "yes" ]]; then
     ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
   fi
 
-  create_output_file ${ITEM_FILE}
-  check_output_file ${ITEM_FILE}
-  eval "print_${item}" ${ITEM_FILE}
+  create_output_file "${ITEM_FILE}"
+  check_output_file "${ITEM_FILE}"
+  eval "print_${item}" "${ITEM_FILE}"
 }
 
 # manage resources report
@@ -436,7 +433,7 @@ run_resources_report() {
   local item="resources"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
-  if [[ ${SNAPSHOT,,} == "yes" ]]; then
+  if [[ "${SNAPSHOT,,}" == "yes" ]]; then
     ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
   fi
 
@@ -454,40 +451,40 @@ run_resources_report() {
   print_blankline "${ITEM_FILE}"
 
   # check to see if sar should be run
-  if [[ ${USESAR,,} == "yes" ]]; then
+  if [[ "${USESAR,,}" == "yes" ]]; then
     print_blankline "${ITEM_FILE}"
     print_sar "${ITEM_FILE}"
   fi
 
   # check to see if sar -r should be run
-  if [[ ${USESARR,,} == "yes" ]]; then
+  if [[ "${USESARR,,}" == "yes" ]]; then
     # send sar -r output to output file
     print_blankline "${ITEM_FILE}"
-    print_sar "r" "${ITEM_FILE}"
+    print_sar "${ITEM_FILE}" "r"
   fi
 
   # check to see if sar -q should be run
-  if [[ ${USESARQ,,} == "yes" ]]; then
+  if [[ "${USESARQ,,}" == "yes" ]]; then
     # send sar -q output to output file
     print_blankline "${ITEM_FILE}"
-    print_sar "q" "${ITEM_FILE}"
+    print_sar "${ITEM_FILE}" "q" 
   fi
 
   # check to see if apachectl fullstatus should be run
   type -p 'apachectl' > /dev/null
-  if [[ $? -eq 0 && ${USEFULLSTATUS,,} == "yes" ]]; then
+  if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
     # send apachectl fullstatus output to output file
     print_blankline "${ITEM_FILE}"
     print_httpd_fullstatus
   fi
 
-  if [[ ${USEDF,,} == "yes" ]]; then
+  if [[ "${USEDF,,}" == "yes" ]]; then
     # send df -h output to output file
     print_blankline "${ITEM_FILE}"
     print_df "${ITEM_FILE}"
   fi
 
-  if [[ ${USESLAB,,} == "yes" ]]; then
+  if [[ "${USESLAB,,}" == "yes" ]]; then
     # send slabinfo output to output file
     print_blankline "${ITEM_FILE}"
     print_slabinfo "${ITEM_FILE}"
@@ -504,7 +501,7 @@ run_netstat_report() {
   local item="netstat"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
-  if [[ ${SNAPSHOT} == "yes" ]]; then
+  if [[ "${SNAPSHOT,,}" == "yes" ]]; then
     ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
   fi
 
@@ -513,11 +510,9 @@ run_netstat_report() {
   print_netstat "${ITEM_FILE}"
 
   # check to see if optional netstat summary report should be run
-  if [[ ! -z ${USENETSTATSUM} ]]; then
-    if [[ ${USENETSTATSUM,,} == "yes" ]]; then
-      print_blankline "${ITEM_FILE}"
-      print_netstat_sum "${ITEM_FILE}"
-    fi
+  if [[ "${USENETSTATSUM,,}" == "yes" ]]; then
+    print_blankline "${ITEM_FILE}"
+    print_netstat_sum "${ITEM_FILE}"
   fi
 }
 
@@ -526,7 +521,7 @@ run_mysql_report() {
   local item="mysql"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
-  if [[ ${SNAPSHOT} == "yes" ]]; then
+  if [[ "${SNAPSHOT,,}" == "yes" ]]; then
     ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
   fi
 
@@ -535,13 +530,11 @@ run_mysql_report() {
   print_mysql "${ITEM_FILE}"
 
   # check to see if the optional mysql process list should be generated
-  if [[ ! -z ${USEMYSQLPROCESSLIST} ]]; then
-    if [[ ${USEMYSQLPROCESSLIST,,} == "yes" ]]; then
-      print_blankline "${ITEM_FILE}"
-      print_mysql_procs "${ITEM_FILE}"
-    fi
+  if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
+    print_blankline "${ITEM_FILE}"
+    print_mysql_procs "${ITEM_FILE}"
   fi
-  if [[ ${USEINNODB,,} == "yes" ]]; then
+  if [[ "${USEINNODB,,}" == "yes" ]]; then
     # send df -h output to output file
     print_blankline "${ITEM_FILE}"
     print_mysql_innodb_status "${ITEM_FILE}"
@@ -550,9 +543,9 @@ run_mysql_report() {
 
 # copy the last log file set to ${BACKUPDIR}
 create_backup() {
-  for f in ${BACKUP_ITEMS}; do
-    ls -1t ${BASEDIR}/${f}_*.log | \
-    grep -m1 ".*_[0-9]\{8\}-[0-9]\{6\}.log" | \
+  for log_file in ${BACKUP_ITEMS}; do
+    ls -1t ${BASEDIR}/${log_file}_*.log |
+    head -1 |
     xargs -I {} cp {} ${BACKUPDIR}
   done
 }
@@ -562,9 +555,9 @@ check_disk_space() {
   if [[ ${MIN_FREE_SPACE} -eq 0 ]]; then
     return 0
   else
-    FREE_SPACE=$( df -BM ${BASEDIR} | grep -v 1M-blocks | awk '{print $4}' )
+    FREE_SPACE=$( df -BM --output=avail "${BASEDIR}" | tail -1 )
     FREE_SPACE=${FREE_SPACE%M}
-    if [[ ${MIN_FREE_SPACE} -ge ${FREE_SPACE} ]]; then
+    if [[ "${MIN_FREE_SPACE}" -ge "${FREE_SPACE}" ]]; then
       echo "Unable to run recap due to not enough disk space" >&2
     fi
   fi
@@ -576,15 +569,15 @@ check_disk_space() {
 
 # check to see where the configuration file is located.
 # if the file is not at /etc/recap, make some noise to alert users
-if [ -f /etc/sysconfig/recap ] && [ -f /etc/recap ]
+if [ -r /etc/sysconfig/recap ] && [ -r /etc/recap ]
 then
 	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
 	source /etc/sysconfig/recap
-elif [ -f /etc/sysconfig/recap ] && [ ! -f /etc/recap ]
+elif [ -r /etc/sysconfig/recap ] && [ ! -r /etc/recap ]
 then
 	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
 	source /etc/sysconfig/recap
-elif [ ! -f /etc/recap ]
+elif [ ! -r /etc/recap ]
 then
 	echo "No configuration file found. Proceeding with defaults."
 else
@@ -592,9 +585,8 @@ else
 fi
 
 # Quit if load is higher than MAXLOAD
-LOAD=$( uptime | awk -F'load average:' '{ print $2 }' |
-          cut -d" " -f2 | cut -d"," -f1 )
-QUIT=$( echo ${LOAD}'>'${MAXLOAD} | bc -l )
+LOAD=$( grep -Po '^[\d.]+' /proc/loadavg )
+QUIT=$( bc -l <<< "${LOAD}>${MAXLOAD}" )
 if [[ ${QUIT} -eq 1 ]]; then
   echo "QUIT (LOAD:"${LOAD}", MAXLOAD:"${MAXLOAD}")"
   exit 1
@@ -643,13 +635,13 @@ fi
 check_disk_space
 
 # grab the server's host name
-HOSTNAME=$( hostname )
+HOSTNAME="$( hostname )"
 
 # create output directory if it is not already present
 create_output_dirs
 
 # take a backup?
-if [[ ${BACKUP,,} == "yes" ]]; then
+if [[ "${BACKUP,,}" == "yes" ]]; then
   create_backup
   exit 0
 fi
@@ -668,41 +660,41 @@ fi
 
 recaplock
 # run the ps report
-if [[ ${USEPS,,} == "yes" ]]; then
+if [[ "${USEPS,,}" == "yes" ]]; then
   run_item_report "ps"
 fi
 
 # run the resources report
 #TODO: standardize the run_resources_report
-if [[ ${USERESOURCES,,} == "yes" ]]; then
+if [[ "${USERESOURCES,,}" == "yes" ]]; then
   run_resources_report
 fi
 
 # run the pstree report
-if [[ ${USEPSTREE,,} == "yes" ]]; then
+if [[ "${USEPSTREE,,}" == "yes" ]]; then
   run_item_report "pstree"
 fi
 
 # run the netstat report
 #TODO: standardize the run_netstat_report
-if [[ ${USENETSTAT,,} == "yes" ]]; then
+if [[ "${USENETSTAT,,}" == "yes" ]]; then
   run_netstat_report
 fi
 
 # run the fdisk report
-if [[ ${USEFDISK,,} == "yes" ]]; then
+if [[ "${USEFDISK,,}" == "yes" ]]; then
   run_item_report "fdisk"
 fi
 
 # run the mysql report
 #TODO: standardize the run_mysql_report
 type -p 'mysqladmin' > /dev/null
-if [[ $? -eq 0 && ${USEMYSQL,,} == "yes" ]]; then
+if [[ $? -eq 0 && "${USEMYSQL,,}" == "yes" ]]; then
   run_mysql_report
 fi
 
 # check to see if report should be emailed
-if [[ ! ${MAILTO} == '' ]]; then
+if [[ ! "${MAILTO}" == '' ]]; then
   send_mail
 fi
 
