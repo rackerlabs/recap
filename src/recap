@@ -37,7 +37,7 @@ DATE=`date +%Y-%m-%d_%H:%M:%S`
 ROTATELOGS="yes"
 SNAPSHOT="no"
 BACKUP="no"
-lockdir=/var/lock/recap.lock
+LOCKFILE="/var/lock/recap.lock"
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 MAXLOAD="1000"
 
@@ -92,17 +92,22 @@ OUTPUTDIR_MODE="750"
 ######### BEGIN FUNCTION DEFINITIONS #########
 ##############################################
 
-# Create a Lock so that recap does not try to run over itself, and create errors:
+
+# Cleanup function to remove lock
+cleanup() {
+  rm -f "${LOCKFILE}"
+  exit 2
+}
+
+# Create a Lock so that recap does not try to run over itself.
 recaplock() {
-	if mkdir "$lockdir"
-	then
-		# Remove lockdir when the script finishes, or when it receives a signal
-		trap 'rm -rf "$lockdir"' 0    # remove directory when script finishes
-		trap "exit 2" 1 2 3 15        # terminate script when receiving signal
-	else
-		echo "Cannot acquire lock, giving up on $lockdir"
-		exit 0
-fi
+  (set -C; echo "$$" > "${LOCKFILE}") 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo "ERROR $( basename $0 ) ($$): Lock File exists - exiting"
+    exit 1
+  else
+    trap 'cleanup' 1 2 15 17 19 23 EXIT
+  fi
 }
 
 # ensure our output directories exist before we start creating files
@@ -248,24 +253,15 @@ print_netstat_sum() {
 # print the output of "mysqladmin status" to the mysql file
 print_mysql() {
   local LOGFILE="$1"
-  # We only support a single DOTMYDOTCNF for MySQL when running Plesk
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL status" >> "${LOGFILE}"
     mysqladmin -uadmin -p$(cat "${PLESK_FILE}") status >> "${LOGFILE}"
-    print_blankline "${LOGFILE}"
   else
-    for cnf in $( sed -e 's/,/ /g' <<<"${DOTMYDOTCNF}" ); do
-      if [[ -r "${cnf}" ]]; then
-        echo "MySQL ${cnf} status" >> "${LOGFILE}"
-        mysqladmin --defaults-extra-file="${cnf}" status >> "${LOGFILE}"
-        print_blankline "${LOGFILE}"
-      else
-        echo "MySQL ${cnf} for status does not exist. Please check DOTMYDOTCNF in /etc/recap" >> "${LOGFILE}"
-        print_blankline "${LOGFILE}"
-      fi
-    done
+    echo "MySQL ${DOTMYDOTCNF} status" >> "${LOGFILE}"
+    mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" status >> "${LOGFILE}"
   fi
+  print_blankline "${LOGFILE}"
 }
 
 # print the non-truncated innodb status to the mysql file
@@ -278,9 +274,11 @@ print_mysql_innodb_status() {
 
   echo "MySQL InnoDB status"  >> "${LOGFILE}"
   unset MYVALS PID_FILE TMPDIR
-  MYVALS=( $( IFS=$'\t' mysql -Bse "SHOW VARIABLES LIKE 'pid_file'; \
+  MYVALS=( $( IFS=$'\t' mysql --defaults-extra-file="${DOTMYDOTCNF}" \
+                              -Bse "SHOW VARIABLES LIKE 'pid_file'; \
                                     SHOW VARIABLES LIKE 'tmpdir'; \
-                                    SHOW ENGINE INNODB STATUS;" 2>/dev/null \
+                                    SHOW ENGINE INNODB STATUS;" \
+                              2>/dev/null \
                 | head -n 2 ) )
   PID_FILE="${MYVALS[1]%/}"
   TMPDIR="${MYVALS[3]%/}"
@@ -303,34 +301,28 @@ print_mysql_innodb_status() {
 # print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
   local LOGFILE="$1"
-  # We only support a single DOTMYDOTCNF for MySQL when running Plesk
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist >> "${LOGFILE}"
+      mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist \
+        >> "${LOGFILE}"
     fi
     if [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
-      mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" >> "${LOGFILE}"
+      mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" \
+        >> "${LOGFILE}"
     fi
-    print_blankline "${LOGFILE}"
   else
-    for cnf in $( sed -e 's/,/ /g' <<<"${DOTMYDOTCNF}" ); do
-      if [[ -r "${cnf}" ]]; then
-        echo "MySQL ${cnf} processes" >> "${LOGFILE}"
-        if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-          mysqladmin --defaults-extra-file="${cnf}" -v processlist >> "${LOGFILE}"
-        elif [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
-          # This doesnt seem to work right
-          mysqladmin --defaults-extra-file="${cnf}" -e "show full processlist\G"
-        fi
-        print_blankline "${LOGFILE}"
-      else
-        echo "MySQL ${cnf} for processes does not exist. Please check DOTMYDOTCNF in /etc/recap" >> "${LOGFILE}"
-        print_blankline "${LOGFILE}"
-      fi
-    done
+    echo "MySQL ${DOTMYDOTCNF} processes" >> "${LOGFILE}"
+    if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
+      mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" -v processlist \
+        >> "${LOGFILE}"
+    elif [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
+      mysql --defaults-extra-file="${DOTMYDOTCNF}" \
+            -e "show full processlist\G" >> "${LOGFILE}"
+    fi
   fi
+  print_blankline "${LOGFILE}"
 }
 
 # print the top 10 processes (by cpu usage) to the defined file
@@ -468,7 +460,7 @@ run_resources_report() {
   if [[ "${USESARQ,,}" == "yes" ]]; then
     # send sar -q output to output file
     print_blankline "${ITEM_FILE}"
-    print_sar "${ITEM_FILE}" "q" 
+    print_sar "${ITEM_FILE}" "q"
   fi
 
   # check to see if apachectl fullstatus should be run
@@ -528,6 +520,13 @@ run_mysql_report() {
 
   create_output_file "${ITEM_FILE}"
   check_output_file "${ITEM_FILE}"
+  # Don't run reports if can't read the config file
+  if [[ ! -r "${DOTMYDOTCNF}" ]]; then
+    echo "Error when attempting to read: ${DOTMYDOTCNF}, please check the" \
+         "DOTMYDOTCNF setting in the configuration file" >> "${ITEM_FILE}"
+    return
+  fi
+
   print_mysql "${ITEM_FILE}"
 
   # check to see if the optional mysql process list should be generated
