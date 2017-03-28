@@ -25,6 +25,7 @@ install:
 	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap
 	@echo "Installing cron job..."
 	@install -Dm0644 src/recap.cron $(DESTDIR)$(CRONDIR)/recap
+	@sed -i 's,/usr/sbin/,$(BINDIR)/,' $(DESTDIR)$(CRONDIR)/recap
 	@echo "Installing docs..."
 	@install -dm0755 $(DESTDIR)$(DOCDIR)/recap
 	@install -Dm0644 CHANGELOG README.md COPYING -t $(DESTDIR)$(DOCDIR)/recap
