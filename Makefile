@@ -26,6 +26,7 @@ install:
 	@echo "Installing cron job..."
 	@install -Dm0644 src/recap.cron $(DESTDIR)$(CRONDIR)/recap
 	@echo "Installing docs..."
+	@install -dm0750 $(DESTDIR)$(DOCDIR)/recap
 	@install -Dm0644 CHANGELOG README.md COPYING -t $(DESTDIR)$(DOCDIR)/recap
 	@echo "Creating log directories..."
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap
