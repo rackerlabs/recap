@@ -585,7 +585,7 @@ else
 fi
 
 # Quit if load is higher than MAXLOAD
-LOAD=$( grep -Po '^[\d.]+' /proc/loadavg )
+LOAD=$( grep -Po '^[\d\.]+' /proc/loadavg )
 QUIT=$( bc -l <<< "${LOAD}>${MAXLOAD}" )
 if [[ ${QUIT} -eq 1 ]]; then
   echo "QUIT (LOAD:"${LOAD}", MAXLOAD:"${MAXLOAD}")"
