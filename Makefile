@@ -28,7 +28,7 @@ install:
 	@sed -i 's,/usr/sbin/,$(BINDIR)/,' $(DESTDIR)$(CRONDIR)/recap
 	@echo "Installing docs..."
 	@install -dm0755 $(DESTDIR)$(DOCDIR)/recap
-	@install -Dm0644 CHANGELOG README.md COPYING -t $(DESTDIR)$(DOCDIR)/recap
+	@install -Dm0644 CHANGELOG.md README.md COPYING -t $(DESTDIR)$(DOCDIR)/recap
 	@echo "Creating log directories..."
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap/backups
