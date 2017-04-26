@@ -35,7 +35,7 @@ DESTDIR=%{buildroot} make install
 %files
 %{!?_licensedir:%global license %%doc}
 %license COPYING
-%doc README.md TODO CHANGELOG
+%doc README.md CHANGELOG
 %dir %{_localstatedir}/log/recap
 %dir %{_localstatedir}/log/recap/backups
 %dir %{_localstatedir}/log/recap/snapshots
