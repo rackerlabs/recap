@@ -52,7 +52,6 @@ install -m 0755 ../src/recaplog $SBINDIR/
 install -m 0755 ../src/recaptool $SBINDIR/
 
 install -m 0644 ../README.md $DATADIR/doc/recap-$VERSION/
-install -m 0644 ../TODO $DATADIR/doc/recap-$VERSION/
 install -m 0644 ../CHANGELOG $DATADIR/doc/recap-$VERSION/
 install -m 0644 ../COPYING $DATADIR/doc/recap-$VERSION/
 
