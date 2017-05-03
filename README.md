@@ -85,5 +85,5 @@ Original authors at Rackspace (http://www.rackspace.com):
 Past contributors at Rackspace:
                     -David King
                     -Hans duPlooy
-                    -All other should be defined in CHANGELOG
+                    -All other should be defined in CHANGELOG.md
 ```
