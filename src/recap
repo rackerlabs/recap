@@ -365,7 +365,7 @@ print_df() {
 print_fdisk() {
   local LOGFILE="$1"
   echo "Disk partitions" >> "${LOGFILE}"
-  fdisk ${OPTS_FDISK} >> "${LOGFILE}"
+  fdisk ${OPTS_FDISK} 2>&1 >> "${LOGFILE}"
 }
 
 # print the slabinfo command to the defined file
