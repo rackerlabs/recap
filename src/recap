@@ -468,7 +468,7 @@ run_resources_report() {
   if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
     # send apachectl fullstatus output to output file
     print_blankline "${ITEM_FILE}"
-    print_httpd_fullstatus
+    print_httpd_fullstatus "${ITEM_FILE}"
   fi
 
   if [[ "${USEDF,,}" == "yes" ]]; then
