@@ -25,7 +25,10 @@ optional reporting on Apache, MySQL, and network connections.
 
 %install
 %{__rm} -rf %{buildroot}
-PREFIX=%{_prefix} DESTDIR=%{buildroot} make install
+export PREFIX=%{_prefix}
+export DESTDIR=%{buildroot}
+make install-base
+make install-man
 
 
 %clean
