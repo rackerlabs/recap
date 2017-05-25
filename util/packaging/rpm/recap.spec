@@ -55,20 +55,10 @@ make install-man
 
 %changelog
 * Mon May 15 2017 Tony Garcia <tony.garcia@rackspace.com> - 1.0.0-1.rs
-- Record point-in-time CPU.
-- Multiple bug fixing on recaptool.
-- Multiple bug fixing on recap.
-- Refactor of recaplog.
-- Fix plesk mysql bug.
-- Install recaptool man page.
-- Adding specific requirements for bash(>=4) and sysstat(>=9).
-- Removing rpm spec requirements: elinks.
+- Update to version 1.0.0
+- Include recaptool man page.
+- Clean up requirements.
 - Obsoletes and provides rs-sysmon.
-- Better support for multiple mysql instances.
-- Makefile updated to allow multiple distros alignment and to include new man pages.
-- Adjust spec for Makefile.
-- Makefile now uses /usr/local as default for DESTDIR.
-- fdisk warnings(stderr) are now included in the logs(stdin).
 
 * Wed May 11 2016 Ben Harper <ben.harper@rackspace.com> - 0.9.14-1.rs
 - Latest version

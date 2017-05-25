@@ -7,10 +7,8 @@ All notable changes to this project will be documented in this file.
 - Multiple bug fixing on recap.
 - Refactor of recaplog.
 - Fix plesk mysql bug.
-- Install recaptool man page.
-- Adding specific requirements for bash(>=4) and sysstat(>=9).
-- Removing rpm spec requirements: elinks.
-- Obsoletes and provides rs-sysmon.
+- Include recaptool man page.
+- RPM spec file specifics: modified to update requirements, obsoletes, provides rs-sysmon.
 - Better support for multiple mysql instances.
 - Makefile updated to allow multiple distros alignment and to include new man pages.
 - Adjust spec for Makefile.
