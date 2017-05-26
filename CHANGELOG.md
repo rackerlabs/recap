@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.0] - 2017-05-15
 - Record point-in-time CPU.
 - Multiple bug fixing on recaptool.
 - Multiple bug fixing on recap.
@@ -9,11 +9,13 @@ All notable changes to this project will be documented in this file.
 - Fix plesk mysql bug.
 - Install recaptool man page.
 - Adding specific requirements for bash(>=4) and sysstat(>=9).
+- Removing rpm spec requirements: elinks.
 - Obsoletes and provides rs-sysmon.
 - Better support for multiple mysql instances.
 - Makefile updated to allow multiple distros alignment and to include new man pages.
 - Adjust spec for Makefile.
 - Makefile now uses /usr/local as default for DESTDIR.
+- fdisk warnings(stderr) are now included in the logs(stdin).
 
 ## [0.9.14] - 2016-05-11
 - Fix #55 Code clean up, typos fixed and functions renamed

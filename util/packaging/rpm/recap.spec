@@ -1,5 +1,5 @@
 Name: recap
-Version: 0.9.14
+Version: 1.0.0
 Release: 1.rs%{?dist}
 Summary: System status reporting
 Group: Applications/System
@@ -8,7 +8,7 @@ Url: https://github.com/rackerlabs/%{name}
 Source0: https://github.com/rackerlabs/%{name}/archive/%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: sysstat, coreutils, procps, grep, gawk, bc, elinks, net-tools, iotop
+Requires: bash >= 4, sysstat >= 9, coreutils, procps, grep, gawk, bc, net-tools, iotop, psmisc
 Obsoletes: rs-sysmon < 0.9.5-2
 Provides: rs-sysmon = %{version}-%{release}
 
@@ -25,7 +25,10 @@ optional reporting on Apache, MySQL, and network connections.
 
 %install
 %{__rm} -rf %{buildroot}
-DESTDIR=%{buildroot} make install
+export PREFIX=%{_prefix}
+export DESTDIR=%{buildroot}
+make install-base
+make install-man
 
 
 %clean
@@ -47,9 +50,26 @@ DESTDIR=%{buildroot} make install
 %{_mandir}/man5/recap.5.gz
 %{_mandir}/man8/recap.8.gz
 %{_mandir}/man8/recaplog.8.gz
+%{_mandir}/man8/recaptool.8.gz
 
 
 %changelog
+* Mon May 15 2017 Tony Garcia <tony.garcia@rackspace.com> - 1.0.0-1.rs
+- Record point-in-time CPU.
+- Multiple bug fixing on recaptool.
+- Multiple bug fixing on recap.
+- Refactor of recaplog.
+- Fix plesk mysql bug.
+- Install recaptool man page.
+- Adding specific requirements for bash(>=4) and sysstat(>=9).
+- Removing rpm spec requirements: elinks.
+- Obsoletes and provides rs-sysmon.
+- Better support for multiple mysql instances.
+- Makefile updated to allow multiple distros alignment and to include new man pages.
+- Adjust spec for Makefile.
+- Makefile now uses /usr/local as default for DESTDIR.
+- fdisk warnings(stderr) are now included in the logs(stdin).
+
 * Wed May 11 2016 Ben Harper <ben.harper@rackspace.com> - 0.9.14-1.rs
 - Latest version
 - Fixing typos, removing commented old code, renaming functions
