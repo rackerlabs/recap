@@ -93,16 +93,6 @@ USEFDISK="no"
 MYSQL_PROCESS_LIST="table"
 MIN_FREE_SPACE=0
 
-###########################################
-######### DEFAULT COMMAND OPTIONS #########
-###########################################
-
-# variables not currently documented for end users/not yet intended for use
-# if you change any of these, everything is likely to break in some ugly,
-# unpredictable way
-# set the permissions on the output directory, if we have to create it
-OUTPUTDIR_MODE="750"
-
 ##############################################
 ######### BEGIN FUNCTION DEFINITIONS #########
 ##############################################
@@ -136,7 +126,6 @@ create_output_dirs() {
   for OUTPUT_DIR in ${OUTPUT_DIRS[@]}; do
     if [[ ! -d "${OUTPUT_DIR}" ]]; then
       mkdir -p "${OUTPUT_DIR}"
-      chmod ${OUTPUTDIR_MODE} "${OUTPUT_DIR}"
     fi
   done
 }
