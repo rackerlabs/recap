@@ -3,6 +3,10 @@
 recap is a reporting script that generates reports of 
 various information about the server.
 
+## Contribution
+
+Contribution guidelines can be found in CONTRIBUTING.md.
+
 ## Dependencies
 * git - Installation
 * bc - arithmetic calculations
