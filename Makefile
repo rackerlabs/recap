@@ -57,8 +57,8 @@ install-base: src/recap.cron
 	@install -Dm0644 src/recap.cron $(DESTDIR)$(CRONDIR)/recap
 	@echo "Creating log directories..."
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap
-	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap/backups
-	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap/snapshots
+	@install -dm0755 $(DESTDIR)$(LOGDIR)/recap/backups
+	@install -dm0755 $(DESTDIR)$(LOGDIR)/recap/snapshots
 
 install-man:
 	@echo "Installing man pages..."
