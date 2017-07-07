@@ -43,21 +43,17 @@
 #~
 #~ recaplog will not produce output if no tty is found, this is useful when
 #~ running from cron.
+#~
 
-
-## DEFAULT CONFIG ##
+## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 BASEDIR="/var/log/recap"
 LOCKFILE="/var/lock/recaplog.lock"
 LOG_COMPRESS=1
-LOG_EXPIRY=0
+LOG_EXPIRY=15
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 LOGFILE="${BASEDIR}/recaplog.log"
-EMAIL_ON_ERROR=1
-EMAIL_ON_ERROR_SUBJECT="recaplog error"
-EMAIL_ON_ERROR_RECIPIENTS="root@localhost"
 
-## FUNCTIONS ##
 
 # Function to generate timestamps
 ts() {

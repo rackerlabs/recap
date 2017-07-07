@@ -37,12 +37,9 @@ in /etc/recap
 
 ```
 DATE=`date +%Y-%m-%d_%H:%M:%S
-ROTATE="7"
 ```
 
 `DATE` is the format of the date header at the top of the reports/email
-
-`ROTATE` is the number of files to maintain for rotation purposes
 
 Additional optional variables are as follows:
 
