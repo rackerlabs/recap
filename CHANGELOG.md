@@ -111,7 +111,7 @@ All notable changes to this project will be documented in this file.
 - Blake Moore
 - Brandon Tomlinson (thebwt)
 - Brent A. Oswald (buzzboy23)
-- Carl George (cgtx)
+- Carl George (carlwgeorge)
 - Christian (thtieig)
 - Cian Brennan (lil-cain)
 - Erik Ljungstrom
