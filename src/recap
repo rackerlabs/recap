@@ -84,6 +84,7 @@ USEINNODB="no"
 USEMYSQLPROCESSLIST="no"
 
 # Default command options(can be overriden in config file)
+OPTS_CURL="-Ls"
 OPTS_DF="-x nfs"
 OPTS_FDISK="-l"
 OPTS_FREE=""
@@ -237,7 +238,7 @@ print_sar() {
 print_http_fullstatus() {
   local LOGFILE="$1"
   echo "Web Status report" >> "${LOGFILE}"
-  curl -Ls "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
+  curl ${OPTS_CURL} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
 }
 
 # Print the output of "netstat -ntulpae" to the specified file
