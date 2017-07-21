@@ -102,7 +102,6 @@ OPTS_STATUSURL="http://localhost:80/"
 # Cleanup function to remove lock
 cleanup() {
   rm -f "${LOCKFILE}"
-  exit 2
 }
 
 # Create a Lock so that recap does not try to run over itself.
@@ -112,7 +111,8 @@ recaplock() {
     echo "ERROR $( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
-    trap 'cleanup' 1 2 15 17 19 23 EXIT
+    trap 'cleanup; exit 2' 1 2 15 17 19 23
+    trap 'cleanup' EXIT
   fi
 }
 
@@ -691,4 +691,4 @@ if [[ -n "${MAILTO}" ]]; then
 fi
 
 # We're done, time to exit
-exit
+exit 0
