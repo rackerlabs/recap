@@ -108,7 +108,7 @@ cleanup() {
 # Create a Lock so that recap does not try to run over itself.
 recaplock() {
   (set -C; echo "$$" > "${LOCKFILE}") 2>/dev/null
-  if [ $? -ne 0 ]; then
+  if [[ $? -ne 0 ]]; then
     echo "ERROR $( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
@@ -571,16 +571,15 @@ check_disk_space() {
 
 # Check to see where the configuration file is located.
 # If the file is not at /etc/recap, make some noise to alert users
-if [ -r /etc/sysconfig/recap ] && [ -r /etc/recap ]
-then
+if [[ -r /etc/sysconfig/recap &&
+      -r /etc/recap ]]; then
 	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
 	source /etc/sysconfig/recap
-elif [ -r /etc/sysconfig/recap ] && [ ! -r /etc/recap ]
-then
+elif [[ -r /etc/sysconfig/recap &&
+        ! -r /etc/recap ]]; then
 	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
 	source /etc/sysconfig/recap
-elif [ ! -r /etc/recap ]
-then
+elif [[ ! -r /etc/recap ]]; then
 	echo "No configuration file found. Proceeding with defaults."
 else
 	source /etc/recap
