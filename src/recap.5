@@ -19,7 +19,7 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH RECAP 5 "October 31, 2013"
+.TH RECAP 5 "July 7, 2017"
 .SH NAME
 recap \- dumps periodic information about running applications and resource usage
 .SH SYNOPSIS
@@ -30,25 +30,42 @@ recap is a user-configurable script that can be run once, or run periodically ou
 The default values for which reports are generated and how many reports are stored can be
 .IR /etc/recap "."
 The output files from the script are written to
-.IR /var/log/recap "."
+.IR BASEDIR "."
 .SH OPTIONS
 .LP
+
+.IP \fBBACKUP_ITEMS\fR
+.br
+The list of reports to be generated and used by recap scripts. Currently this list is used in conjunction with the "USE___" variables to generate a report.
+(default: "fdisk mysql netstat ps pstree resources")
+
+.IP \fBBASEDIR\fR
+.br
+Directory where recap logs will be written, if defined is used by recaplog and recaptool.
+(default: /var/log/recap)
+
 .IP \fBMAILTO\fR
 .br
 Define this variable if you would like the reports to be sent via email
 
-.IP \fBMYSQL_PROCESS_LIST\fR
+IP \fBMAXLOAD\fR
 .br
-"table" to display MySQL process list as a table, "vertical" to display process list vertically
-(default: table)
+The maximum load allowed to run recap, abort if load is higher than this value. Default is calculated dynamically 10 times the number of CPUs identified by the kernel.
+(default: 10*CPUs)
 
-.IP \fBROTATE\fR
+.IP \fBMIN_FREE_SPACE\fR
 .br
-By default, the last seven result sets will be stored. If you define this value you can set it equal to any integer in order to keep a larger or smaller set of data.
+The minimum free disk space (in MB) required in ${BASEDIR} to run recap. (Disabled by default)
+(default: 0)
 
+.PP
+REPORTS
+.RS 4
 .IP \fBUSEFDISK\fR
 .br
-Can be set to yes or no to enable or not the fdisk.log. (default: no)
+Can be set to yes or no to enable or not "fdisk ${OPTS_FDISK}. This output is written in
+.IR ${BASEDIR}/fdisk.log
+(default: no)
 
 .IP \fBUSEPS\fR
 .br
@@ -58,106 +75,148 @@ Can be set to yes or no to enable or disable the ps.log. (default: yes)
 .br
 Can be set to yes or no to enable or disable the resources.log. (default: yes)
 
+.IP \fBUSEDF\fR
+.br
+Can be set to yes or no depending on whether or not "df ${OPTS_DF}" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: yes)
+
+.IP \fBUSESLAB\fR
+.br
+Can be set to yes or no depending on whether or not the slab counters should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+
 .IP \fBUSESAR\fR
 .br
-Can be set to yes or no depending on whether or not "sar" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
-
-.IP \fBUSESARR\fR
-.br
-Can be set to yes or no depending on whether or not "sar -r" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not "sar" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: yes)
 
 .IP \fBUSESARQ\fR
 .br
-Can be set to yes or no depending on whether or not "sar -q" output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not "sar -q"(Queue lenght, load) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+
+.IP \fBUSESARR\fR
+.br
+Can be set to yes or no depending on whether or not "sar -r"(memory data) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
 
 .IP \fBUSEFULLSTATUS\fR
 .br
-Can be set to yes or no depending on whether or not the output of "service httpd fullstatus" should be recorded. Before enabling this option, please make sure that the http://localhost/server-status URL is accessible and that the ExtendedStatus directive is turned on in the Apache configuration. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not a http request(GET) to OPTS_STATUSURL is required, it requires that the webserver url(OPTS_STATUSURL) is configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server-status) offer a functionality to provide the status of the webserver via URL. This requires that USERESOURCES be set to yes. (default: no)
 
 .IP \fBUSEPSTREE\fR
 .br
-Can be set to yes or no depending on whether or not the output of the "pstree" command should be recorded. Please note that this output is written to a separate file in
-.IR /var/log/recap/
-named
-.IR pstree.log
+Can be set to yes or no depending on whether or not the output of the "pstree" command should be recorded. Makes use of OPTS_PSTREE to modify its options. Please note that this output is written to a separate file in
+.IR ${BASEDIR}/pstree.log
 (default: no)
 
 .IP \fBUSENETSTAT\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat -ntulpae" command should be recorded. Please note that this output is written to a separate file in
-.IR /var/log/recap/
-named
-.IR netstat.log
-(default: no)
+Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT}" command should be recorded. Please note that this output is written to a separate file in
+.IR ${BASEDIR}/netstat.log
+is required by USENETSTATSUM.
+(default: yes)
 
 .IP \fBUSENETSTATSUM\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat -s" command should be recorded. This report requires that USENETSTAT be set to "yes". Please note that this output is written to a separate file in
-.IR /var/log/recap/
-named
-.IR netstat.log
+Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT_SUM}" command should be recorded. This report requires that USENETSTAT be set to "yes". This output is written in
+.IR ${BASEDIR}/netstat.log
 (default: no)
 
 .IP \fBUSEMYSQL\fR
 .br
-Can be set to yes or no depending on whether or not the output of "mysqladmin status" command should be recorded. Before enabling this option, please make sure that the ~root/.my.cnf has appropriate credentials for accessing MySQL. Please note that this output is written to a separate file in
-.IR /var/log/recap/
-named
-.IR mysql.log
+Can be set to yes or no depending on whether or not the output of "mysqladmin status" command should be recorded. Before enabling this option, please make sure that DOTMYDOTCNF points to the file that has appropriate credentials for accessing MySQL. Please note that this output is written to a separate file in
+.IR ${BASEDIR}/mysql.log
 (default: no)
 
 .IP \fBUSEMYSQLPROCESSLIST\fR
 .br
-Can be set to yes or no depending on whether or not the output of "mysqladmin status" command should be recorded. This report requires that USEMYSQL be set to "yes". Please note that this output is written to a separate file in
-.IR /var/log/recap/
-named
-.IR mysql.log
+Can be set to yes or no depending on whether or not the output of "mysqladmin processlist" command should be recorded. This report requires that USEMYSQL be set to "yes". This option makes use of MYSQL_PROCESS_LIST, to produce the output vertical or in a table. This output is written in
+.IR ${BASEDIR}/mysql.log
 (default: no)
 
-.SH DEFAULT COMMAND LINE OPTIONS
-.LP
+.IP \fBUSEINNODB\fR
+.br
+Can be set to yes or no depending on whether or not the output of "mysql show engine innodb status" and other variables(pid_files, tmpdir) command should be recorded. This report requires that USEMYSQL be set to "yes". This output is written in
+.IR ${BASEDIR}/mysql.log
+(default: no)
+
+.PP
+COMMAND OPTIONS
+.RS 4
+Options used by the tools generating the reports
+
+.IP \fBDOTMYDOTCNF\fR
+.br
+Option required by USEMYSQL, USEMYSQLPROCESSLIST, USEINNODB, defines the path to the mysql client configuration file.
+(default: "/root/.my.cnf")
+
+.IP \fBMYSQL_PROCESS_LIST\fR
+.br
+Format to display MySQL process list, options are "table" or "vertical". This requires that USEMYSQLPROCESSLIST be set "yes".
+(default: table).
+
+.IP \fBOPTS_CURL\fR
+.br
+Options used by curl, when using USEFULLSTATUS
+(default: '-Ls')
+
 .IP \fBOPTS_DF\fR
 .br
 df options
+(default: '-x nfs')
 
 .IP \fBOPTS_FDISK\fR
 .br
-fdisk options
+Option used by USEFDISK.
+(default: "-l")
 
 .IP \fBOPTS_FREE\fR
 .br
 free options
+(default: "")
 
 .IP \fBOPTS_IOSTAT\fR
 .br
 iostat options
+(default: "-t -x 1 3" )
 
 .IP \fBOPTS_IOTOP\fR
 .br
 iotop options
+(default: "-b -o -t -n 3")
 
 .IP \fBOPTS_NETSTAT\fR
 .br
 netstat options
+(default: "-ntulpae")
 
 .IP \fBOPTS_NETSTAT_SUM\fR
 .br
 netstat statics options
+(default: "-s")
 
 .IP \fBOPTS_PS\fR
 .br
 ps options
+(default: "auxfww")
 
 .IP \fBOPTS_PSTREE\fR
 .br
 pstree options
+(default: "-p")
+
+.IP \fBOPTS_STATUSURL\fR
+.br
+URL to perform the http request when USEFULLSTATUS is enabled.
+(default: "http://localhost:80/")
 
 .IP \fBOPTS_VMSTAT\fR
 .br
 vmstat options
+(default: "-S M 1 3")
+
+.SH "REPORTING BUGS"
+Bugs and issues to be submitted via github
+<https://github.com/rackerlabs/recap/issues>.
 
 .SH AUTHOR
-The recap script is maintained by Brent Oswald (brent.oswald@rackspace.com) and Benjamin H. Graham (ben@administr8.me). If you have any questions, comments, or concerns, please let them know or post them to https://github.com/rackerlabs/recap/issues.
+The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 .SH "SEE ALSO"
 .BR recap (8),
 .BR recaplog (8),

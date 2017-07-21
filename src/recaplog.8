@@ -19,7 +19,7 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH "RECAPLOG" "8" "January 21, 2017"
+.TH "RECAPLOG" "8" "July 7, 2017"
 
 .SH NAME
 .PP
@@ -44,7 +44,18 @@ recaplog is a user-configurable script that runs periodically out of cron to com
 .BI "-v"
 .R Prints to stdout.
 
+.SH SETTINGS
+These can be modified via the config file.
 .TP
+.BI LOG_COMPRESS
+.R Enables(1) or disables(0) log compression.
+.B (default: 1)
+
+.TP
+.BI LOG_EXPIRY
+.R Number of days held for the logs.
+.B (default: 15)
+
 .SH FILES
 .nf
 /etc/recap \- The configuration file.
@@ -56,7 +67,7 @@ Bugs and issues to be submitted via github
 <https://github.com/rackerlabs/recap/issues>.
 
 .SH AUTHOR
-The recaplog script was initially created by Simone Soldateschi(https://github.com/siso).
+The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 
 .SH "SEE ALSO"
 .BR recap (5),

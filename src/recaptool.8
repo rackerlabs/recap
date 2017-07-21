@@ -19,7 +19,7 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH "RECAPTOOL" "8" "October 3, 2016"
+.TH "RECAPTOOL" "8" "July 7, 2017"
 
 
 .SH NAME
@@ -73,8 +73,9 @@ a particular option in the logs.
 
 .TP
 .BI "-d " "PATH" 
-.RB "Specify the recap log " "PATH" ". Default is"
+.RB "Overrides the recap log " "PATH" ". Default uses BASEDIR"
 .I /var/log/recap/
+.RB "Can be changed in config file."
 
 .SH FILES
 .I /var/log/recap/*.log
@@ -118,8 +119,7 @@ Bugs and issues to be submitted via github
 <https://github.com/rackerlabs/recap/issues>.
 
 .SH AUTHOR
-The recaptool script was initially created by "Benjamin H. Graham"
-<ben@administr8.me>.
+The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 
 .SH "SEE ALSO"
 .BR recap (5),

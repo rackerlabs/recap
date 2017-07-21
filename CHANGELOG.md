@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2017-06-15
+- Align default settings on recap.conf to script defaults.
+- Default setting changed for: USEDF, USENETSTAT, OPTS_PSTREE.
+- Removed old unused settings.
+- Added new setting(OPTS_STATUSURL) to remove dependency to apache httpd.
+- Updated man pages to reflect new defaults.
+
 ## [1.0.0] - 2017-05-15
 - Record point-in-time CPU.
 - Multiple bug fixing on recaptool.
@@ -106,15 +113,19 @@ All notable changes to this project will be documented in this file.
 
 # Contributors
 - Alan Pearce
+- Andrew Howard(StafDehat)
 - Ben Harper (b-harper)
 - Benjamin H. Graham (bhgraham)
 - Blake Moore
 - Brandon Tomlinson (thebwt)
 - Brent A. Oswald (buzzboy23)
 - Carl George (carlwgeorge)
+- Carl Thompson(redragon)
 - Christian (thtieig)
 - Cian Brennan (lil-cain)
+- David King
 - Erik Ljungstrom
+- Jacob Walcik
 - James Belchamber
 - Sean Dennis (jamrok)
 - Jay Goldberg
