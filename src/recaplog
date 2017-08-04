@@ -219,9 +219,8 @@ pack_old_logs() {
 
 # Cleanup function to remove lock
 cleanup() {
-  log INFO "$( basename $0 ) ($$): Caught exit signal - deleting ${LOCKFILE}"
+  log INFO "$( basename $0 ) ($$): Caught signal - deleting ${LOCKFILE}"
   rm -f "${LOCKFILE}"
-  exit 2
 }
 
 # Create a Lock so that recaplog does not try to run over itself.
@@ -231,7 +230,8 @@ recaploglock() {
     log ERROR "$( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
-    trap 'cleanup' 1 2 15 17 19 23 EXIT
+    trap 'cleanup; exit 2' 1 2 15 17 19 23
+    trap 'cleanup' EXIT
     log INFO "$( basename $0 ) ($$): Created lock file: ${LOCKFILE}"
   fi
 }
