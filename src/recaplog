@@ -227,7 +227,7 @@ cleanup() {
 # Create a Lock so that recaplog does not try to run over itself.
 recaploglock() {
   (set -C; echo "$$" > "${LOCKFILE}") 2>/dev/null
-  if [ $? -ne 0 ]; then
+  if [[ $? -ne 0 ]]; then
     log ERROR "$( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
@@ -259,8 +259,7 @@ while getopts hnv flag; do
 done
 
 # Verify running as root
-if [ "$( id -u )" != "0" ]
-then
+if [[ "$( id -u )" != "0" ]]; then
   echo "This script must be run as root." >&2
   exit 1
 fi
