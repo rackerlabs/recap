@@ -1,89 +1,302 @@
 # Recap
 
-recap is a reporting script that generates reports of 
-various information about the server.
+[![GitHub release](https://img.shields.io/github/release/rackerlabs/recap.svg)](https://github.com/rackerlabs/recap/releases/latest)
+[![License](https://img.shields.io/badge/license-GPLv2-red.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
+[![GitHub stars](https://img.shields.io/github/stars/rackerlabs/recap.svg?style=social&label=Star)](https://github.com/rackerlabs/recap)
+
+**recap** is a system status reporting tool. A reporting script that generates reports of various information about the server.
 
 ## Contribution
 
-Contribution guidelines can be found in CONTRIBUTING.md.
+Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
 
 ## Dependencies
-* git - Installation
-* bc - arithmetic calculations
-* net-tools - netstat report
-* sysstat - provides 'iostat' for  I/O statistics
-* iotop - simple top-like I/O monitor
+- bash >= 4
+- bc
+- coreutils
+- gawk
+- grep
+- iotop
+- net-tools
+- procps
+- psmisc
+- sysstat >= 9
 
 ## Installation
-1. Install the required dependencies:
-  * Debian/Ubuntu - `apt-get install bc gawk git iotop make net-tools psmisc sysstat`
-  * RHEL/CentOS - `yum install bc gawk git iotop make net-tools psmisc sysstat`
+
+It is highly recommended to make use of a package to install `recap` is the easiest way to keep it updated whenever there is a new release.
+
+### Package
+
+`recap` is provided in [EPEL](https://fedoraproject.org/wiki/EPEL) for Red Hat based distros. A list of the EPEL repos is [here](https://bodhi.fedoraproject.org/updates/?packages=recap).
+
+At the moment there is no public repository for Debian based distros.
+
+### Manual
+
+1. Install the required dependencies.
 2. Clone this repository: `git clone https://github.com/rackerlabs/recap.git`
 3. Change into the new directory: `cd recap`
-4. Install the program: `make install`
+4. Install the program: `sudo make install`
 
 The information captured will be found in log files in the `/var/log/recap/` directory.
 
-## Configuration
+## Cron and Configuration
 
-The cron file (`/etc/cron.d/recap`) is used to determine the execution time of
-`recap` and `recaplog`.  By default the cron execution for `recap` is enabled
-to run every 10 min. and `recaplog` is expected to run
-every day at 1 am, but those can be adjusted as needed.
+### Cron
 
-The following variables are defined with defaults inside the 
-script but can be overwritten if these variables are defined
-in /etc/recap
+The cron file (`/etc/cron.d/recap`) is used to determine the execution time of `recap` and `recaplog`.  By default the cron execution for `recap` is enabled to run every 10 min. and `recaplog` is expected to run every day at 1 am, but those can be adjusted as needed.
 
-```
-DATE=`date +%Y-%m-%d_%H:%M:%S
-```
+### Configuration
 
-`DATE` is the format of the date header at the top of the reports/email
+The following variables are commented out with the defaults values in the configuration file `/etc/recap` which can be overriden.
 
-Additional optional variables are as follows:
+#### Settings shared by recap scripts
 
-`MAILTO` i.e., `MAILTO="username@example.com"`
+- **BASEDIR** - Directory where the logs are saved.
 
-`USEPS` do you want to generate the ps.log? (no/yes) default yes
+  Default: `BASEDIR="/var/log/recap"`
 
-`USERESOURCES` do you want to generate the resources.log? (no/yes) default yes
+- **BACKUP_ITEMS** - Is the list of reports generated and used by recap scripts
 
-`USESAR` do you want to generate sar reports? (no/yes) default no
+  Default: `BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"`
 
-`USESARR` do you want to generate sar -r reports? (no/yes) default no
 
-`USESARQ` do you want to generate sar -q reports? (no/yes) default no
+#### Settings used only by `recaplog`
 
-`USEFULLSTATUS` do you want to generate "service httpd fullstatus" reports? (no/yes) default no
+- **LOG_COMPRESS** - Enable or disable log compression.
 
-See the recap man pages for additional optional reports. Some reports depend on 
-parent reports to generate the file they will write their output to. 
+  Default: `LOG_COMPRESS=1`
 
-For instance, the `USESAR` reports above all rely on having `USERESOURCES` enabled.
+- **LOG_EXPIRY** - Log files will be deleted after LOG_EXPIRY days
 
-The script will never need to be modified for these variables, they
-can all be defined in `/etc/recap`
+  Default: `LOG_EXPIRY=15`
 
-If you want a backup of the last file created before a reboot
-uncomment the `@reboot` line in the crontab file `/etc/cron.d/recap`
+#### Settings used only by `recap`
 
-Uncomment the lines to enable the backup
+- **MAILTO** - Send a report to the email defined.
 
-## Info & License
-```
-Package name:   recap
-Author:         The Common Public
-Maintainers:    Brent Oswald, Benjamin Graham, Simone Soldateschi
-License:        GPL 2.0
-Homepage:       https://github.com/rackerlabs/recap/
+  Default: `MAILTO=""`
 
-Original authors at Rackspace (http://www.rackspace.com):
-                    -Jacob Walcik
-                    -Carl Thompson
+- **MIN_FREE_SPACE** - Minimum free space (in MB) required in `${BASEDIR}` to run recap, a value of 0 deactivates this check.
 
-Past contributors at Rackspace:
-                    -David King
-                    -Hans duPlooy
-                    -All other should be defined in CHANGELOG.md
-```
+  Default: `MIN_FREE_SPACE=0`
+
+- **MAXLOAD** - Maximum load allowed to run recap, abort if load is higher than this value.
+
+  Default: `MAXLOAD=10`
+
+
+#### Reports
+
+These are the type of reports generated and their dependencies.
+
+##### fdisk
+
+- **USEFDISK** - Generates logs from "fdisk `${OPTS_FDISK}`"
+
+  Default: `USEFDISK="no"`
+
+##### mysql
+
+- **USEMYSQL** - Generates logs from "mysqladmin status"
+
+  Makes use of `DOTMYDOTCNF`.
+
+  Required by: `USEMYSQLPROCESSLIST`, `USEINNODB`
+
+  Default: `USEMYSQL="no"`
+
+- **USEMYSQLPROCESSLIST** - Generates logs from "mysqladmin processlist"
+
+  Makes use of `DOTMYDOTCNF` and `MYSQL_PROCESS_LIST`
+
+  Requires: `USEMYSQL`
+
+  Default: `USEMYSQLPROCESSLIST="no"`
+
+- **USEINNODB** - Generates logs from "mysql show engine innodb status"
+
+  Makes use of `DOTMYDOTCNF`
+
+  Requires: `USEMYSQL`
+
+  Default: `USEINNODB="no"`
+
+
+##### netstat
+
+- **USENETSTAT** - Generates network stats from "netstat `${OPTS_NETSTAT}`"
+
+  Required by: `USENETSTATSUM`
+
+  Default: `USENETSTAT="yes"`
+
+
+- **USENETSTATSUM** - Generates logs from "netstat `${OPTS_NETSTAT_SUM}`".
+
+  Requires: `USENETSTAT`
+
+  Default: `USENETSTATSUM="no"`
+
+##### ps
+
+- **USEPS** - Generates logs from "ps"
+
+  Options can be modified in `OTPS_PS`
+
+  Default: `USEPS="yes"`
+
+##### pstree
+
+- **USEPSTREE** - Generates logs from pstree
+
+  Options can be modified in `OTPS_PSTREE`
+
+  Default: `USEPSTREE="no"`
+
+##### resources
+
+- **USERESOURCES** - Generates "resources"(uptime, free, vmstat, iostat, iotop) log
+
+  Required by: `USEDF`, `USESLAB`, `USESAR`, `USESARQ`, `USESARR`, `USEFULLSTATUS`
+
+  Default: `USERESOURCES="yes"`
+
+
+- **USEDF** - Generates logs from df
+
+  Requires: `USERESOURCES`
+
+  Options can be modified in `OPTS_DF`
+
+  Default: `USEDF="yes"`
+
+- **USESLAB** - Generates logs from the slab table.
+
+  Requires: `USERESOURCES`
+
+  Default: `USESLAB="no"`
+
+
+- **USERSAR** - Generates logs from sar.
+
+  Requires: `USERESOURCES`
+
+  Default: `USESAR="yes"`
+
+- **USESARQ** - Generates logs from "sar -q" (logs queue lenght, load data)
+
+  Requires: `USERESOURCES`
+
+  Default: `USESARQ="no"`
+
+- **USESARR** - Generates logs from"sar -r" (logs memory data)
+
+  Requires: `USERESOURCES`
+
+  Default: `USESARR="no"`
+
+- **USEFULLSTATUS** - Performs an http request(GET) to the URL defined in `OPTS_STATUSURL`. Needs a webserver configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server-stats) offer this functionality that needs to be enabled.
+
+  Requires: `USERESOURCES`
+
+  Default: `USEFULLSTATUS="no"`
+
+
+#### Options
+
+Options used by the tools generating the reports
+
+- **DOTMYDOTCNF** - Defines the path to the mysql client configuration file
+
+  Required by: `USEMYSQL`, `USEMYSQLPROCESSLIST`, `USEINNODB`
+
+  Default: `DOTMYDOTCNF="/root/.my.cnf"`
+
+- **MYSQL_PROCESS_LIST** - Format  to  display MySQL process list, options are "table" or "vertical".
+
+  Required by: `USEMYSQLPROCESSLIST`
+
+  Default: `MYSQL_PROCESS_LIST="table"`
+
+- **OPTS_CURL** - Options used by curl.
+  Required by: `USEFULLSTATUS`
+
+  Default: `OPTS_CURL="-Ls"`
+
+- **OPTS_DF** - df options
+
+  Required by: `USEDF`
+
+  Default: `OPTS_DF="-x nfs"`
+
+- **OPTS_FDISK** - Option used by USEFDISK.
+
+  Required by: `USEFDISK`
+
+  Default: `OPTS_FDISK="-l"`
+
+- **OPTS_FREE** - free options
+
+  Required by: `USEFREE`
+
+  Default: `OPTS_FREE=""`
+
+- **OPTS_IOSTAT** - iostat options
+
+  Required by: `USERESOURCES`
+
+  Default: `OPTS_IOSTAT="-t -x 1 3"`
+
+- **OPTS_IOTOP** - iotop options
+
+  Required by: `USERESOURCES`
+
+  Default: `OPTS_IOTOP="-b -o -t -n 3"`
+
+- **OPTS_NETSTAT** - netstat options
+
+  Required by: `USENETSTAT`
+
+  Default: `OPTS_NETSTAT="-ntulpae"`
+
+- **OPTS_NETSTAT_SUM** - netstat statistics options
+
+  Required by: `USENETSTATSUM`
+
+  Default: `OPTS_NETSTAT_SUM="-s"`
+
+- **OPTS_PS** - ps options
+
+  Required by: `USEPS`
+
+  Default: `OPTS_PS="auxfww"`
+
+- **OPTS_PSTREE** - pstree options
+
+  Required by: `USEPSTREE`
+
+  Default: `OPTS_PSTREE="-p"`
+
+
+- **OPTS_STATUSURL** - URL to perform the http request  when USEFULLSTATUS is enabled.
+
+  Required by: `USEFULLSTATUS`
+
+  Default: `OPTS_STATUSURL="http://localhost:80/"`
+
+- **OPTS_VMSTAT** - vmstat options
+
+  Required by: `USERESOURCES`
+
+  Default: `OPTS_VMSTAT="-S M 1 3"`
+
+## Changelog & Contributions
+
+Information about changes and contributors is documented in the [CHANGELOG.md](https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md)
+
+## License
+
+*recap* is licensed under the [GNU General Public License v2.0](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
+
