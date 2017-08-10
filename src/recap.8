@@ -21,13 +21,13 @@
 .\"
 .TH RECAP 8 "July 7, 2017"
 .SH NAME
-recap \- dumps periodic information about running applications and resource usage
+recap - dumps periodic information about running applications and resource usage
 .SH SYNOPSIS
 .BI "recap " [OPTION]
 .SH DESCRIPTION
 recap is a user-configurable script that can be run once, or run periodically out of cron to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
 
-The values for which reports are generated and how many reports are stored can be overriden in
+The values for which reports are generated and how many reports are stored can be overridden in
 .IR /etc/recap "."
 The output files from the script are written to
 .IR BASEDIR "."

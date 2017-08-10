@@ -24,7 +24,7 @@
 
 .SH NAME
 .PP
-recaptool \- parses the logs and prints specific information about memory,
+recaptool - parses the logs and prints specific information about memory,
 processes, network connections or queries to a mysql db.
 
 
@@ -37,7 +37,7 @@ processes, network connections or queries to a mysql db.
 
 .BR "recaptool " "querycount"
 
-.BR "recaptool " "-d"
+.BR "recaptool " "\-d"
 .I PATH
 
 .SH DESCRIPTION
@@ -72,7 +72,7 @@ a particular option in the logs.
 .RB "Shows the amount of " "mysql" " connections from the logs."
 
 .TP
-.BI "-d " "PATH" 
+.BI "\-d " "PATH"
 .RB "Overrides the recap log " "PATH" ". Default uses BASEDIR"
 .I /var/log/recap/
 .RB "Can be changed in config file."
@@ -86,7 +86,7 @@ Show the memory and amount of processes running for httpd:
 .nf
 $ sudo recaptool memproc http
 Information: Using /var/log/recap as recap log path
-Information: Executing memproc http 
+Information: Executing memproc http
 2016-10-07_00:00:01     1101    3032.535 M
 2016-10-07_00:10:01     1120    3132.832 M
 2016-10-07_00:20:01     1128    3186.153 M
@@ -97,7 +97,7 @@ Information: Executing memproc http
 .nf
 $ sudo recaptool netestab 443
 Information: Using /var/log/recap as recap log path
-Information: Executing netestab 443 
+Information: Executing netestab 443
 2016-10-07_00:00:01     302
 2016-10-07_00:10:01     311
 2016-10-07_00:20:01     312
@@ -108,7 +108,7 @@ Show the amount of query connections to the mysql db:
 .nf
 $ sudo recaptool querycount
 Information: Using /var/log/recap as recap log path
-Information: Executing querycount 
+Information: Executing querycount
 2016-10-07_00:00:01     124
 2016-10-07_00:10:01     125
 2016-10-07_00:20:01     128
