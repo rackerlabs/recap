@@ -21,7 +21,7 @@
 .\"
 .TH RECAP 5 "July 7, 2017"
 .SH NAME
-recap \- dumps periodic information about running applications and resource usage
+recap - dumps periodic information about running applications and resource usage
 .SH SYNOPSIS
 .BI "recap"
 .SH DESCRIPTION
@@ -89,11 +89,11 @@ Can be set to yes or no depending on whether or not "sar" output should be store
 
 .IP \fBUSESARQ\fR
 .br
-Can be set to yes or no depending on whether or not "sar -q"(Queue lenght, load) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not "sar \-q"(Queue length, load) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
 
 .IP \fBUSESARR\fR
 .br
-Can be set to yes or no depending on whether or not "sar -r"(memory data) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not "sar \-r"(memory data) output should be stored in the report output. This requires that USERESOURCES be set to yes. (default: no)
 
 .IP \fBUSEFULLSTATUS\fR
 .br
@@ -154,17 +154,17 @@ Format to display MySQL process list, options are "table" or "vertical". This re
 .IP \fBOPTS_CURL\fR
 .br
 Options used by curl, when using USEFULLSTATUS
-(default: '-Ls')
+(default: '\-Ls')
 
 .IP \fBOPTS_DF\fR
 .br
 df options
-(default: '-x nfs')
+(default: '\-x nfs')
 
 .IP \fBOPTS_FDISK\fR
 .br
 Option used by USEFDISK.
-(default: "-l")
+(default: "\-l")
 
 .IP \fBOPTS_FREE\fR
 .br
@@ -174,22 +174,22 @@ free options
 .IP \fBOPTS_IOSTAT\fR
 .br
 iostat options
-(default: "-t -x 1 3" )
+(default: "\-t \-x 1 3" )
 
 .IP \fBOPTS_IOTOP\fR
 .br
 iotop options
-(default: "-b -o -t -n 3")
+(default: "\-b \-o \-t \-n 3")
 
 .IP \fBOPTS_NETSTAT\fR
 .br
 netstat options
-(default: "-ntulpae")
+(default: "\-ntulpae")
 
 .IP \fBOPTS_NETSTAT_SUM\fR
 .br
-netstat statics options
-(default: "-s")
+netstat statistics options
+(default: "\-s")
 
 .IP \fBOPTS_PS\fR
 .br
@@ -199,7 +199,7 @@ ps options
 .IP \fBOPTS_PSTREE\fR
 .br
 pstree options
-(default: "-p")
+(default: "\-p")
 
 .IP \fBOPTS_STATUSURL\fR
 .br
@@ -209,7 +209,7 @@ URL to perform the http request when USEFULLSTATUS is enabled.
 .IP \fBOPTS_VMSTAT\fR
 .br
 vmstat options
-(default: "-S M 1 3")
+(default: "\-S M 1 3")
 
 .SH "REPORTING BUGS"
 Bugs and issues to be submitted via github
