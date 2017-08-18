@@ -40,10 +40,14 @@
 #~   -h             Print this help.
 #~   -n             Dry run.
 #~   -v             Verbose.
+#~   -V             Print version and exit.
 #~
 #~ recaplog will not produce output if no tty is found, this is useful when
 #~ running from cron.
 #~
+
+## Version
+declare -r _VERSION='1.1.0'
 
 ## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
@@ -241,7 +245,7 @@ recaploglock() {
 unset VERBOSE
 unset DRYRUN
 
-while getopts hnv flag; do
+while getopts hnvV flag; do
   case ${flag} in
     n)
       DRYRUN=1
@@ -249,6 +253,10 @@ while getopts hnv flag; do
       ;;
     v)
       VERBOSE=1
+      ;;
+    V)
+      echo "${_VERSION}"
+      exit 0
       ;;
     h|*)
       echo "Usage: $( basename $0 ) [-hnv]"

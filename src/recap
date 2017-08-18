@@ -40,6 +40,9 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 
+## Version
+declare -r _VERSION='1.1.0'
+
 ## Default settings(can *NOT* be overriden in config file)
 declare -r DATE=$( date +%F_%T )
 declare -r LOCKFILE="/var/lock/recap.lock"
@@ -137,9 +140,10 @@ print_usage() {
 	echo "Takes a snapshot of running processes and resource usage"
 	echo " "
 	echo "Optional flags: "
-	echo "-h, --help		print this help output"
-	echo "-B, --backup		copy the last log file set to '/var/log/recap/backups'"
-	echo "-S, --snapshot		take a timestamped snapshot outside of the regular output file rotation"
+	echo "-h, --help     print this help output"
+	echo "-B, --backup   copy the last log file set to '/var/log/recap/backups'"
+	echo "-S, --snapshot take a timestamped snapshot outside of the regular output file rotation"
+	echo "-V, --version  print version and exit"
 }
 
 # Create output file
@@ -593,12 +597,6 @@ if [[ ${QUIT} -eq 1 ]]; then
   exit 1
 fi
 
-# Verify that script is being run as root
-if [[ "$(id -u)" != "0" ]]; then
-  echo "This script must be run as root."
-  exit
-fi
-
 # Evaluate input flags, print usage if more than one flag is used.
 if [[ "$#" -gt 1 ]]; then
  echo "Only one flag is allowed"
@@ -609,6 +607,10 @@ fi
 # If we only have one flag, see if we know how to handle it.
 if [[ "$#" -gt 0 ]]; then
   case "$1" in
+    -V|--version)
+      echo "${_VERSION}"
+      exit 0
+      ;;
     -B|--backup)
       # backup latest log files
       BACKUP="yes"
@@ -628,6 +630,12 @@ if [[ "$#" -gt 0 ]]; then
       print_usage
       exit
   esac
+fi
+
+# Verify that script is being run as root
+if [[ "$(id -u)" != "0" ]]; then
+  echo "This script must be run as root."
+  exit
 fi
 
 check_disk_space
