@@ -19,14 +19,12 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH "RECAPTOOL" "8" "July 7, 2017"
-
+.TH "RECAPTOOL" "8" "Aug 18, 2017"
 
 .SH NAME
 .PP
 recaptool - parses the logs and prints specific information about memory,
 processes, network connections or queries to a mysql db.
-
 
 .SH SYNOPSIS
 .BR "recaptool " "{proc|mem|procmen} "
@@ -39,6 +37,8 @@ processes, network connections or queries to a mysql db.
 
 .BR "recaptool " "\-d"
 .I PATH
+
+.BR "recaptool " "\-V, --version"
 
 .SH DESCRIPTION
 recaptool  is a parsing tool for recap logs that shows specific information
@@ -76,6 +76,10 @@ a particular option in the logs.
 .RB "Overrides the recap log " "PATH" ". Default uses BASEDIR"
 .I /var/log/recap/
 .RB "Can be changed in config file."
+
+.TP
+.BI "\-V, \-\-version"
+.RB "Print version and exit."
 
 .SH FILES
 .I /var/log/recap/*.log
