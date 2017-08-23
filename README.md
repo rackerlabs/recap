@@ -26,11 +26,29 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 
 It is highly recommended to make use of a package to install `recap` is the easiest way to keep it updated whenever there is a new release.
 
-### Package
+### Fedora
 
-`recap` is provided in [EPEL](https://fedoraproject.org/wiki/EPEL) for Red Hat based distros. A list of the EPEL repos is [here](https://bodhi.fedoraproject.org/updates/?packages=recap).
+`recap` is available from the main Fedora repository ([spec file](https://src.fedoraproject.org/rpms/recap/blob/master/f/recap.spec)).
 
-At the moment there is no public repository for Debian based distros.
+```
+dnf install recap
+```
+
+### RHEL/CentOS
+
+`recap` is available from the [EPEL](https://fedoraproject.org/wiki/EPEL) repository ([spec file](https://src.fedoraproject.org/rpms/recap/blob/master/f/recap.spec)).
+
+```
+yum install recap
+```
+
+### Ubuntu
+
+At the moment there is no public repository for Ubuntu, use the [manual installation](#manual) method.
+
+### Debian
+
+At the moment there is no public repository for Debian, use the [manual installation](#manual) method.
 
 ### Manual
 
