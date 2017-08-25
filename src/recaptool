@@ -16,6 +16,9 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+## Version
+declare -r _VERSION='1.1.0'
+
 ## Default settings
 ME=`basename $0`
 BASEDIR="/var/log/recap"
@@ -103,7 +106,8 @@ usage() {
   echo -e "Usage: ${ME} ( {proc|mem|memproc} PROCESS_NAME |"
   echo "                   {net|netestab} PORT |"
   echo "                   querycount |"
-  echo "                   -d PATH )"
+  echo "                   -d PATH |"
+  echo "                   [-V|--version])"
   echo
   echo "Parsing tool for recap logs to show specific information."
   echo
@@ -112,6 +116,7 @@ usage() {
   echo "  {net|netestab} PORT              Show network connections of a PORT."
   echo "  querycount                       Show mysql connections."
   echo "  -d PATH                          Specify the recap log PATH."
+  echo "  -V, --version                    Print version and exit."
   echo
 }
 
@@ -122,6 +127,10 @@ fi
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+    -V|--version)
+      echo "${_VERSION}"
+      exit 0
+      ;;
 		-d)
 			if [[ -d $2 ]]; then
 				BASEDIR=$2
