@@ -1,12 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2017-06-15
+## [1.1.0] - 2017-09-01
 - Align default settings on recap.conf to script defaults.
 - Default setting changed for: USEDF, USENETSTAT, OPTS_PSTREE.
 - Removed old unused settings.
 - Added new setting(OPTS_STATUSURL) to remove dependency to apache httpd.
 - Updated man pages to reflect new defaults.
+- Corrected exit codes.
+- Added new options(OPTS_CURL).
+- Added version argument to scripts(recap, recaplog, recaptool).
+- RPM spec file moved out of the repo.
 
 ## [1.0.0] - 2017-05-15
 - Record point-in-time CPU.
