@@ -59,6 +59,20 @@ At the moment there is no public repository for Debian, use the [manual installa
 
 The information captured will be found in log files in the `/var/log/recap/` directory.
 
+#### About the locations of the scripts
+
+The default location of the install is `"/"` it can be overriden with `DESTDIR`, the scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overriden with `PREFIX`. The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
+
+  ```
+$ sudo make PREFIX="/usr" install 
+```
+
+This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~./usr/local"`:
+
+  ```
+$ make DESTDIR="~" install
+```
+
 ## Cron and Configuration
 
 ### Cron
