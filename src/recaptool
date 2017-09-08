@@ -16,15 +16,25 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+## Version
+declare -r _VERSION='1.1.0'
+
+## Default settings
 ME=`basename $0`
-RECAPPATH="/var/log/recap"
+BASEDIR="/var/log/recap"
 cmds=""
+CONFFILE="/etc/recap"
+
+## Overriding defaults
+if [[ -r "${CONFFILE}" ]]; then
+  source "${CONFFILE}"
+fi
 
 memproc() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/ps_*.log`; do
+	for i in `ls "${BASEDIR}"/ps_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
@@ -37,7 +47,7 @@ proc() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/ps_*.log`; do
+	for i in `ls "${BASEDIR}"/ps_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i -c >> $TMP
 	done
@@ -49,7 +59,7 @@ mem() {
 	PROCESS="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/ps_*.log`; do
+	for i in `ls "${BASEDIR}"/ps_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
 	done
@@ -61,7 +71,7 @@ net() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/netstat_*.log`; do
+	for i in `ls "${BASEDIR}"/netstat_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep ":$PORT " $i -c >> $TMP
 	done
@@ -73,7 +83,7 @@ netestab() {
 	PORT="$1"
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/netstat_*.log`; do
+	for i in `ls "${BASEDIR}"/netstat_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		egrep ":$PORT .*ESTAB" $i -c >> $TMP
 	done
@@ -84,7 +94,7 @@ netestab() {
 querycount() {
 	TMP=`mktemp`
 	>$TMP
-	for i in `ls "${RECAPPATH}"/mysql_*.log`; do
+	for i in `ls "${BASEDIR}"/mysql_*.log`; do
 		head -n 1 $i | tr "\n" "\t" >> $TMP
 		grep "Query" -c $i >> $TMP
 	done
@@ -96,7 +106,8 @@ usage() {
   echo -e "Usage: ${ME} ( {proc|mem|memproc} PROCESS_NAME |"
   echo "                   {net|netestab} PORT |"
   echo "                   querycount |"
-  echo "                   -d PATH )"
+  echo "                   -d PATH |"
+  echo "                   [-V|--version])"
   echo
   echo "Parsing tool for recap logs to show specific information."
   echo
@@ -105,19 +116,24 @@ usage() {
   echo "  {net|netestab} PORT              Show network connections of a PORT."
   echo "  querycount                       Show mysql connections."
   echo "  -d PATH                          Specify the recap log PATH."
+  echo "  -V, --version                    Print version and exit."
   echo
 }
 
-if [ $# -eq 0 ]; then
+if [[ $# -eq 0 ]]; then
 	usage
 	exit 1
 fi
 
 while [ $# -gt 0 ]; do
 	case "$1" in
+    -V|--version)
+      echo "${_VERSION}"
+      exit 0
+      ;;
 		-d)
-			if [ -d $2 ]; then
-				RECAPPATH=$2
+			if [[ -d $2 ]]; then
+				BASEDIR=$2
 				shift 2
 			else
 				echo "Error: $2 is not a valid directory."
@@ -141,7 +157,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-echo "Information: Using ${RECAPPATH} as recap log path"
+echo "Information: Using ${BASEDIR} as recap log path"
 echo "Information: Executing $cmds"
 
 $cmds

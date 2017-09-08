@@ -40,24 +40,24 @@
 #~   -h             Print this help.
 #~   -n             Dry run.
 #~   -v             Verbose.
+#~   -V             Print version and exit.
 #~
 #~ recaplog will not produce output if no tty is found, this is useful when
 #~ running from cron.
+#~
 
+## Version
+declare -r _VERSION='1.1.0'
 
-## DEFAULT CONFIG ##
+## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 BASEDIR="/var/log/recap"
 LOCKFILE="/var/lock/recaplog.lock"
 LOG_COMPRESS=1
-LOG_EXPIRY=0
+LOG_EXPIRY=15
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 LOGFILE="${BASEDIR}/recaplog.log"
-EMAIL_ON_ERROR=1
-EMAIL_ON_ERROR_SUBJECT="recaplog error"
-EMAIL_ON_ERROR_RECIPIENTS="root@localhost"
 
-## FUNCTIONS ##
 
 # Function to generate timestamps
 ts() {
@@ -223,19 +223,19 @@ pack_old_logs() {
 
 # Cleanup function to remove lock
 cleanup() {
-  log INFO "$( basename $0 ) ($$): Caught exit signal - deleting ${LOCKFILE}"
+  log INFO "$( basename $0 ) ($$): Caught signal - deleting ${LOCKFILE}"
   rm -f "${LOCKFILE}"
-  exit 2
 }
 
 # Create a Lock so that recaplog does not try to run over itself.
 recaploglock() {
   (set -C; echo "$$" > "${LOCKFILE}") 2>/dev/null
-  if [ $? -ne 0 ]; then
+  if [[ $? -ne 0 ]]; then
     log ERROR "$( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
-    trap 'cleanup' 1 2 15 17 19 23 EXIT
+    trap 'cleanup; exit 2' 1 2 15 17 19 23
+    trap 'cleanup' EXIT
     log INFO "$( basename $0 ) ($$): Created lock file: ${LOCKFILE}"
   fi
 }
@@ -245,7 +245,7 @@ recaploglock() {
 unset VERBOSE
 unset DRYRUN
 
-while getopts hnv flag; do
+while getopts hnvV flag; do
   case ${flag} in
     n)
       DRYRUN=1
@@ -253,6 +253,10 @@ while getopts hnv flag; do
       ;;
     v)
       VERBOSE=1
+      ;;
+    V)
+      echo "${_VERSION}"
+      exit 0
       ;;
     h|*)
       echo "Usage: $( basename $0 ) [-hnv]"
@@ -263,8 +267,7 @@ while getopts hnv flag; do
 done
 
 # Verify running as root
-if [ "$( id -u )" != "0" ]
-then
+if [[ "$( id -u )" != "0" ]]; then
   echo "This script must be run as root." >&2
   exit 1
 fi

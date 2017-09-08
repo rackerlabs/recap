@@ -40,23 +40,54 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 
-#####################################
-######### BASIC ENVIRONMENT #########
-#####################################
+## Version
+declare -r _VERSION='1.1.0'
 
-# define our basic environment
-LOG_SUFFIX=$(date +%Y%m%d-%H%M%S)
+## Default settings(can *NOT* be overriden in config file)
+declare -r DATE=$( date +%F_%T )
+declare -r LOCKFILE="/var/lock/recap.lock"
+declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-BASEDIR="/var/log/recap"
-DATE=`date +%Y-%m-%d_%H:%M:%S`
-ROTATELOGS="yes"
-SNAPSHOT="no"
-BACKUP="no"
-LOCKFILE="/var/lock/recap.lock"
-BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
-MAXLOAD="1000"
 
-# default command options
+## Default settings(modified through command line arguments)
+BACKUP="no"
+SNAPSHOT="no"
+
+## Default settings(can be overridden in config file)
+BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
+BASEDIR="/var/log/recap"
+MAILTO=""
+MAXLOAD=$(( $( grep -c sibling /proc/cpuinfo ) * 10 ))
+MIN_FREE_SPACE=0
+USEFDISK="no"
+USEPS="yes"
+USEPSTREE="no"
+USESLAB="no"
+
+# Parent setting(other settings depend on this)
+USERESOURCES="yes"
+# These depend on USERRESOURCES to be enabled("yes")
+USEDF="yes"
+USEFULLSTATUS="no"
+USESAR="yes"
+USESARQ="no"
+USESARR="no"
+
+# Parent setting(other settings depend on this)
+USENETSTAT="yes"
+# These depend on USENETSTAT to be enabled("yes")
+USENETSTATSUM="no"
+
+# Parent setting(other settings depend on this)
+USEMYSQL="no"
+# These depend on USEMYSQL to be enabled("yes")
+DOTMYDOTCNF="/root/.my.cnf"
+MYSQL_PROCESS_LIST="table"
+USEINNODB="no"
+USEMYSQLPROCESSLIST="no"
+
+# Default command options(can be overriden in config file)
+OPTS_CURL="-Ls"
 OPTS_DF="-x nfs"
 OPTS_FDISK="-l"
 OPTS_FREE=""
@@ -65,67 +96,30 @@ OPTS_IOTOP="-b -o -t -n 3"
 OPTS_NETSTAT="-ntulpae"
 OPTS_NETSTAT_SUM="-s"
 OPTS_PS="auxfww"
-OPTS_PSTREE=""
+OPTS_PSTREE="-p"
 OPTS_VMSTAT="-S M 1 3"
+OPTS_STATUSURL="http://localhost:80/"
 
-################################################
-######### DEFAULT VALUES FOR VARIABLES #########
-################################################
-
-# set defaults (can be overridden in /etc/recap)
-USEPS="yes"
-USERESOURCES="yes"
-USESAR="no"
-USESARR="no"
-USESARQ="no"
-USEFULLSTATUS="no"
-ROTATE="7"
-USEPSTREE="no"
-USENETSTAT="no"
-USENETSTATSUM="no"
-USEMYSQL="no"
-USEMYSQLPROCESSLIST="no"
-USEDF="no"
-USESLAB="no"
-USEINNODB="no"
-DOTMYDOTCNF="/root/.my.cnf"
-USEFDISK="no"
-MYSQL_PROCESS_LIST="table"
-MIN_FREE_SPACE=0
-
-###########################################
-######### DEFAULT COMMAND OPTIONS #########
-###########################################
-
-# variables not currently documented for end users/not yet intended for use
-# if you change any of these, everything is likely to break in some ugly,
-# unpredictable way
-# set the permissions on the output directory, if we have to create it
-OUTPUTDIR_MODE="750"
-
-##############################################
-######### BEGIN FUNCTION DEFINITIONS #########
-##############################################
-
+# Functions
 
 # Cleanup function to remove lock
 cleanup() {
   rm -f "${LOCKFILE}"
-  exit 2
 }
 
 # Create a Lock so that recap does not try to run over itself.
 recaplock() {
   (set -C; echo "$$" > "${LOCKFILE}") 2>/dev/null
-  if [ $? -ne 0 ]; then
+  if [[ $? -ne 0 ]]; then
     echo "ERROR $( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
-    trap 'cleanup' 1 2 15 17 19 23 EXIT
+    trap 'cleanup; exit 2' 1 2 15 17 19 23
+    trap 'cleanup' EXIT
   fi
 }
 
-# ensure our output directories exist before we start creating files
+# Ensure our output directories exist before we start creating files
 create_output_dirs() {
   BACKUPDIR="${BASEDIR}/backups"
   SNAPSHOTSDIR="${BASEDIR}/snapshots"
@@ -136,23 +130,23 @@ create_output_dirs() {
   for OUTPUT_DIR in ${OUTPUT_DIRS[@]}; do
     if [[ ! -d "${OUTPUT_DIR}" ]]; then
       mkdir -p "${OUTPUT_DIR}"
-      chmod ${OUTPUTDIR_MODE} "${OUTPUT_DIR}"
     fi
   done
 }
 
-# print the usage definition for the script
+# Print the usage definition for the script
 print_usage() {
 	echo "Usage: recap [OPTION]"
 	echo "Takes a snapshot of running processes and resource usage"
 	echo " "
 	echo "Optional flags: "
-	echo "-h, --help		print this help output"
-	echo "-B, --backup		copy the last log file set to '/var/log/recap/backups'"
-	echo "-S, --snapshot		take a timestamped snapshot outside of the regular output file rotation"
+	echo "-h, --help     print this help output"
+	echo "-B, --backup   copy the last log file set to '/var/log/recap/backups'"
+	echo "-S, --snapshot take a timestamped snapshot outside of the regular output file rotation"
+	echo "-V, --version  print version and exit"
 }
 
-# create output file
+# Create output file
 create_output_file() {
   local OUTPUT_FILE="$1"
   if [[ -d "${OUTPUT_FILE}" ]]; then
@@ -164,7 +158,7 @@ create_output_file() {
   fi
 }
 
-# check to see if the output directory exists
+# Check to see if the output directory exists
 check_output_file() {
   local OUTPUT_FILE="$1"
   if [[ ! -r "${OUTPUT_FILE}" ]]; then
@@ -173,60 +167,60 @@ check_output_file() {
   fi
 }
 
-# print output of "ps auxfww" to the specified file
+# Print output of "ps auxfww" to the specified file
 print_ps() {
   local LOGFILE="$1"
   ps ${OPTS_PS} >> "${LOGFILE}"
 }
 
-# print output of "pstree" to specified file
+# Print output of "pstree" to specified file
 print_pstree() {
   local LOGFILE="$1"
   pstree ${OPTS_PSTREE} >> "${LOGFILE}"
 }
 
-# print a blank line to the specified file
+# Print a blank line to the specified file
 print_blankline() {
   local LOGFILE="$1"
   echo " " >> "${LOGFILE}"
 }
 
-# print the output of "uptime" to the specified file
+# Print the output of "uptime" to the specified file
 print_uptime() {
   local LOGFILE="$1"
   echo "UPTIME report" >> "${LOGFILE}"
   uptime >> "${LOGFILE}"
 }
 
-# print the output of "free" to the specified file
+# Print the output of "free" to the specified file
 print_free() {
   local LOGFILE="$1"
   echo "FREE report" >> "${LOGFILE}"
   free ${OPTS_FREE} >> "${LOGFILE}"
 }
 
-# print the output of "vmstat" to the specified file
+# Print the output of "vmstat" to the specified file
 print_vmstat() {
   local LOGFILE="$1"
   echo "VMSTAT report" >> "${LOGFILE}"
   vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
 }
 
-# print the output of "iostat" to the specified file
+# Print the output of "iostat" to the specified file
 print_iostat() {
   local LOGFILE="$1"
   echo "IOSTAT report" >> "${LOGFILE}"
   iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
 }
 
-# print the output of "iotop" to the specified file
+# Print the output of "iotop" to the specified file
 print_iotop() {
   local LOGFILE="$1"
   echo "IOTOP report" >> "${LOGFILE}"
   iotop ${OPTS_IOTOP} >> "${LOGFILE}"
 }
 
-# print the output of sar to the specified file
+# Print the output of sar to the specified file
 print_sar() {
   local LOGFILE="$1"
   local OPTION="$2"
@@ -244,28 +238,28 @@ print_sar() {
   sar "${FLAGS}" >> "${LOGFILE}"
 }
 
-# print the output of "apachectl fullstatus" to the specified file
-print_httpd_fullstatus() {
+# Print the output of the web server status page to the specified file
+print_http_fullstatus() {
   local LOGFILE="$1"
-  echo "Apache Status report" >> "${LOGFILE}"
-  apachectl fullstatus >> "${LOGFILE}"
+  echo "Web Status report" >> "${LOGFILE}"
+  curl ${OPTS_CURL} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
 }
 
-# print the output of "netstat -ntulpae" to the specified file
+# Print the output of "netstat -ntulpae" to the specified file
 print_netstat() {
   local LOGFILE="$1"
   echo "Network connections" >> "${LOGFILE}"
   netstat ${OPTS_NETSTAT} >> "${LOGFILE}"
 }
 
-# print the output of "netstat -s" to the specified file
+# Print the output of "netstat -s" to the specified file
 print_netstat_sum() {
   local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
   netstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
 }
 
-# print the output of "mysqladmin status" to the mysql file
+# Print the output of "mysqladmin status" to the mysql file
 print_mysql() {
   local LOGFILE="$1"
   local PLESK_FILE="/etc/psa/.psa.shadow"
@@ -279,7 +273,7 @@ print_mysql() {
   print_blankline "${LOGFILE}"
 }
 
-# print the non-truncated innodb status to the mysql file
+# Print the non-truncated innodb status to the mysql file
 print_mysql_innodb_status() {
   local LOGFILE="$1"
   # First, we establish which tmpdir and pid_file are in use, strip any
@@ -313,17 +307,17 @@ print_mysql_innodb_status() {
   done
 }
 
-# print the output of "mysqladmin processlist" to the mysql file
+# Print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
   local LOGFILE="$1"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL processes" >> "${LOGFILE}"
-    if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
+    if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
       mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist \
         >> "${LOGFILE}"
     fi
-    if [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
+    if [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
       mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" \
         >> "${LOGFILE}"
     fi
@@ -332,7 +326,7 @@ print_mysql_procs() {
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
       mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" -v processlist \
         >> "${LOGFILE}"
-    elif [[ ${MYSQL_PROCESS_LIST} == "vertical" ]]; then
+    elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
       mysql --defaults-extra-file="${DOTMYDOTCNF}" \
             -e "show full processlist\G" >> "${LOGFILE}"
     fi
@@ -340,7 +334,7 @@ print_mysql_procs() {
   print_blankline "${LOGFILE}"
 }
 
-# print the top 10 processes (by cpu usage) to the defined file
+# Print the top 10 processes (by cpu usage) to the defined file
 print_top_10_cpu() {
   local LOGFILE="$1"
   local pidstat_cpufield=0
@@ -362,28 +356,28 @@ print_top_10_cpu() {
     head -11 >> "${LOGFILE}"
 }
 
-# print the top 10 processes (by memory usage) to the defined file
+# Print the top 10 processes (by memory usage) to the defined file
 print_top_10_mem() {
   local LOGFILE="$1"
   echo "Top 10 memory using processes" >> "${LOGFILE}"
   ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
 }
 
-# print the disk utilization to the defined file
+# Print the disk utilization to the defined file
 print_df() {
   local LOGFILE="$1"
   echo "Disk Utilization" >> "${LOGFILE}"
   df ${OPTS_DF} >> "${LOGFILE}"
 }
 
-# print the disk partitions to the fdisk file
+# Print the disk partitions to the fdisk file
 print_fdisk() {
   local LOGFILE="$1"
   echo "Disk partitions" >> "${LOGFILE}"
   fdisk ${OPTS_FDISK} 2>&1 >> "${LOGFILE}"
 }
 
-# print the slabinfo command to the defined file
+# Print the slabinfo command to the defined file
 print_slabinfo() {
   local LOGFILE="$1"
   echo "Slab Information" >> "${LOGFILE}"
@@ -393,7 +387,7 @@ print_slabinfo() {
     sort -k5gr >> "${LOGFILE}"
 }
 
-# send the report via email
+# Send the report via email
 send_mail() {
   # create a temp directory
   local TEMPDIR=$( mktemp -d "/tmp/rs.XXXXXXXXXX" )
@@ -422,13 +416,13 @@ send_mail() {
   fi
 }
 
-# manage item report
+# Manage item report
 run_item_report() {
   local item="$1"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
   if [[ "${SNAPSHOT,,}" == "yes" ]]; then
-    ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
+    ITEM_FILE="${SNAPSHOTSDIR}/${item}_${LOG_SUFFIX}.log_snapshot"
   fi
 
   create_output_file "${ITEM_FILE}"
@@ -436,13 +430,13 @@ run_item_report() {
   eval "print_${item}" "${ITEM_FILE}"
 }
 
-# manage resources report
+# Manage resources report
 run_resources_report() {
   local item="resources"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
   if [[ "${SNAPSHOT,,}" == "yes" ]]; then
-    ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
+    ITEM_FILE="${SNAPSHOTSDIR}/${item}_${LOG_SUFFIX}.log_snapshot"
   fi
 
   create_output_file "${ITEM_FILE}"
@@ -478,12 +472,11 @@ run_resources_report() {
     print_sar "${ITEM_FILE}" "q"
   fi
 
-  # check to see if apachectl fullstatus should be run
-  type -p 'apachectl' > /dev/null
+  # check to see if webserver fullstatus should be run
+  type -p 'curl' > /dev/null
   if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
-    # send apachectl fullstatus output to output file
     print_blankline "${ITEM_FILE}"
-    print_httpd_fullstatus "${ITEM_FILE}"
+    print_http_fullstatus "${ITEM_FILE}"
   fi
 
   if [[ "${USEDF,,}" == "yes" ]]; then
@@ -504,13 +497,13 @@ run_resources_report() {
   print_top_10_mem "${ITEM_FILE}"
 }
 
-# manage netstat report
+# Manage netstat report
 run_netstat_report() {
   local item="netstat"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
   if [[ "${SNAPSHOT,,}" == "yes" ]]; then
-    ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
+    ITEM_FILE="${SNAPSHOTSDIR}/${item}_${LOG_SUFFIX}.log_snapshot"
   fi
 
   create_output_file "${ITEM_FILE}"
@@ -524,13 +517,13 @@ run_netstat_report() {
   fi
 }
 
-# manage mysql report
+# Manage mysql report
 run_mysql_report() {
   local item="mysql"
   local ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
 
   if [[ "${SNAPSHOT,,}" == "yes" ]]; then
-    ITEM_FILE="${SNAPSHOTSDIR}/${item}.log_snapshot_${DATE}"
+    ITEM_FILE="${SNAPSHOTSDIR}/${item}_${LOG_SUFFIX}.log_snapshot"
   fi
 
   create_output_file "${ITEM_FILE}"
@@ -556,7 +549,7 @@ run_mysql_report() {
   fi
 }
 
-# copy the last log file set to ${BACKUPDIR}
+# Copy the last log file set to ${BACKUPDIR}
 create_backup() {
   for log_file in ${BACKUP_ITEMS}; do
     ls -1t ${BASEDIR}/${log_file}_*.log |
@@ -565,7 +558,7 @@ create_backup() {
   done
 }
 
-# check enough disk space is free
+# Check enough disk space is free
 check_disk_space() {
   if [[ ${MIN_FREE_SPACE} -eq 0 ]]; then
     return 0
@@ -578,22 +571,19 @@ check_disk_space() {
   fi
 }
 
-###############################################
-######### BEGIN EXECUTING SCRIPT HERE #########
-###############################################
+## Main
 
-# check to see where the configuration file is located.
-# if the file is not at /etc/recap, make some noise to alert users
-if [ -r /etc/sysconfig/recap ] && [ -r /etc/recap ]
-then
+# Check to see where the configuration file is located.
+# If the file is not at /etc/recap, make some noise to alert users
+if [[ -r /etc/sysconfig/recap &&
+      -r /etc/recap ]]; then
 	echo "Configuration files exist at old (/etc/sysconfig/recap) and new locations (/etc/recap). The file from the old location will be read. Please consolidate your configuration details into /etc/recap."
 	source /etc/sysconfig/recap
-elif [ -r /etc/sysconfig/recap ] && [ ! -r /etc/recap ]
-then
+elif [[ -r /etc/sysconfig/recap &&
+        ! -r /etc/recap ]]; then
 	echo "Configuration file exists at old location (/etc/sysconfig/recap). The file will be read. Please move your configuration file to /etc/recap."
 	source /etc/sysconfig/recap
-elif [ ! -r /etc/recap ]
-then
+elif [[ ! -r /etc/recap ]]; then
 	echo "No configuration file found. Proceeding with defaults."
 else
 	source /etc/recap
@@ -607,24 +597,20 @@ if [[ ${QUIT} -eq 1 ]]; then
   exit 1
 fi
 
-# verify that script is being run as root
-if [[ "$(id -u)" != "0" ]]; then
-  echo "This script must be run as root."
-  exit
-fi
-
-# evaluate input flags
-# if we have more than one flag, print usage and exit
+# Evaluate input flags, print usage if more than one flag is used.
 if [[ "$#" -gt 1 ]]; then
  echo "Only one flag is allowed"
  print_usage
  exit
 fi
 
-# if we only have one flag, see if we know how to handle it.
-# otherwise, print usage and exit
+# If we only have one flag, see if we know how to handle it.
 if [[ "$#" -gt 0 ]]; then
   case "$1" in
+    -V|--version)
+      echo "${_VERSION}"
+      exit 0
+      ;;
     -B|--backup)
       # backup latest log files
       BACKUP="yes"
@@ -636,7 +622,6 @@ if [[ "$#" -gt 0 ]]; then
       ;;
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
-      ROTATELOGS="no"
       SNAPSHOT="yes"
       ;;
     *)
@@ -647,71 +632,70 @@ if [[ "$#" -gt 0 ]]; then
   esac
 fi
 
+# Verify that script is being run as root
+if [[ "$(id -u)" != "0" ]]; then
+  echo "This script must be run as root."
+  exit
+fi
+
 check_disk_space
 
-# grab the server's host name
+# Grab the server's host name
 HOSTNAME="$( hostname )"
 
-# create output directory if it is not already present
+# Create output directory if it is not already present
 create_output_dirs
 
-# take a backup?
+# Take a backup
 if [[ "${BACKUP,,}" == "yes" ]]; then
   create_backup
   exit 0
 fi
 
-# proceed to report generation
+## Proceed to report generation
 
-###################################################################################
-# To add new reports, do the following:						  #
-# -Add a "USE[ string ]" variable at the top of this script to default the report #
-#  to on or off (yes or no).							  #
-# -Define a "run_[ string ]" function above that generates the report file	  #
-# -Define any supplemental functions necessary for generating the report	  #
-# -Add an "if" block below that calls the appropriate "run_[ string ]" function   #
-# -Update the documentation to reflect the new report				  #
-###################################################################################
-
+# Create lock
 recaplock
-# run the ps report
+
+# Run the ps report
 if [[ "${USEPS,,}" == "yes" ]]; then
   run_item_report "ps"
 fi
 
-# run the resources report
+# Run the resources report
 #TODO: standardize the run_resources_report
 if [[ "${USERESOURCES,,}" == "yes" ]]; then
   run_resources_report
 fi
 
-# run the pstree report
+# Run the pstree report
 if [[ "${USEPSTREE,,}" == "yes" ]]; then
   run_item_report "pstree"
 fi
 
-# run the netstat report
+# Run the netstat report
 #TODO: standardize the run_netstat_report
 if [[ "${USENETSTAT,,}" == "yes" ]]; then
   run_netstat_report
 fi
 
-# run the fdisk report
+# Run the fdisk report
 if [[ "${USEFDISK,,}" == "yes" ]]; then
   run_item_report "fdisk"
 fi
 
-# run the mysql report
+# Run the mysql report
 #TODO: standardize the run_mysql_report
 type -p 'mysqladmin' > /dev/null
 if [[ $? -eq 0 && "${USEMYSQL,,}" == "yes" ]]; then
   run_mysql_report
 fi
 
-# check to see if report should be emailed
-if [[ ! "${MAILTO}" == '' ]]; then
+# Check to see if report should be emailed
+#TODO: Validate MAILTO format.
+if [[ -n "${MAILTO}" ]]; then
   send_mail
 fi
 
-# we're done, time to exit
-exit
+# We're done, time to exit
+exit 0

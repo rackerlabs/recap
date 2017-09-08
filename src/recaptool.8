@@ -19,14 +19,12 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH "RECAPTOOL" "8" "October 3, 2016"
-
+.TH "RECAPTOOL" "8" "Aug 18, 2017"
 
 .SH NAME
 .PP
-recaptool \- parses the logs and prints specific information about memory,
+recaptool - parses the logs and prints specific information about memory,
 processes, network connections or queries to a mysql db.
-
 
 .SH SYNOPSIS
 .BR "recaptool " "{proc|mem|procmen} "
@@ -37,8 +35,10 @@ processes, network connections or queries to a mysql db.
 
 .BR "recaptool " "querycount"
 
-.BR "recaptool " "-d"
+.BR "recaptool " "\-d"
 .I PATH
+
+.BR "recaptool " "\-V, --version"
 
 .SH DESCRIPTION
 recaptool  is a parsing tool for recap logs that shows specific information
@@ -72,9 +72,14 @@ a particular option in the logs.
 .RB "Shows the amount of " "mysql" " connections from the logs."
 
 .TP
-.BI "-d " "PATH" 
-.RB "Specify the recap log " "PATH" ". Default is"
+.BI "\-d " "PATH"
+.RB "Overrides the recap log " "PATH" ". Default uses BASEDIR"
 .I /var/log/recap/
+.RB "Can be changed in config file."
+
+.TP
+.BI "\-V, \-\-version"
+.RB "Print version and exit."
 
 .SH FILES
 .I /var/log/recap/*.log
@@ -85,7 +90,7 @@ Show the memory and amount of processes running for httpd:
 .nf
 $ sudo recaptool memproc http
 Information: Using /var/log/recap as recap log path
-Information: Executing memproc http 
+Information: Executing memproc http
 2016-10-07_00:00:01     1101    3032.535 M
 2016-10-07_00:10:01     1120    3132.832 M
 2016-10-07_00:20:01     1128    3186.153 M
@@ -96,7 +101,7 @@ Information: Executing memproc http
 .nf
 $ sudo recaptool netestab 443
 Information: Using /var/log/recap as recap log path
-Information: Executing netestab 443 
+Information: Executing netestab 443
 2016-10-07_00:00:01     302
 2016-10-07_00:10:01     311
 2016-10-07_00:20:01     312
@@ -107,7 +112,7 @@ Show the amount of query connections to the mysql db:
 .nf
 $ sudo recaptool querycount
 Information: Using /var/log/recap as recap log path
-Information: Executing querycount 
+Information: Executing querycount
 2016-10-07_00:00:01     124
 2016-10-07_00:10:01     125
 2016-10-07_00:20:01     128
@@ -118,8 +123,7 @@ Bugs and issues to be submitted via github
 <https://github.com/rackerlabs/recap/issues>.
 
 .SH AUTHOR
-The recaptool script was initially created by "Benjamin H. Graham"
-<ben@administr8.me>.
+The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 
 .SH "SEE ALSO"
 .BR recap (5),
