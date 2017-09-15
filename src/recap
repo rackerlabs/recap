@@ -39,6 +39,14 @@
 # Define the default environment for recap
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
+#
+#~ Usage: _tool_ [OPTION]
+#~ Options:
+#~   -h,--help       Print this help.
+#~   -B,--backup     Copy the last log file to the backups dir.
+#~   -S,--snapshot   Take a timestamped snapshot outside the regular rotation.
+#~   -V,--version    Print version and exit.
+#~
 
 ## Version
 declare -r _VERSION='1.1.0'
@@ -102,6 +110,12 @@ OPTS_STATUSURL="http://localhost:80/"
 
 # Functions
 
+# Usage
+print_usage() {
+  grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
+                         -e "s/_tool_/$( basename $0 )/"
+}
+
 # Cleanup function to remove lock
 cleanup() {
   rm -f "${LOCKFILE}"
@@ -132,18 +146,6 @@ create_output_dirs() {
       mkdir -p "${OUTPUT_DIR}"
     fi
   done
-}
-
-# Print the usage definition for the script
-print_usage() {
-	echo "Usage: recap [OPTION]"
-	echo "Takes a snapshot of running processes and resource usage"
-	echo " "
-	echo "Optional flags: "
-	echo "-h, --help     print this help output"
-	echo "-B, --backup   copy the last log file set to '/var/log/recap/backups'"
-	echo "-S, --snapshot take a timestamped snapshot outside of the regular output file rotation"
-	echo "-V, --version  print version and exit"
 }
 
 # Create output file
@@ -599,9 +601,9 @@ fi
 
 # Evaluate input flags, print usage if more than one flag is used.
 if [[ "$#" -gt 1 ]]; then
- echo "Only one flag is allowed"
+ echo "Error: Only one flag is allowed"
  print_usage
- exit
+ exit 1
 fi
 
 # If we only have one flag, see if we know how to handle it.
@@ -618,7 +620,7 @@ if [[ "$#" -gt 0 ]]; then
     -h|--help)
       # print usage
       print_usage
-      exit
+      exit 0
       ;;
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
@@ -626,9 +628,9 @@ if [[ "$#" -gt 0 ]]; then
       ;;
     *)
       # user entered an invalid flag, print warning and exit
-      echo "Invalid Input"
+      echo "Error: Invalid Input"
       print_usage
-      exit
+      exit 1
   esac
 fi
 
