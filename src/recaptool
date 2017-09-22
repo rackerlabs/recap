@@ -15,12 +15,21 @@
 #   You should have received a copy of the GNU General Public License along
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#~ Usage: _tool_ [OPTIONS]
+#~ Options:
+#~   {proc|mem|memproc} PROCESS_NAME  Show proc/mem info of PROCESS_NAME.
+#~   {net|netestab} PORT              Show network connections of a PORT.
+#~   querycount                       Show mysql connections.
+#~   -d PATH                          Specify the recap log PATH.
+#~   -h,--help                        Print this help.
+#~   -V,--version                     Print version and exit.
+#~
 
 ## Version
 declare -r _VERSION='1.1.0'
 
 ## Default settings
-ME=`basename $0`
 BASEDIR="/var/log/recap"
 cmds=""
 CONFFILE="/etc/recap"
@@ -102,26 +111,14 @@ querycount() {
 	rm -f $TMP
 }
 
-usage() {
-  echo -e "Usage: ${ME} ( {proc|mem|memproc} PROCESS_NAME |"
-  echo "                   {net|netestab} PORT |"
-  echo "                   querycount |"
-  echo "                   -d PATH |"
-  echo "                   [-V|--version])"
-  echo
-  echo "Parsing tool for recap logs to show specific information."
-  echo
-  echo "optional arguments:"
-  echo "  {proc|mem|memproc} PROCESS_NAME  Show proc/mem info of PROCESS_NAME."
-  echo "  {net|netestab} PORT              Show network connections of a PORT."
-  echo "  querycount                       Show mysql connections."
-  echo "  -d PATH                          Specify the recap log PATH."
-  echo "  -V, --version                    Print version and exit."
-  echo
+print_usage() {
+  grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
+                         -e "s/_tool_/$( basename $0 )/"
 }
 
 if [[ $# -eq 0 ]]; then
-	usage
+  echo "Error: No arguments provided."
+	print_usage
 	exit 1
 fi
 
@@ -137,10 +134,14 @@ while [ $# -gt 0 ]; do
 				shift 2
 			else
 				echo "Error: $2 is not a valid directory."
-				usage
+				print_usage
 				exit 1
 			fi
 			;;
+    -h|--help)
+        print_usage
+        exit 0
+      ;;
 		memproc|proc|mem|net|netestab)
 			cmds="${cmds}$1 $2 "
 			shift 2
@@ -151,7 +152,7 @@ while [ $# -gt 0 ]; do
 			;;
 		*)
 			echo "Error: Invalid command $1"
-			usage
+			print_usage
 			exit 1
 			;;
 	esac

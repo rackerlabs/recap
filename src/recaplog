@@ -36,6 +36,7 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 #
+#~ Usage: _tool_ [-hnv]
 #~ Options:
 #~   -h             Print this help.
 #~   -n             Dry run.
@@ -259,8 +260,8 @@ while getopts hnvV flag; do
       exit 0
       ;;
     h|*)
-      echo "Usage: $( basename $0 ) [-hnv]"
-      grep -E '^#~' $0|sed -e 's/^#~//'
+      grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
+                             -e "s/_tool_/$( basename $0 )/"
       exit 1
       ;;
  esac
