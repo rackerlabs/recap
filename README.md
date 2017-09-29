@@ -162,14 +162,14 @@ These are the type of reports generated and their dependencies.
 
 ##### netstat
 
-- **USENETSTAT** - Generates network stats from "netstat `${OPTS_NETSTAT}`"
+- **USENETSTAT** - Generates network stats from "ss `${OPTS_NETSTAT}`"
 
   Required by: `USENETSTATSUM`
 
   Default: `USENETSTAT="yes"`
 
 
-- **USENETSTATSUM** - Generates logs from "netstat `${OPTS_NETSTAT_SUM}`".
+- **USENETSTATSUM** - Generates logs from "nstat `${OPTS_NETSTAT_SUM}`".
 
   Requires: `USENETSTAT`
 
@@ -291,17 +291,17 @@ Options used by the tools generating the reports
 
   Default: `OPTS_IOTOP="-b -o -t -n 3"`
 
-- **OPTS_NETSTAT** - netstat options
+- **OPTS_NETSTAT** - ss options
 
   Required by: `USENETSTAT`
 
-  Default: `OPTS_NETSTAT="-ntulpae"`
+  Default: `OPTS_NETSTAT="-atunp"`
 
-- **OPTS_NETSTAT_SUM** - netstat statistics options
+- **OPTS_NETSTAT_SUM** - nstat options
 
   Required by: `USENETSTATSUM`
 
-  Default: `OPTS_NETSTAT_SUM="-s"`
+  Default: `OPTS_NETSTAT_SUM="-a"`
 
 - **OPTS_PS** - ps options
 
