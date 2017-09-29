@@ -101,7 +101,7 @@ OPTS_FREE=""
 OPTS_IOSTAT="-t -x 1 3"
 OPTS_IOTOP="-b -o -t -n 3"
 OPTS_NETSTAT="-ntulpae"
-OPTS_NETSTAT_SUM="-s"
+OPTS_NETSTAT_SUM="-a"
 OPTS_PS="auxfww"
 OPTS_PSTREE="-p"
 OPTS_VMSTAT="-S M 1 3"
@@ -253,11 +253,11 @@ print_netstat() {
   netstat ${OPTS_NETSTAT} >> "${LOGFILE}"
 }
 
-# Print the output of "netstat -s" to the specified file
+# Print the output of "nstat -a" to the specified file
 print_netstat_sum() {
   local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
-  netstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+  nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
 }
 
 # Print the output of "mysqladmin status" to the mysql file
