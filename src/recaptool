@@ -82,7 +82,7 @@ net() {
 	>"${TMP}"
 	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
 		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep ":${PORT} " "${i}" -c >> "${TMP}"
+		egrep -c ":${PORT} " "${i}" >> "${TMP}"
 	done
 	sort "${TMP}"
 	rm -f "${TMP}"
@@ -94,7 +94,7 @@ netestab() {
 	>"${TMP}"
 	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
 		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep ":${PORT} .*ESTAB" "${i}" -c >> "${TMP}"
+		egrep -c "ESTAB .*:${PORT} " "${i}" >> "${TMP}"
 	done
 	sort "${TMP}"
 	rm -f "${TMP}"
