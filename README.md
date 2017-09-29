@@ -22,6 +22,14 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 - psmisc
 - sysstat >= 9
 
+## Versioning
+
+`recap` is following the `x.y.z` versioning as defined below:
+
+ - **x** *(major)* - Changes that prevent at least some rolling upgrades.
+ - **y** *(minor)* - Changes that don't break any rolling upgrades but require closer user attention for example configuration defaults, function behavior, tools used to produce reports, among others.
+ - **z** *(patch)* - Changes that are backward-compatible including features and/or bug fixes.
+
 ## Installation
 
 It is highly recommended to make use of a package to install `recap` is the easiest way to keep it updated whenever there is a new release.
