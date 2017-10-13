@@ -40,100 +40,100 @@ if [[ -r "${CONFFILE}" ]]; then
 fi
 
 memproc() {
-	PROCESS="$1"
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/ps_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep "$PROCESS" $i -c | tr "\n" "\t" >> $TMP
-		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
+	PROCESS="${1}"
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/ps_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		egrep "${PROCESS}" "${i}" -c | tr "\n" "\t" >> "${TMP}"
+		egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 proc() {
-	PROCESS="$1"
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/ps_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep "$PROCESS" $i -c >> $TMP
+	PROCESS="${1}"
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/ps_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		egrep "${PROCESS}" "${i}" -c >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 mem() {
-	PROCESS="$1"
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/ps_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep "$PROCESS" $i | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> $TMP
+	PROCESS="${1}"
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/ps_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 net() {
-	PORT="$1"
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/netstat_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep ":$PORT " $i -c >> $TMP
+	PORT="${1}"
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		egrep ":${PORT} " "${i}" -c >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 netestab() {
-	PORT="$1"
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/netstat_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		egrep ":$PORT .*ESTAB" $i -c >> $TMP
+	PORT="${1}"
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		egrep ":${PORT} .*ESTAB" "${i}" -c >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 querycount() {
-	TMP=`mktemp`
-	>$TMP
-	for i in `ls "${BASEDIR}"/mysql_*.log`; do
-		head -n 1 $i | tr "\n" "\t" >> $TMP
-		grep "Query" -c $i >> $TMP
+	TMP=$( mktemp )
+	>"${TMP}"
+	for i in $( ls "${BASEDIR}"/mysql_*.log ); do
+		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+		grep "Query" -c "${i}" >> "${TMP}"
 	done
-	sort $TMP
-	rm -f $TMP
+	sort "${TMP}"
+	rm -f "${TMP}"
 }
 
 print_usage() {
-  grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
-                         -e "s/_tool_/$( basename $0 )/"
+  grep -E '^#~' "${0}" | sed -e 's/^#~\s\?//' \
+                             -e "s/_tool_/$( basename ${0} )/"
 }
 
-if [[ $# -eq 0 ]]; then
+if [[ ${#} -eq 0 ]]; then
   echo "Error: No arguments provided."
 	print_usage
 	exit 1
 fi
 
-while [ $# -gt 0 ]; do
-	case "$1" in
+while [[ ${#} -gt 0 ]]; do
+	case "${1}" in
     -V|--version)
       echo "${_VERSION}"
       exit 0
       ;;
 		-d)
-			if [[ -d $2 ]]; then
-				BASEDIR=$2
+			if [[ -d ${2} ]]; then
+				BASEDIR=${2}
 				shift 2
 			else
-				echo "Error: $2 is not a valid directory."
+				echo "Error: ${2} is not a valid directory."
 				print_usage
 				exit 1
 			fi
@@ -143,15 +143,15 @@ while [ $# -gt 0 ]; do
         exit 0
       ;;
 		memproc|proc|mem|net|netestab)
-			cmds="${cmds}$1 $2 "
+			cmds="${cmds}${1} ${2} "
 			shift 2
 			;;
 		querycount)
-			cmds="${cmds}$1 "
+			cmds="${cmds}${1} "
 			shift
 			;;
 		*)
-			echo "Error: Invalid command $1"
+			echo "Error: Invalid command ${1}"
 			print_usage
 			exit 1
 			;;
@@ -159,8 +159,8 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Information: Using ${BASEDIR} as recap log path"
-echo "Information: Executing $cmds"
+echo "Information: Executing ${cmds}"
 
-$cmds
+${cmds}
 
 exit 0
