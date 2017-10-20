@@ -95,7 +95,7 @@ USEINNODB="no"
 USEMYSQLPROCESSLIST="no"
 
 # Default command options(can be overriden in config file)
-OPTS_CURL="-Ls"
+OPTS_LINKS="-dump"
 OPTS_DF="-x nfs"
 OPTS_FDISK="-l"
 OPTS_FREE=""
@@ -106,7 +106,7 @@ OPTS_NETSTAT_SUM="-s"
 OPTS_PS="auxfww"
 OPTS_PSTREE="-p"
 OPTS_VMSTAT="-S M 1 3"
-OPTS_STATUSURL="http://localhost:80/"
+OPTS_STATUSURL="http://localhost:80/server-status"
 
 # Functions
 
@@ -244,7 +244,7 @@ print_sar() {
 print_http_fullstatus() {
   local LOGFILE="$1"
   echo "Web Status report" >> "${LOGFILE}"
-  curl ${OPTS_CURL} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
+  links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
 }
 
 # Print the output of "netstat -ntulpae" to the specified file
@@ -475,7 +475,7 @@ run_resources_report() {
   fi
 
   # check to see if webserver fullstatus should be run
-  type -p 'curl' > /dev/null
+  type -p 'links' > /dev/null
   if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
     print_blankline "${ITEM_FILE}"
     print_http_fullstatus "${ITEM_FILE}"

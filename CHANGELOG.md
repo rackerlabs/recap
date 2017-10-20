@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+- Deprecated the use of OPTS_CURL in favor of OPTS_LINKS
+- Default changed for OPTS_STATUSURL
+
 ## [1.1.0] - 2017-09-01
 - Align default settings on recap.conf to script defaults.
 - Default setting changed for: USEDF, USENETSTAT, OPTS_PSTREE.

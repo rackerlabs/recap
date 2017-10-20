@@ -260,10 +260,10 @@ Options used by the tools generating the reports
 
   Default: `MYSQL_PROCESS_LIST="table"`
 
-- **OPTS_CURL** - Options used by curl.
+- **OPTS_LINKS** - Options used by links.
   Required by: `USEFULLSTATUS`
 
-  Default: `OPTS_CURL="-Ls"`
+  Default: `OPTS_LINKS="-dump"`
 
 - **OPTS_DF** - df options
 
@@ -324,7 +324,7 @@ Options used by the tools generating the reports
 
   Required by: `USEFULLSTATUS`
 
-  Default: `OPTS_STATUSURL="http://localhost:80/"`
+  Default: `OPTS_STATUSURL="http://localhost:80/server-status"`
 
 - **OPTS_VMSTAT** - vmstat options
 

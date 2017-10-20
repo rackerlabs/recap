@@ -151,10 +151,10 @@ Option required by USEMYSQL, USEMYSQLPROCESSLIST, USEINNODB, defines the path to
 Format to display MySQL process list, options are "table" or "vertical". This requires that USEMYSQLPROCESSLIST be set "yes".
 (default: table).
 
-.IP \fBOPTS_CURL\fR
+.IP \fBOPTS_LINKS\fR
 .br
-Options used by curl, when using USEFULLSTATUS
-(default: '\-Ls')
+Options used by links, when using USEFULLSTATUS
+(default: '\-dump')
 
 .IP \fBOPTS_DF\fR
 .br
@@ -204,7 +204,7 @@ pstree options
 .IP \fBOPTS_STATUSURL\fR
 .br
 URL to perform the http request when USEFULLSTATUS is enabled.
-(default: "http://localhost:80/")
+(default: "http://localhost:80/server-status")
 
 .IP \fBOPTS_VMSTAT\fR
 .br
