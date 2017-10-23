@@ -17,6 +17,7 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 - gawk
 - grep
 - iotop
+- links
 - net-tools
 - procps
 - psmisc
