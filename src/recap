@@ -65,7 +65,6 @@ SNAPSHOT="no"
 BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 BASEDIR="/var/log/recap"
 MAILTO=""
-MAXLOAD=$(( $( grep -c sibling /proc/cpuinfo ) * 10 ))
 MIN_FREE_SPACE=0
 USEFDISK="no"
 USEPS="yes"
@@ -589,14 +588,6 @@ elif [[ ! -r /etc/recap ]]; then
 	echo "No configuration file found. Proceeding with defaults."
 else
 	source /etc/recap
-fi
-
-# Quit if load is higher than MAXLOAD
-LOAD=$( grep -Po '^[\d\.]+' /proc/loadavg )
-QUIT=$( bc -l <<< "${LOAD}>${MAXLOAD}" )
-if [[ ${QUIT} -eq 1 ]]; then
-  echo "QUIT (LOAD:"${LOAD}", MAXLOAD:"${MAXLOAD}")"
-  exit 1
 fi
 
 # Evaluate input flags, print usage if more than one flag is used.

@@ -1,9 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [Unreleased]
 - Deprecated the use of OPTS_CURL in favor of OPTS_LINKS
 - Default changed for OPTS_STATUSURL
+- Deprecated the use of MAXLOAD. [(#123)][1]
+- Timeout added to cronjobs with a default of 5m for most cases. [(#123)][1]
 
 ## [1.1.0] - 2017-09-01
 - Align default settings on recap.conf to script defaults.
@@ -149,3 +151,6 @@ All notable changes to this project will be documented in this file.
 - Simone Soldateschi (siso)
 - Tony Garcia (tonyskapunk)
 
+---
+
+[1]: https://github.com/rackerlabs/recap/issues/123 

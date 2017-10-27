@@ -2,32 +2,32 @@
 #uncomment for the files you want saved
 
 # runs at boot, backup the last set of reports generated prior to a reboot
-@reboot root @BINDIR@/recap -B
+@reboot root timeout 5m @BINDIR@/recap -B
 
 #The following are examples of times to run recap
 #This file should be in /etc/cron.d
 #Only uncomment or create one active line per installation
 
 #At 2am every day
-#0 2 * * * root @BINDIR@/recap
+#0 2 * * * root timeout 5m @BINDIR@/recap
 
 #At 2am and 2pm every day
-#0 2,14 * * * root @BINDIR@/recap
+#0 2,14 * * * root timeout 5m @BINDIR@/recap
 
 #At 2am, 8am, 2pm, 8pm every day
-#0 2,8,14,20 * * * root @BINDIR@/recap
+#0 2,8,14,20 * * * root timeout 5m @BINDIR@/recap
 
 #Every hour
-#0 * * * * root @BINDIR@/recap
+#0 * * * * root timeout 5m @BINDIR@/recap
 
 #Every 30 minutes
-#*/30 * * * * root @BINDIR@/recap
+#*/30 * * * * root timeout 5m @BINDIR@/recap
 
 #Every 10 minutes
-*/10 * * * * root @BINDIR@/recap
+*/10 * * * * root timeout 5m @BINDIR@/recap
 
 #Every 5 minutes
-#*/5 * * * * root @BINDIR@/recap
+#*/5 * * * * root timeout 4m @BINDIR@/recap
 
 # Pack and clear log files
 0 1 * * * root @BINDIR@/recaplog
