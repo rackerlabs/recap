@@ -12,7 +12,6 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 
 ## Dependencies
 - bash >= 4
-- bc
 - coreutils
 - gawk
 - grep
@@ -122,10 +121,6 @@ The following variables are commented out with the defaults values in the config
 - **MIN_FREE_SPACE** - Minimum free space (in MB) required in `${BASEDIR}` to run recap, a value of 0 deactivates this check.
 
   Default: `MIN_FREE_SPACE=0`
-
-- **MAXLOAD** - Maximum load allowed to run recap, abort if load is higher than this value.
-
-  Default: `MAXLOAD=10`
 
 
 #### Reports
