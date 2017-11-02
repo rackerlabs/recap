@@ -102,14 +102,14 @@ Can be set to yes or no depending on whether or not the output of the "pstree" c
 
 .IP \fBUSENETSTAT\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT}" command should be recorded. Please note that this output is written to a separate file in
+Can be set to yes or no depending on whether or not the output of "ss ${OPTS_NETSTAT}" command should be recorded. Please note that this output is written to a separate file in
 .IR ${BASEDIR}/netstat.log
 is required by USENETSTATSUM.
 (default: yes)
 
 .IP \fBUSENETSTATSUM\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT_SUM}" command should be recorded. This report requires that USENETSTAT be set to "yes". This output is written in
+Can be set to yes or no depending on whether or not the output of "nstat ${OPTS_NETSTAT_SUM}" command should be recorded. This report requires that USENETSTAT be set to "yes". This output is written in
 .IR ${BASEDIR}/netstat.log
 (default: no)
 
@@ -178,13 +178,13 @@ iotop options
 
 .IP \fBOPTS_NETSTAT\fR
 .br
-netstat options
-(default: "\-ntulpae")
+ss options
+(default: "\-atunp")
 
 .IP \fBOPTS_NETSTAT_SUM\fR
 .br
-netstat statistics options
-(default: "\-s")
+nstat statistics options
+(default: "\-a")
 
 .IP \fBOPTS_PS\fR
 .br
