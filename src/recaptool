@@ -16,6 +16,7 @@
 #   with this program; if not, write to the Free Software Foundation, Inc.,
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+#
 #~ Usage: _tool_ [OPTIONS]
 #~ Options:
 #~   {proc|mem|memproc} PROCESS_NAME  Show proc/mem info of PROCESS_NAME.
@@ -27,7 +28,7 @@
 #~
 
 ## Version
-declare -r _VERSION='1.1.0'
+declare -r _VERSION='1.2.0'
 
 ## Default settings
 BASEDIR="/var/log/recap"
