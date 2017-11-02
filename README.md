@@ -16,8 +16,8 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 - gawk
 - grep
 - iotop
+- iproute/iproute2
 - links
-- net-tools
 - procps
 - psmisc
 - sysstat >= 9

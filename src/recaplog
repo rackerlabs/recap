@@ -17,14 +17,6 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#   Package name:   recap
-#   Author:         Simone Soldateschi
-#
-#   Maintainer:
-#
-#   Homepage:
-#
-#
 # The cron execution file is in /etc/cron.d
 #
 # The variable configuration file for 'recaplog' is in /etc/recap
@@ -48,7 +40,7 @@
 #~
 
 ## Version
-declare -r _VERSION='1.1.0'
+declare -r _VERSION='1.2.0'
 
 ## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin

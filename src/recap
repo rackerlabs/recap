@@ -17,18 +17,6 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#   Package name:   recap
-#   Author:         Jacob Walcik
-#                   Carl Thompson
-#                   David King
-#
-#   Maintainer:     Brent Oswald
-#                   Benjamin Graham
-#                   Simone Soldateschi
-#
-#   Homepage:   https://github.com/rackerlabs/recap/
-#
-#
 # The cron execution file is in /etc/cron.d
 #
 # The variable configuration file for recap is in /etc/recap
@@ -49,7 +37,7 @@
 #~
 
 ## Version
-declare -r _VERSION='1.1.0'
+declare -r _VERSION='1.2.0'
 
 ## Default settings(can *NOT* be overriden in config file)
 declare -r DATE=$( date +%F_%T )
