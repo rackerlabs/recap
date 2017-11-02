@@ -129,8 +129,8 @@ while [[ ${#} -gt 0 ]]; do
       exit 0
       ;;
 		-d)
-			if [[ -d ${2} ]]; then
-				BASEDIR=${2}
+			if [[ -d "${2}" ]]; then
+				BASEDIR="${2}"
 				shift 2
 			else
 				echo "Error: ${2} is not a valid directory."
