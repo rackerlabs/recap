@@ -81,7 +81,16 @@ This other example will install `recap` under your homedirectory but using the d
 $ make DESTDIR="~" install
 ```
 
-## Cron and Configuration
+The `Makefile` scripts attempts to detect systemd if so, the `install` option will install the systemd unit files, otherwise the cronjobs will be installed.
+
+## Cron/Timers and Configuration
+
+### Timers(systemd)
+
+Multiple unit files are available to make use of `timers`, here the default schedules for the recap scripts:
+- recap (default every 10min)
+- recap-onboot (runs at boot time)
+- recaplog (default: Once a day 1am)
 
 ### Cron
 

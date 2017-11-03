@@ -1,0 +1,9 @@
+[Unit]
+Description=recap on boot
+Documentation=man:recap(5) man:recap(8)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=@BINDIR@/recap -B

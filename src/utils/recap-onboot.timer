@@ -1,0 +1,8 @@
+[Unit]
+Description=Timer for recap-onboot
+
+[Timer]
+OnBootSec=10s
+
+[Install]
+WantedBy=timers.target

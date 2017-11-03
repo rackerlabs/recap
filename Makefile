@@ -23,42 +23,71 @@ MANDIR        ?= $(PREFIX)/share/man
 DOCDIR        ?= $(PREFIX)/share/doc
 SYSCONFDIR    ?= /etc
 CRONDIR       ?= $(SYSCONFDIR)/cron.d
+SYSTEMDDIR    ?= /lib/systemd/system
 LOGDIR        ?= /var/log
+
+ifneq ("$(wildcard /bin/systemctl)","")
+	type=systemd
+else
+	type=cron
+endif
 
 all:
 	@echo "Nothing to compile, please choose a specific target:"
-	@echo "    install (includes install-base, install-man, and install-doc)"
+	@echo "    install (includes install-base, install-man, install-doc and install-(cron/systemd)*)"
 	@echo "    install-base"
+	@echo "    install-cron"
+	@echo "    install-systemd"
 	@echo "    install-man"
 	@echo "    install-doc"
-	@echo "    uninstall (includes uninstall-base, uninstall-man, and uninstall-doc)"
+	@echo "    uninstall (includes uninstall-base, uninstall-man, uninstall-doc and uninstall-(cron/systemd)*)"
 	@echo "    uninstall-base"
+	@echo "    uninstall-cron"
+	@echo "    uninstall-systemd"
 	@echo "    uninstall-man"
 	@echo "    uninstall-doc"
+	@echo ""
+	@echo "*If systemd is available it will (un)install systemd units instead of cron"
+	@echo "Current type detected is: $(type)"
 
-src/recap.cron:
-	@sed -e 's|@BINDIR@|$(BINDIR)|' src/recap.cron.in > src/recap.cron
+recap.cron:
+	@sed -e 's|@BINDIR@|$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
+
+recap.systemd:
+	for service_file in $$( ls src/utils/*.service.in ); do \
+    sed -e 's|@BINDIR@|$(BINDIR)|' $${service_file} \
+      > $$( echo $${service_file} | sed "s,.in,,"); \
+	done
 
 clean:
-	@rm -f src/recap.cron
+	@rm -f src/util/recap.cron
+	@rm -f src/util/*.service
 
-install: install-base install-man install-doc
+install: install-base install-man install-doc install-$(type)
 
-uninstall: uninstall-base uninstall-man uninstall-doc
+uninstall: uninstall-base uninstall-man uninstall-doc uninstall-$(type)
 
-install-base: src/recap.cron
+install-base:
 	@echo "Installing scripts..."
 	@install -Dm0755 src/recap $(DESTDIR)$(BINDIR)/recap
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool
 	@echo "Installing configuration..."
 	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap
-	@echo "Installing cron job..."
-	@install -Dm0644 src/recap.cron $(DESTDIR)$(CRONDIR)/recap
 	@echo "Creating log directories..."
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap
 	@install -dm0755 $(DESTDIR)$(LOGDIR)/recap/backups
 	@install -dm0755 $(DESTDIR)$(LOGDIR)/recap/snapshots
+
+install-cron: recap.cron
+	@echo "Installing cron job..."
+	@install -Dm0644 src/utils/recap.cron $(DESTDIR)$(CRONDIR)/recap
+
+install-systemd: recap.systemd
+	@echo "Installing systemd timers and services..."
+	@install -Dm0644 src/utils/*.service $(DESTDIR)$(SYSTEMDDIR)/
+	@install -Dm0644 src/utils/*.timer $(DESTDIR)$(SYSTEMDDIR)/
+	@echo "Is recommended to enable timers and reload systemd daemon."
 
 install-man:
 	@echo "Installing man pages..."
@@ -79,8 +108,15 @@ uninstall-base:
 	@rm -f $(DESTDIR)$(BINDIR)/recaptool
 	@echo "Removing configuration..."
 	@rm -f $(DESTDIR)$(SYSCONFDIR)/recap
+
+uninstall-cron:
 	@echo "Removing cron job..."
 	@rm -f $(DESTDIR)$(CRONDIR)/recap
+
+uninstall-systemd:
+	@echo "Removing systemd timers and services..."
+	@rm -f $(DESTDIR)$(SYSTEMDDIR)/recap*.{service,timer}
+	@echo "Is recommended to reload systemd daemon."
 
 uninstall-man:
 	@echo "Removing man pages..."
@@ -93,4 +129,4 @@ uninstall-doc:
 	@echo "Removing docs..."
 	@rm -Rf $(DESTDIR)$(DOCDIR)/recap
 
-.PHONY: install install-base install-man install-doc uninstall uninstall-base uninstall-man uninstall-doc clean
+.PHONY: install install-base install-cron install-systemd install-man install-doc uninstall uninstall-base uninstall-cron uninstall-systemd uninstall-man uninstall-doc clean
