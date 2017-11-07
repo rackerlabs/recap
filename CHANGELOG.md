@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2017-11-01
+- Use of modern tools for netstat reports, `net-tools` are now deprecated.
+- Deprecated the use of `OPTS_CURL` in favor of `OPTS_LINKS` [(#125)][0]
+- Default changed for `OPTS_STATUSURL` [(#125)][0]
+- Deprecated the use of `MAXLOAD`. [(#123)][1]
+- Timeout added to cronjobs with a default of 5m for most cases. [(#123)][1]
+- Added `version` option.
+- Dependencies:
+  - Removed:`bc`, `net-tools`.
+  - Added: `links`, `iproute`/`iproute2`.
+
 ## [1.1.0] - 2017-09-01
 - Align default settings on recap.conf to script defaults.
 - Default setting changed for: USEDF, USENETSTAT, OPTS_PSTREE.
@@ -145,3 +156,7 @@ All notable changes to this project will be documented in this file.
 - Simone Soldateschi (siso)
 - Tony Garcia (tonyskapunk)
 
+---
+
+[0]: https://github.com/rackerlabs/recap/issues/125
+[1]: https://github.com/rackerlabs/recap/issues/123

@@ -17,18 +17,6 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#   Package name:   recap
-#   Author:         Jacob Walcik
-#                   Carl Thompson
-#                   David King
-#
-#   Maintainer:     Brent Oswald
-#                   Benjamin Graham
-#                   Simone Soldateschi
-#
-#   Homepage:   https://github.com/rackerlabs/recap/
-#
-#
 # The cron execution file is in /etc/cron.d
 #
 # The variable configuration file for recap is in /etc/recap
@@ -39,9 +27,17 @@
 # Define the default environment for recap
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
+#
+#~ Usage: _tool_ [OPTION]
+#~ Options:
+#~   -h,--help       Print this help.
+#~   -B,--backup     Copy the last log file to the backups dir.
+#~   -S,--snapshot   Take a timestamped snapshot outside the regular rotation.
+#~   -V,--version    Print version and exit.
+#~
 
 ## Version
-declare -r _VERSION='1.1.0'
+declare -r _VERSION='1.2.0'
 
 ## Default settings(can *NOT* be overriden in config file)
 declare -r DATE=$( date +%F_%T )
@@ -50,57 +46,97 @@ declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 ## Default settings(modified through command line arguments)
-BACKUP="no"
-SNAPSHOT="no"
+declare -r default_BACKUP="no"
+declare -r default_SNAPSHOT="no"
+BACKUP="${default_BACKUP}"
+SNAPSHOT="${default_SNAPSHOT}"
 
 ## Default settings(can be overridden in config file)
-BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
-BASEDIR="/var/log/recap"
-MAILTO=""
-MAXLOAD=$(( $( grep -c sibling /proc/cpuinfo ) * 10 ))
-MIN_FREE_SPACE=0
-USEFDISK="no"
-USEPS="yes"
-USEPSTREE="no"
-USESLAB="no"
+declare -r default_BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
+declare -r default_BASEDIR="/var/log/recap"
+declare -r default_MAILTO=""
+declare -r default_MIN_FREE_SPACE=0
+declare -r default_USEFDISK="no"
+declare -r default_USEPS="yes"
+declare -r default_USEPSTREE="no"
+declare -r default_USESLAB="no"
+BACKUP_ITEMS="${default_BACKUP_ITEMS}"
+BASEDIR="${default_BASEDIR}"
+MAILTO="${default_MAILTO}"
+MIN_FREE_SPACE=${default_MIN_FREE_SPACE}
+USEFDISK="${default_USEFDISK}"
+USEPS="${default_USEPS}"
+USEPSTREE="${default_USEPSTREE}"
+USESLAB="${default_USESLAB}"
 
 # Parent setting(other settings depend on this)
-USERESOURCES="yes"
+declare -r default_USERESOURCES="yes"
+USERESOURCES="${default_USERESOURCES}"
 # These depend on USERRESOURCES to be enabled("yes")
-USEDF="yes"
-USEFULLSTATUS="no"
-USESAR="yes"
-USESARQ="no"
-USESARR="no"
+declare -r default_USEDF="yes"
+declare -r default_USEFULLSTATUS="no"
+declare -r default_USESAR="yes"
+declare -r default_USESARQ="no"
+declare -r default_USESARR="no"
+USEDF="${default_USEDF}"
+USEFULLSTATUS="${default_USEFULLSTATUS}"
+USESAR="${default_USESAR}"
+USESARQ="${default_USESARQ}"
+USESARR="${default_USESARR}"
 
 # Parent setting(other settings depend on this)
-USENETSTAT="yes"
+declare -r default_USENETSTAT="yes"
+USENETSTAT="${default_USENETSTAT}"
 # These depend on USENETSTAT to be enabled("yes")
-USENETSTATSUM="no"
+declare -r default_USENETSTATSUM="no"
+USENETSTATSUM="${default_USENETSTATSUM}"
 
 # Parent setting(other settings depend on this)
-USEMYSQL="no"
+declare -r default_USEMYSQL="no"
+USEMYSQL="${default_USEMYSQL}"
 # These depend on USEMYSQL to be enabled("yes")
-DOTMYDOTCNF="/root/.my.cnf"
-MYSQL_PROCESS_LIST="table"
-USEINNODB="no"
-USEMYSQLPROCESSLIST="no"
+declare -r default_DOTMYDOTCNF="/root/.my.cnf"
+declare -r default_MYSQL_PROCESS_LIST="table"
+declare -r default_USEINNODB="no"
+declare -r default_USEMYSQLPROCESSLIST="no"
+DOTMYDOTCNF="${default_DOTMYDOTCNF}"
+MYSQL_PROCESS_LIST="${default_MYSQL_PROCESS_LIST}"
+USEINNODB="${default_USEINNODB}"
+USEMYSQLPROCESSLIST="${default_USEMYSQLPROCESSLIST}"
 
 # Default command options(can be overriden in config file)
-OPTS_CURL="-Ls"
-OPTS_DF="-x nfs"
-OPTS_FDISK="-l"
-OPTS_FREE=""
-OPTS_IOSTAT="-t -x 1 3"
-OPTS_IOTOP="-b -o -t -n 3"
-OPTS_NETSTAT="-ntulpae"
-OPTS_NETSTAT_SUM="-s"
-OPTS_PS="auxfww"
-OPTS_PSTREE="-p"
-OPTS_VMSTAT="-S M 1 3"
-OPTS_STATUSURL="http://localhost:80/"
+declare -r default_OPTS_LINKS="-dump"
+declare -r default_OPTS_DF="-x nfs"
+declare -r default_OPTS_FDISK="-l"
+declare -r default_OPTS_FREE=""
+declare -r default_OPTS_IOSTAT="-t -x 1 3"
+declare -r default_OPTS_IOTOP="-b -o -t -n 3"
+declare -r default_OPTS_NETSTAT="-atunp"
+declare -r default_OPTS_NETSTAT_SUM="-a"
+declare -r default_OPTS_PS="auxfww"
+declare -r default_OPTS_PSTREE="-p"
+declare -r default_OPTS_VMSTAT="-S M 1 3"
+declare -r default_OPTS_STATUSURL="http://localhost:80/server-status"
+OPTS_LINKS="${default_OPTS_LINKS}"
+OPTS_DF="${default_OPTS_DF}"
+OPTS_FDISK="${default_OPTS_FDISK}"
+OPTS_FREE="${default_OPTS_FREE}"
+OPTS_IOSTAT="${default_OPTS_IOSTAT}"
+OPTS_IOTOP="${default_OPTS_IOTOP}"
+OPTS_NETSTAT="${default_OPTS_NETSTAT}"
+OPTS_NETSTAT_SUM="${default_OPTS_NETSTAT_SUM}"
+OPTS_PS="${default_OPTS_PS}"
+OPTS_PSTREE="${default_OPTS_PSTREE}"
+OPTS_VMSTAT="${default_OPTS_VMSTAT}"
+OPTS_STATUSURL="${default_OPTS_STATUSURL}"
 
 # Functions
+
+# Usage
+print_usage() {
+  grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
+                         -e "s/_tool_/$( basename $0 )/"
+}
 
 # Cleanup function to remove lock
 cleanup() {
@@ -132,18 +168,6 @@ create_output_dirs() {
       mkdir -p "${OUTPUT_DIR}"
     fi
   done
-}
-
-# Print the usage definition for the script
-print_usage() {
-	echo "Usage: recap [OPTION]"
-	echo "Takes a snapshot of running processes and resource usage"
-	echo " "
-	echo "Optional flags: "
-	echo "-h, --help     print this help output"
-	echo "-B, --backup   copy the last log file set to '/var/log/recap/backups'"
-	echo "-S, --snapshot take a timestamped snapshot outside of the regular output file rotation"
-	echo "-V, --version  print version and exit"
 }
 
 # Create output file
@@ -242,21 +266,33 @@ print_sar() {
 print_http_fullstatus() {
   local LOGFILE="$1"
   echo "Web Status report" >> "${LOGFILE}"
-  curl ${OPTS_CURL} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
+  links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
 }
 
-# Print the output of "netstat -ntulpae" to the specified file
+# Print the output of "ss -atunp" to the specified file
 print_netstat() {
   local LOGFILE="$1"
   echo "Network connections" >> "${LOGFILE}"
-  netstat ${OPTS_NETSTAT} >> "${LOGFILE}"
+  if ss ${OPTS_NETSTAT} &>/dev/null; then
+    ss ${OPTS_NETSTAT} >> "${LOGFILE}"
+  else
+    ss ${default_OPTS_NETSTAT} >> "${LOGFILE}"
+    echo -e "\nBad config: '${OPTS_NETSTAT}', "\
+            "using default: '${default_OPTS_NETSTAT}'" >> "${LOGFILE}"
+  fi
 }
 
-# Print the output of "netstat -s" to the specified file
+# Print the output of "nstat -a" to the specified file
 print_netstat_sum() {
   local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
-  netstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+  if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
+    nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+  else
+    nstat ${default_OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    echo -e "\nBad config: '${OPTS_NETSTAT_SUM}', "\
+            "using default: '${default_OPTS_NETSTAT_SUM}'" >> "${LOGFILE}"
+  fi
 }
 
 # Print the output of "mysqladmin status" to the mysql file
@@ -473,7 +509,7 @@ run_resources_report() {
   fi
 
   # check to see if webserver fullstatus should be run
-  type -p 'curl' > /dev/null
+  type -p 'links' > /dev/null
   if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
     print_blankline "${ITEM_FILE}"
     print_http_fullstatus "${ITEM_FILE}"
@@ -589,19 +625,11 @@ else
 	source /etc/recap
 fi
 
-# Quit if load is higher than MAXLOAD
-LOAD=$( grep -Po '^[\d\.]+' /proc/loadavg )
-QUIT=$( bc -l <<< "${LOAD}>${MAXLOAD}" )
-if [[ ${QUIT} -eq 1 ]]; then
-  echo "QUIT (LOAD:"${LOAD}", MAXLOAD:"${MAXLOAD}")"
-  exit 1
-fi
-
 # Evaluate input flags, print usage if more than one flag is used.
 if [[ "$#" -gt 1 ]]; then
- echo "Only one flag is allowed"
+ echo "Error: Only one flag is allowed"
  print_usage
- exit
+ exit 1
 fi
 
 # If we only have one flag, see if we know how to handle it.
@@ -618,7 +646,7 @@ if [[ "$#" -gt 0 ]]; then
     -h|--help)
       # print usage
       print_usage
-      exit
+      exit 0
       ;;
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
@@ -626,9 +654,9 @@ if [[ "$#" -gt 0 ]]; then
       ;;
     *)
       # user entered an invalid flag, print warning and exit
-      echo "Invalid Input"
+      echo "Error: Invalid Input"
       print_usage
-      exit
+      exit 1
   esac
 fi
 

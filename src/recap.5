@@ -48,11 +48,6 @@ Directory where recap logs will be written, if defined is used by recaplog and r
 .br
 Define this variable if you would like the reports to be sent via email
 
-IP \fBMAXLOAD\fR
-.br
-The maximum load allowed to run recap, abort if load is higher than this value. Default is calculated dynamically 10 times the number of CPUs identified by the kernel.
-(default: 10*CPUs)
-
 .IP \fBMIN_FREE_SPACE\fR
 .br
 The minimum free disk space (in MB) required in ${BASEDIR} to run recap. (Disabled by default)
@@ -107,14 +102,14 @@ Can be set to yes or no depending on whether or not the output of the "pstree" c
 
 .IP \fBUSENETSTAT\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT}" command should be recorded. Please note that this output is written to a separate file in
+Can be set to yes or no depending on whether or not the output of "ss ${OPTS_NETSTAT}" command should be recorded. Please note that this output is written to a separate file in
 .IR ${BASEDIR}/netstat.log
 is required by USENETSTATSUM.
 (default: yes)
 
 .IP \fBUSENETSTATSUM\fR
 .br
-Can be set to yes or no depending on whether or not the output of "netstat ${OPTS_NETSTAT_SUM}" command should be recorded. This report requires that USENETSTAT be set to "yes". This output is written in
+Can be set to yes or no depending on whether or not the output of "nstat ${OPTS_NETSTAT_SUM}" command should be recorded. This report requires that USENETSTAT be set to "yes". This output is written in
 .IR ${BASEDIR}/netstat.log
 (default: no)
 
@@ -151,10 +146,10 @@ Option required by USEMYSQL, USEMYSQLPROCESSLIST, USEINNODB, defines the path to
 Format to display MySQL process list, options are "table" or "vertical". This requires that USEMYSQLPROCESSLIST be set "yes".
 (default: table).
 
-.IP \fBOPTS_CURL\fR
+.IP \fBOPTS_LINKS\fR
 .br
-Options used by curl, when using USEFULLSTATUS
-(default: '\-Ls')
+Options used by links, when using USEFULLSTATUS
+(default: '\-dump')
 
 .IP \fBOPTS_DF\fR
 .br
@@ -183,13 +178,13 @@ iotop options
 
 .IP \fBOPTS_NETSTAT\fR
 .br
-netstat options
-(default: "\-ntulpae")
+ss options
+(default: "\-atunp")
 
 .IP \fBOPTS_NETSTAT_SUM\fR
 .br
-netstat statistics options
-(default: "\-s")
+nstat statistics options
+(default: "\-a")
 
 .IP \fBOPTS_PS\fR
 .br
@@ -204,7 +199,7 @@ pstree options
 .IP \fBOPTS_STATUSURL\fR
 .br
 URL to perform the http request when USEFULLSTATUS is enabled.
-(default: "http://localhost:80/")
+(default: "http://localhost:80/server-status")
 
 .IP \fBOPTS_VMSTAT\fR
 .br

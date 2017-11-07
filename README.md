@@ -12,15 +12,23 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 
 ## Dependencies
 - bash >= 4
-- bc
 - coreutils
 - gawk
 - grep
 - iotop
-- net-tools
+- iproute/iproute2
+- links
 - procps
 - psmisc
 - sysstat >= 9
+
+## Versioning
+
+`recap` is following the `x.y.z` versioning as defined below:
+
+ - **x** *(major)* - Changes that prevent at least some rolling upgrades.
+ - **y** *(minor)* - Changes that don't break any rolling upgrades but require closer user attention for example configuration defaults, function behavior, tools used to produce reports, among others.
+ - **z** *(patch)* - Changes that are backward-compatible including features and/or bug fixes.
 
 ## Installation
 
@@ -114,10 +122,6 @@ The following variables are commented out with the defaults values in the config
 
   Default: `MIN_FREE_SPACE=0`
 
-- **MAXLOAD** - Maximum load allowed to run recap, abort if load is higher than this value.
-
-  Default: `MAXLOAD=10`
-
 
 #### Reports
 
@@ -158,14 +162,14 @@ These are the type of reports generated and their dependencies.
 
 ##### netstat
 
-- **USENETSTAT** - Generates network stats from "netstat `${OPTS_NETSTAT}`"
+- **USENETSTAT** - Generates network stats from "ss `${OPTS_NETSTAT}`"
 
   Required by: `USENETSTATSUM`
 
   Default: `USENETSTAT="yes"`
 
 
-- **USENETSTATSUM** - Generates logs from "netstat `${OPTS_NETSTAT_SUM}`".
+- **USENETSTATSUM** - Generates logs from "nstat `${OPTS_NETSTAT_SUM}`".
 
   Requires: `USENETSTAT`
 
@@ -252,10 +256,10 @@ Options used by the tools generating the reports
 
   Default: `MYSQL_PROCESS_LIST="table"`
 
-- **OPTS_CURL** - Options used by curl.
+- **OPTS_LINKS** - Options used by links.
   Required by: `USEFULLSTATUS`
 
-  Default: `OPTS_CURL="-Ls"`
+  Default: `OPTS_LINKS="-dump"`
 
 - **OPTS_DF** - df options
 
@@ -287,17 +291,17 @@ Options used by the tools generating the reports
 
   Default: `OPTS_IOTOP="-b -o -t -n 3"`
 
-- **OPTS_NETSTAT** - netstat options
+- **OPTS_NETSTAT** - ss options
 
   Required by: `USENETSTAT`
 
-  Default: `OPTS_NETSTAT="-ntulpae"`
+  Default: `OPTS_NETSTAT="-atunp"`
 
-- **OPTS_NETSTAT_SUM** - netstat statistics options
+- **OPTS_NETSTAT_SUM** - nstat options
 
   Required by: `USENETSTATSUM`
 
-  Default: `OPTS_NETSTAT_SUM="-s"`
+  Default: `OPTS_NETSTAT_SUM="-a"`
 
 - **OPTS_PS** - ps options
 
@@ -316,7 +320,7 @@ Options used by the tools generating the reports
 
   Required by: `USEFULLSTATUS`
 
-  Default: `OPTS_STATUSURL="http://localhost:80/"`
+  Default: `OPTS_STATUSURL="http://localhost:80/server-status"`
 
 - **OPTS_VMSTAT** - vmstat options
 

@@ -17,14 +17,6 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#   Package name:   recap
-#   Author:         Simone Soldateschi
-#
-#   Maintainer:
-#
-#   Homepage:
-#
-#
 # The cron execution file is in /etc/cron.d
 #
 # The variable configuration file for 'recaplog' is in /etc/recap
@@ -36,6 +28,7 @@
 # DO NOT change these values here, user-modifiable options can be tweaked through
 # /etc/recap
 #
+#~ Usage: _tool_ [-hnv]
 #~ Options:
 #~   -h             Print this help.
 #~   -n             Dry run.
@@ -47,7 +40,7 @@
 #~
 
 ## Version
-declare -r _VERSION='1.1.0'
+declare -r _VERSION='1.2.0'
 
 ## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
@@ -259,8 +252,8 @@ while getopts hnvV flag; do
       exit 0
       ;;
     h|*)
-      echo "Usage: $( basename $0 ) [-hnv]"
-      grep -E '^#~' $0|sed -e 's/^#~//'
+      grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
+                             -e "s/_tool_/$( basename $0 )/"
       exit 1
       ;;
  esac
