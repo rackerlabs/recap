@@ -23,7 +23,7 @@ MANDIR        ?= $(PREFIX)/share/man
 DOCDIR        ?= $(PREFIX)/share/doc
 SYSCONFDIR    ?= /etc
 CRONDIR       ?= $(SYSCONFDIR)/cron.d
-SYSTEMDDIR    ?= /lib/systemd/system
+SYSTEMDDIR    ?= /usr/lib/systemd/system
 LOGDIR        ?= /var/log
 
 ifneq ("$(wildcard /bin/systemctl)","")
@@ -85,6 +85,7 @@ install-cron: recap.cron
 
 install-systemd: recap.systemd
 	@echo "Installing systemd timers and services..."
+	@install -dm0755 $(DESTDIR)$(SYSTEMDDIR)
 	@install -Dm0644 src/utils/*.service $(DESTDIR)$(SYSTEMDDIR)/
 	@install -Dm0644 src/utils/*.timer $(DESTDIR)$(SYSTEMDDIR)/
 	@echo "Is recommended to enable timers and reload systemd daemon."
