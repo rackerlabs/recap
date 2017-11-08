@@ -54,14 +54,14 @@ recap.cron:
 	@sed -e 's|@BINDIR@|$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
 
 recap.systemd:
-	for service_file in $$( ls src/utils/*.service.in ); do \
+	@for service_file in $$( ls src/utils/*.service.in ); do \
     sed -e 's|@BINDIR@|$(BINDIR)|' $${service_file} \
       > $$( echo $${service_file} | sed "s,.in,,"); \
 	done
 
 clean:
-	@rm -f src/util/recap.cron
-	@rm -f src/util/*.service
+	@rm -f src/utils/recap.cron
+	@rm -f src/utils/*.service
 
 install: install-base install-man install-doc install-$(type)
 
