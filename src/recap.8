@@ -25,7 +25,7 @@ recap - dumps periodic information about running applications and resource usage
 .SH SYNOPSIS
 .BI "recap " [OPTION]
 .SH DESCRIPTION
-recap is a user-configurable script that can be run once, or run periodically out of cron to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
+recap is a user-configurable script that can be run once, or run periodically out of cron or systemd.timers to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
 
 The values for which reports are generated and how many reports are stored can be overridden in
 .IR /etc/recap "."
@@ -45,6 +45,9 @@ Print version and exit.
 .nf
 /etc/cron.d/recap
 /etc/recap
+/usr/lib/systemd/sytem/recap.{service,timer} - Unit files for running recap periodically.
+/usr/lib/systemd/sytem/recap-onboot.{service,timer} - Unit files for running recap on boot.
+
 .SH "REPORTING BUGS"
 Bugs and issues to be submitted via github
 <https://github.com/rackerlabs/recap/issues>.
@@ -54,4 +57,5 @@ The recap scripts are maintained by Rackspace, the list of contributors is avail
 .SH "SEE ALSO"
 .BR recap (5),
 .BR recaplog (8),
-.BR crontab (5)
+.BR crontab (5),
+.BR systemd.timer (5)
