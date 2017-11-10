@@ -99,7 +99,7 @@ The cron file (`/etc/cron.d/recap`) is used to determine the execution time of `
 
 ### Configuration
 
-The following variables are commented out with the defaults values in the configuration file `/etc/recap` which can be overriden.
+The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overriden.
 
 #### Settings shared by recap scripts
 

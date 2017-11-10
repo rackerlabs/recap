@@ -28,7 +28,7 @@ recap - dumps periodic information about running applications and resource usage
 recap is a user-configurable script that can be run once, or run periodically out of cron or systemd.timers to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
 
 The values for which reports are generated and how many reports are stored can be overridden in
-.IR /etc/recap "."
+.IR /etc/recap.conf "."
 The output files from the script are written to
 .IR BASEDIR "."
 .TP
@@ -43,6 +43,7 @@ Print version and exit.
 .TP
 .SH FILES
 .nf
+/etc/recap.conf
 /etc/cron.d/recap
 /etc/recap
 /usr/lib/systemd/sytem/recap.{service,timer} - Unit files for running recap periodically.
