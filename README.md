@@ -1,8 +1,9 @@
 # Recap
 
 [![GitHub release](https://img.shields.io/github/release/rackerlabs/recap.svg)](https://github.com/rackerlabs/recap/releases/latest)
-[![License](https://img.shields.io/badge/license-GPLv2-red.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
+[![GitHub license](https://img.shields.io/github/license/rackerlabs/recap.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
 [![GitHub stars](https://img.shields.io/github/stars/rackerlabs/recap.svg?style=social&label=Star)](https://github.com/rackerlabs/recap)
+[![Twitter](https://img.shields.io/twitter/url/https/github.com/rackerlabs/recap.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20this%20out:&url=https%3A%2F%2Fgithub.com%2Frackerlabs%2Frecap)
 
 **recap** is a system status reporting tool. A reporting script that generates reports of various information about the server.
 
