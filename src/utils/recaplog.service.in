@@ -1,0 +1,9 @@
+[Unit]
+Description=recaplog
+Documentation=man:recaplog(8)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=@BINDIR@/recaplog

@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for recaplog
+
+[Timer]
+OnCalendar=*-*-* 01:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
