@@ -73,7 +73,7 @@ install-base:
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool
 	@echo "Installing configuration..."
-	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap
+	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap.conf
 	@echo "Creating log directories..."
 	@install -dm0750 $(DESTDIR)$(LOGDIR)/recap
 	@install -dm0755 $(DESTDIR)$(LOGDIR)/recap/backups

@@ -17,17 +17,6 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-# The cron execution file is in /etc/cron.d
-#
-# The variable configuration file for recap is in /etc/recap
-#
-# All the variables defined here and several others can be defined in the variable
-# configuration file.  You can see more on these in /usr/share/doc/recap-{version}/README
-#
-# Define the default environment for recap
-# DO NOT change these values here, user-modifiable options can be tweaked through
-# /etc/recap
-#
 #~ Usage: _tool_ [OPTION]
 #~ Options:
 #~   -h,--help       Print this help.
@@ -697,6 +686,29 @@ check_disk_space() {
 }
 
 ## Main
+
+# Check for the configuration file.
+# The following create awareness about the new the config location in
+# /etc/recap.conf, taking precendence the actual /etc/recap config.
+if [[ -r /etc/recap &&
+      -r /etc/recap.conf ]]; then
+  log WARNING "Configuration files exist at old(/etc/recap) and"\
+              "new(/etc/recap.conf) locations. The file from the old"\
+              "location will be read."
+  log WARNING "Please move your configuration to /etc/recap.conf."
+  source /etc/recap
+elif [[ -r /etc/recap &&
+        ! -r /etc/recap.conf ]]; then
+  log WARNING "Configuration file exists at old(/etc/recap) location. "\
+              "The file will be read."
+              "Please move your configuration file to /etc/recap.conf."
+  source /etc/recap
+elif [[ ! -r /etc/recap.conf ]]; then
+  log WARNING "No configuration file found. Expecting /etc/recap.conf."
+  log WARNING "Proceeding with defaults."
+else
+  source /etc/recap.conf
+fi
 
 # Evaluate input flags, print usage if more than one flag is used.
 if [[ "$#" -gt 1 ]]; then
