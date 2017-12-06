@@ -255,6 +255,18 @@ if [[ "$( id -u )" != "0" ]]; then
   exit 1
 fi
 
+# Define the headers for the run
+if [[ "${DRYRUN}" ]]; then
+  banner_start="--- Starting $( basename $0 )[$$] (dry-run) ---"
+  banner_end="--- Ending $( basename $0 )[$$] (dry-run) ---"
+else
+  banner_start="--- Starting $( basename $0 )[$$] ---"
+  banner_end="--- Ending $( basename $0 )[$$] ---"
+fi
+
+# Start logging
+log INFO "${banner_start}"
+
 # Check for the configuration file.
 # The following create awareness about the new the config location in
 # /etc/recap.conf, taking precendence the actual /etc/recap config.
@@ -277,18 +289,6 @@ elif [[ ! -r /etc/recap.conf ]]; then
 else
   source /etc/recap.conf
 fi
-
-# Define the headers for the run
-if [[ "${DRYRUN}" ]]; then
-  banner_start="--- Starting $( basename $0 )[$$] (dry-run) ---"
-  banner_end="--- Ending $( basename $0 )[$$] (dry-run) ---"
-else
-  banner_start="--- Starting $( basename $0 )[$$] ---"
-  banner_end="--- Ending $( basename $0 )[$$] ---"
-fi
-
-# Start logging
-log INFO "${banner_start}"
 
 # Aquire lock
 recaploglock
