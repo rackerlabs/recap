@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2017-12-06
+- Start the deprecation of `/etc/recap` config file for `/etc/recap.conf`.
+- Add systemd support for units and timers.
+- Add log capabilities for recap.
+- Bug fixing (logging and clean up functions).
+
 ## [1.2.0] - 2017-11-01
 - Use of modern tools for netstat reports, `net-tools` are now deprecated.
 - Deprecated the use of `OPTS_CURL` in favor of `OPTS_LINKS` [(#125)][0]
