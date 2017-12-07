@@ -54,9 +54,8 @@ recap.cron:
 	@sed -e 's|@BINDIR@|$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
 
 recap.systemd:
-	@for service_file in $$( ls src/utils/*.service.in ); do \
-    sed -e 's|@BINDIR@|$(BINDIR)|' $${service_file} \
-      > $$( echo $${service_file} | sed "s,.in,,"); \
+	@for service_file in src/utils/*.service.in; do \
+	sed -e 's|@BINDIR@|$(BINDIR)|' $${service_file} > $${service_file%.in}; \
 	done
 
 clean:
