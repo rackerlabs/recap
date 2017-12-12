@@ -1,8 +1,9 @@
 # Recap
 
 [![GitHub release](https://img.shields.io/github/release/rackerlabs/recap.svg)](https://github.com/rackerlabs/recap/releases/latest)
-[![License](https://img.shields.io/badge/license-GPLv2-red.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
+[![GitHub license](https://img.shields.io/github/license/rackerlabs/recap.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
 [![GitHub stars](https://img.shields.io/github/stars/rackerlabs/recap.svg?style=social&label=Star)](https://github.com/rackerlabs/recap)
+[![Twitter](https://img.shields.io/twitter/url/https/github.com/rackerlabs/recap.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20this%20out:&url=https%3A%2F%2Fgithub.com%2Frackerlabs%2Frecap)
 
 **recap** is a system status reporting tool. A reporting script that generates reports of various information about the server.
 
@@ -81,7 +82,16 @@ This other example will install `recap` under your homedirectory but using the d
 $ make DESTDIR="~" install
 ```
 
-## Cron and Configuration
+The `Makefile` scripts attempts to detect systemd if so, the `install` option will install the systemd unit files, otherwise the cronjobs will be installed.
+
+## Cron/Timers and Configuration
+
+### Timers(systemd)
+
+Multiple unit files are available to make use of `timers`, here the default schedules for the recap scripts:
+- recap (default every 10min)
+- recap-onboot (runs at boot time)
+- recaplog (default: Once a day 1am)
 
 ### Cron
 
@@ -89,7 +99,7 @@ The cron file (`/etc/cron.d/recap`) is used to determine the execution time of `
 
 ### Configuration
 
-The following variables are commented out with the defaults values in the configuration file `/etc/recap` which can be overriden.
+The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overriden.
 
 #### Settings shared by recap scripts
 
