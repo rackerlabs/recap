@@ -662,9 +662,7 @@ run_mysql_report() {
 create_backup() {
   log INFO "Starting backup of reports"
   for log_file in ${BACKUP_ITEMS}; do
-    ls -1t ${BASEDIR}/${log_file}_*.log 2>/dev/null |
-    head -1 |
-    xargs -I {} cp {} ${BACKUPDIR}
+     find ${BASEDIR} -regextype grep -regex ".*${item}_[0-9]\{8\}-[0-9]\{6\}.log" -exec cp {} ${BACKUPDIR}
   done
   log INFO "Ended backup of reports"
 }

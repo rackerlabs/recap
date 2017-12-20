@@ -143,13 +143,8 @@ pack_old_logs() {
     err=''
     log INFO "Packing ${item}..."
     # Finding logs for item from yesterday date. 
-    output=$( ls -1 "${BASEDIR}/${item}_${YESTERDAYDATE}"-*.log 2>&1 )
-    if [[ $? -ne 0 ]]; then
-      output=$( tr -d '\n' <<< "${output}" )
-      log ERROR "An error ocurred while reading logs: '${output}', skipping..."
-      continue
-    fi
-    log_count=$( wc -l <<< "${output}" )
+    output=$( find "${BASEDIR}" -name "${item}_${YESTERDAYDATE}-*.log" | tr '\n' ' ')
+    log_count=$( wc -w <<< "${output}" )
     # Moving logs to yesterday item's directory
     if [[ "${DRYRUN}" ]]; then
       log INFO "Would move ${log_count} logs to: ${YESTERDAY_ITEM_DIR}"
@@ -158,7 +153,7 @@ pack_old_logs() {
       err=$(
         {
           mkdir -p "${YESTERDAY_ITEM_DIR}";
-          mv "${BASEDIR}/${item}_${YESTERDAYDATE}"-*.log \
+          mv "${BASEDIR}/${item}_${YESTERDAYDATE}-*.log" \
              "${YESTERDAY_ITEM_DIR}";
         } 2>&1
       )
