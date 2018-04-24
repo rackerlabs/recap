@@ -217,7 +217,7 @@ recaploglock() {
     log ERROR "$( basename $0 ) ($$): Lock File exists - exiting"
     exit 1
   else
-    trap 'exit 2' 1 2 15 17 19 23
+    trap 'exit 2' 1 2 15 17 23
     trap 'cleanup' EXIT
     log INFO "$( basename $0 ) ($$): Created lock file: ${LOCKFILE}"
   fi
