@@ -676,7 +676,7 @@ check_disk_space() {
     log INFO "Ended check for disk space"
     return 0
   else
-    FREE_SPACE=$( df -BM --output=avail "${BASEDIR}" | tail -1 )
+    FREE_SPACE=$( df -PBM "${BASEDIR}" | awk '!/-blocks/ {print $4}' )
     FREE_SPACE=${FREE_SPACE%M}
     if [[ "${MIN_FREE_SPACE}" -ge "${FREE_SPACE}" ]]; then
       log ERROR "Unable to run recap due to not enough disk space"
@@ -761,11 +761,11 @@ fi
 # Create lock
 recaplock
 
-# Check disk space before generating reports
-check_disk_space
-
 # Create output directory if it is not already present
 create_output_dirs
+
+# Check disk space before generating reports
+check_disk_space
 
 # Take a backup when needed
 if [[ "${BACKUP,,}" == "yes" ]]; then
