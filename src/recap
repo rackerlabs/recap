@@ -351,13 +351,14 @@ print_netstat_sum() {
 print_mysql() {
   log INFO "Starting 'mysql status' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL status" >> "${LOGFILE}"
+    echo "MySQL (plesk) status" >> "${LOGFILE}"
     mysqladmin -uadmin -p$(cat "${PLESK_FILE}") status >> "${LOGFILE}"
   else
-    echo "MySQL ${DOTMYDOTCNF} status" >> "${LOGFILE}"
-    mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" status >> "${LOGFILE}"
+    echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
+    mysqladmin --defaults-extra-file="${MYCNF}" status >> "${LOGFILE}"
   fi
   print_blankline "${LOGFILE}"
   log INFO "Ended 'mysql status' report"
@@ -367,21 +368,29 @@ print_mysql() {
 print_mysql_innodb_status() {
   log INFO "Starting 'mysql innodb' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
+  local mysql_cmd=''
+
+  unset MYVALS PID_FILE TMPDIR
+  if [[ -r "${PLESK_FILE}" ]]; then
+    echo "MySQL (plesk) InnoDB status" >> "${LOGFILE}"
+    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE})"
+  else
+    echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
+    mysql_cmd="mysql --defaults-extra-file=${MYCNF}"
+  fi
   # First, we establish which tmpdir and pid_file are in use, strip any
   # trailing slash and populate the file with current information.
   # We throw away the output of the "show engine innodb status" command as
   # it is likely being truncated, which we attempt to work around:
-
-  echo "MySQL InnoDB status"  >> "${LOGFILE}"
-  unset MYVALS PID_FILE TMPDIR
-  MYVALS=( $( IFS=$'\t' mysql --defaults-extra-file="${DOTMYDOTCNF}" \
-                              -Bse "SHOW VARIABLES LIKE 'pid_file'; \
-                                    SHOW VARIABLES LIKE 'tmpdir'; \
-                                    SHOW ENGINE INNODB STATUS;" \
-                              2>/dev/null \
-                | head -n 2 ) )
-  PID_FILE="${MYVALS[1]%/}"
-  TMPDIR="${MYVALS[3]%/}"
+  local -a MYVALS=( $( IFS=$'\t' ${mysql_cmd} \
+                         -Bse "SHOW VARIABLES LIKE 'pid_file'; \
+                               SHOW VARIABLES LIKE 'tmpdir'; \
+                               SHOW ENGINE INNODB STATUS;" \
+                         2>/dev/null \
+                       | head -n 2 ) )
+  local PID_FILE="${MYVALS[1]%/}"
+  local TMPDIR="${MYVALS[3]%/}"
 
   # Next, we grab a list of descriptors in the tmpdir:
   for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
@@ -403,9 +412,10 @@ print_mysql_innodb_status() {
 print_mysql_procs() {
   log INFO "Starting 'mysql processlist' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL processes" >> "${LOGFILE}"
+    echo "MySQL (plesk) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
       mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist \
         >> "${LOGFILE}"
@@ -415,12 +425,12 @@ print_mysql_procs() {
         >> "${LOGFILE}"
     fi
   else
-    echo "MySQL ${DOTMYDOTCNF} processes" >> "${LOGFILE}"
+    echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" -v processlist \
+      mysqladmin --defaults-extra-file="${MYCNF}" -v processlist \
         >> "${LOGFILE}"
     elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql --defaults-extra-file="${DOTMYDOTCNF}" \
+      mysql --defaults-extra-file="${MYCNF}" \
             -e "show full processlist\G" >> "${LOGFILE}"
     fi
   fi
@@ -637,25 +647,30 @@ run_mysql_report() {
 
   create_output_file "${ITEM_FILE}"
   check_output_file "${ITEM_FILE}"
-  # Don't run reports if can't read the config file
-  if [[ ! -r "${DOTMYDOTCNF}" ]]; then
-    echo "Error when attempting to read: ${DOTMYDOTCNF}, please check the" \
-         "DOTMYDOTCNF setting in the configuration file" >> "${ITEM_FILE}"
-    return
-  fi
+  log INFO "Starting iteration of mysql report(s)"
+  # Iterate through the list of DOTMYDOTCNF config files
+  local -a MYCNFS=( ${DOTMYDOTCNF//,/ } )
+  for MYCNF in ${MYCNFS[@]}; do
+    # Don't run reports if can't read the config file
+    if [[ ! -r "${MYCNF}" ]]; then
+      log ERROR "Unable to read: '${MYCNF}' in the 'DOTMYDOTCNF' config."
+      continue
+    fi
 
-  print_mysql "${ITEM_FILE}"
+    print_mysql "${ITEM_FILE}" "${MYCNF}"
 
-  # check to see if the optional mysql process list should be generated
-  if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
-    print_blankline "${ITEM_FILE}"
-    print_mysql_procs "${ITEM_FILE}"
-  fi
-  if [[ "${USEINNODB,,}" == "yes" ]]; then
-    # send df -h output to output file
-    print_blankline "${ITEM_FILE}"
-    print_mysql_innodb_status "${ITEM_FILE}"
-  fi
+    # check to see if the optional mysql process list should be generated
+    if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
+      print_blankline "${ITEM_FILE}"
+      print_mysql_procs "${ITEM_FILE}" "${MYCNF}"
+    fi
+    if [[ "${USEINNODB,,}" == "yes" ]]; then
+      # send df -h output to output file
+      print_blankline "${ITEM_FILE}"
+      print_mysql_innodb_status "${ITEM_FILE}" "${MYCNF}"
+    fi
+  done
+  log INFO "Ended iteration of mysql report(s)"
 }
 
 # Copy the last log file set to ${BACKUPDIR}
@@ -812,9 +827,12 @@ fi
 
 # Run the mysql report
 #TODO: standardize the run_mysql_report
-type -p 'mysqladmin' > /dev/null
-if [[ $? -eq 0 && "${USEMYSQL,,}" == "yes" ]]; then
-  run_mysql_report
+if [[ "${USEMYSQL,,}" == "yes" ]]; then
+  if type -p 'mysqladmin' > /dev/null; then
+    run_mysql_report
+  else
+    log ERROR "mysql client is not installed, can't run mysql reports"
+  fi
 fi
 
 # Check to see if report should be emailed
@@ -824,4 +842,5 @@ if [[ -n "${MAILTO}" ]]; then
 fi
 
 # We're done, time to exit
+log INFO "Ended all the reports"
 exit 0
