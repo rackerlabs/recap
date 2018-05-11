@@ -198,6 +198,7 @@ create_output_dirs() {
       mkdir -p "${OUTPUT_DIR}"
     fi
   done
+  chmod 0750 "${BASEDIR}"
 }
 
 # Create output file
