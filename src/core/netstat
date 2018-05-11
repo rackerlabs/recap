@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+# Print the output of "ss -atunp" to the specified file
+print_netstat() {
+  log INFO "Starting 'network socket' report"
+  local LOGFILE="$1"
+  echo "Network connections" >> "${LOGFILE}"
+  if ss ${OPTS_NETSTAT} &>/dev/null; then
+    ss ${OPTS_NETSTAT} >> "${LOGFILE}"
+  else
+    ss ${default_OPTS_NETSTAT} >> "${LOGFILE}"
+    log WARNING "Bad config: '${OPTS_NETSTAT}', "\
+                "using default: '${default_OPTS_NETSTAT}'"
+  fi
+  log INFO "Ended 'network socket' report"
+}
+
+# Print the output of "nstat -a" to the specified file
+print_netstat_sum() {
+  log INFO "Starting 'network summary' report"
+  local LOGFILE="$1"
+  echo "Network traffic summary" >> "${LOGFILE}"
+  if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
+    nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+  else
+    nstat ${default_OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    log WARNING "Bad config: '${OPTS_NETSTAT_SUM}', "\
+                "using default: '${default_OPTS_NETSTAT_SUM}'"
+  fi
+  log INFO "Ended 'network summary' report"
+}

@@ -231,6 +231,16 @@ The following variables are commented out with the defaults values in the config
 
   Default: `BASEDIR="/var/log/recap"`
 
+- **LIBDIR** - Directory where the libraries/functions are located.
+
+  The default value depends on the `PREFIX` used when installing, the default `PREFIX` on the `Makefile` is `/usr/local`, then:
+
+    Default: `LIBDIR="/usr/local/lib/recap"`
+
+  But packages use `/usr` as the `PREFIX`, then through a package it is expected to be:
+
+    Default: `LIBDIR="/usr/lib/recap"`
+
 - **BACKUP_ITEMS** - Is the list of reports generated and used by recap scripts
 
   Default: `BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"`

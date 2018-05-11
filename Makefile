@@ -19,6 +19,7 @@ DESTDIR       ?=
 BINPATH       ?= /sbin
 PREFIX        ?= /usr/local
 BINDIR        ?= $(PREFIX)$(BINPATH)
+LIBDIR        ?= $(PREFIX)/lib
 MANDIR        ?= $(PREFIX)/share/man
 DOCDIR        ?= $(PREFIX)/share/doc
 SYSCONFDIR    ?= /etc
@@ -68,9 +69,15 @@ uninstall: uninstall-base uninstall-man uninstall-doc uninstall-$(type)
 
 install-base:
 	@echo "Installing scripts..."
+	@sed -i.orig 's|@LIBDIR@|$(DESTDIR)$(LIBDIR)|' src/recap
 	@install -Dm0755 src/recap $(DESTDIR)$(BINDIR)/recap
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool
+	@mv -f src/recap.orig src/recap
+	@echo "Installing libraries..."
+	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap
+	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap/core
+	@install -Dm0644 src/core/* $(DESTDIR)$(LIBDIR)/recap/core/
 	@echo "Installing configuration..."
 	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap.conf
 	@echo "Creating log directories..."
@@ -109,6 +116,8 @@ uninstall-base:
 	@rm -f $(DESTDIR)$(BINDIR)/recap
 	@rm -f $(DESTDIR)$(BINDIR)/recaplog
 	@rm -f $(DESTDIR)$(BINDIR)/recaptool
+	@echo "Removing libraries..."
+	@rm -Rf $(DESTDIR)$(LIBDIR)/recap/core
 	@echo "Removing configuration..."
 	@rm -f $(DESTDIR)$(SYSCONFDIR)/recap
 

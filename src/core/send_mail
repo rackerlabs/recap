@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+# Send the report via email
+send_mail() {
+  log INFO "Starting email report"
+  # create a temp directory
+  local TEMPDIR=$( mktemp -d "/tmp/rs.XXXXXXXXXX" )
+  local REPORT="${TEMPDIR}/report.log"
+  local ITEM_FILE=""
+  local ITEM_USE=""
+
+  # echo report files into temporary file for mailing
+  for item in ${BACKUP_ITEMS}; do
+    ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
+    # Build the variable to use and then use indirect ref to obtain its value
+    ITEM_USE="USE${item^^}"
+    if [[ -r "${ITEM_FILE}" && "${!ITEM_USE,,}" == "yes" ]]; then
+      echo "-----BEGIN ${item^^} REPORT-----" >> "${REPORT}"
+      cat "${ITEM_FILE}" >> "${REPORT}"
+      echo "-----END ${item^^} REPORT-----" >> "${REPORT}"
+      echo " " >> "${REPORT}"
+    fi
+  done
+  log INFO "Ended email report"
+
+  # send email summary to MAILTO address
+  log INFO "Sending email report to: ${MAILTO}"
+  if [[ -r "${REPORT}" ]]; then
+    cat "${REPORT}" | mail -s "System Monitor Report - ${HOSTNAME}" "${MAILTO}"
+    # Remove the temporary files
+    rm -rf "${TEMPDIR}"
+  fi
+  log INFO "Sent email report"
+}

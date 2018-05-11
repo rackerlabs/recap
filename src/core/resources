@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+# Print the output of "uptime" to the specified file
+print_uptime() {
+  log INFO "Starting 'uptime' report"
+  local LOGFILE="$1"
+  echo "UPTIME report" >> "${LOGFILE}"
+  uptime >> "${LOGFILE}"
+  log INFO "Ended 'uptime' report"
+}
+
+# Print the output of "free" to the specified file
+print_free() {
+  log INFO "Starting 'free' report"
+  local LOGFILE="$1"
+  echo "FREE report" >> "${LOGFILE}"
+  free ${OPTS_FREE} >> "${LOGFILE}"
+  log INFO "Ended 'free' report"
+}
+
+# Print the output of "vmstat" to the specified file
+print_vmstat() {
+  log INFO "Starting 'vmstat' report"
+  local LOGFILE="$1"
+  echo "VMSTAT report" >> "${LOGFILE}"
+  vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
+  log INFO "Ended 'vmstat' report"
+}
+
+# Print the output of "iostat" to the specified file
+print_iostat() {
+  log INFO "Starting 'iostat' report"
+  local LOGFILE="$1"
+  echo "IOSTAT report" >> "${LOGFILE}"
+  iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
+  log INFO "Ended 'iostat' report"
+}
+
+# Print the output of "iotop" to the specified file
+print_iotop() {
+  log INFO "Starting 'iotop' report"
+  local LOGFILE="$1"
+  echo "IOTOP report" >> "${LOGFILE}"
+  iotop ${OPTS_IOTOP} >> "${LOGFILE}"
+  log INFO "Ended 'iotop' report"
+}
+
+# Print the output of sar to the specified file
+print_sar() {
+  log INFO "Starting 'sar' report"
+  local LOGFILE="$1"
+  local OPTION="$2"
+  local FLAGS=''
+  # check to see if we're going to use any parameters for sar
+  if [[ "${OPTION}" == "r" ]]; then
+    FLAGS="-r"
+  elif [[ "${OPTION}" == "q" ]]; then
+    FLAGS="-q"
+  else
+    FLAGS=""
+  fi
+
+  echo "SAR${FLAGS} report" >> "${LOGFILE}"
+  sar "${FLAGS}" >> "${LOGFILE}"
+  log INFO "Ended 'sar' report"
+}
+
+# Print the output of the web server status page to the specified file
+print_http_fullstatus() {
+  log INFO "Starting 'web status page' report"
+  local LOGFILE="$1"
+  echo "Web Status report" >> "${LOGFILE}"
+  links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
+  log INFO "Ended 'web status page' report"
+}
+
+# Print the disk utilization to the defined file
+print_df() {
+  log INFO "Starting 'disk utilization' report"
+  local LOGFILE="$1"
+  local LOGFILE="$1"
+  echo "Disk Utilization" >> "${LOGFILE}"
+  df ${OPTS_DF} >> "${LOGFILE}"
+  log INFO "Ended 'disk utilization' report"
+}
+
+# Print the slabinfo command to the defined file
+print_slabinfo() {
+  log INFO "Starting 'slab info' report"
+  local LOGFILE="$1"
+  echo "Slab Information" >> "${LOGFILE}"
+  printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
+  tail -n+2 /proc/slabinfo |
+    awk 'size=$3*$4 {print $1"\t"$2"\t"$3"\t"$4"\t"size/1048576}' |
+    sort -k5gr >> "${LOGFILE}"
+  log INFO "Ended 'slab info' report"
+}
+
+# Print the top 10 processes (by cpu usage) to the defined file
+print_top_10_cpu() {
+  log INFO "Starting 'top 10 cpu' report"
+  local LOGFILE="$1"
+  local pidstat_cpufield=0
+  #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
+  local version_strings="$( pidstat -V 2>&1 |
+                              awk '{if(NR==1){print $NF}}' ) 10.1.4"
+  local sorted_versions="$( echo ${version_strings} | tr ' ' '\n' |
+                              sort --version-sort | tr '\n' ' ' )"
+  if [[ "${version_strings}" == "${sorted_versions}" ]]; then
+    pidstat_cpufield=6
+  else
+    pidstat_cpufield=7
+  fi
+  echo "Top 10 cpu using processes" >> "${LOGFILE}"
+  # capture header
+  pidstat | sed -n '3p' >> "${LOGFILE}"
+  pidstat -l 2 2 | grep -v '%system' |
+    egrep ^Average: | sort -nr -k ${pidstat_cpufield} |
+    head -11 >> "${LOGFILE}"
+  log INFO "Ended 'top 10 cpu' report"
+}
+
+# Print the top 10 processes (by memory usage) to the defined file
+print_top_10_mem() {
+  log INFO "Starting 'top 10 memory' report"
+  local LOGFILE="$1"
+  echo "Top 10 memory using processes" >> "${LOGFILE}"
+  ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
+  log INFO "Ended 'top 10 memory' report"
+}
