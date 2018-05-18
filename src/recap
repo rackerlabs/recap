@@ -41,7 +41,6 @@ BACKUP="${default_BACKUP}"
 SNAPSHOT="${default_SNAPSHOT}"
 
 ## Default settings(can be overridden in config file)
-declare -r default_BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 declare -r default_BASEDIR="/var/log/recap"
 declare -r default_LIBDIR="@LIBDIR@/recap"
 declare -r default_COREDIR="${default_LIBDIR}/core"
@@ -52,11 +51,10 @@ declare -r default_USEFDISK="no"
 declare -r default_USEPS="yes"
 declare -r default_USEPSTREE="no"
 declare -r default_USESLAB="no"
-BACKUP_ITEMS="${default_BACKUP_ITEMS}"
 BASEDIR="${default_BASEDIR}"
 LIBDIR="${default_LIBDIR}"
 COREDIR="${default_COREDIR}"
-RECAPLOG="${BASEDIR}/recap.log"
+RECAPLOG="${default_RECAPLOG}"
 MAILTO="${default_MAILTO}"
 MIN_FREE_SPACE=${default_MIN_FREE_SPACE}
 USEFDISK="${default_USEFDISK}"
@@ -388,14 +386,53 @@ run_mysql_report() {
   log INFO "Ended iteration of mysql report(s)"
 }
 
+# Generates a list of names from the current run, using LOG_SUFFIX
+get_report_names_of_run() {
+  local -a reports=()
+  log INFO "Finding reports from this run: ${LOG_SUFFIX}"
+  reports=( $( ls -1 "${BASEDIR}" 2>/dev/null |
+                 awk -F_ '/'${LOG_SUFFIX}'\.log$/ {print $1}' |
+                 sort -u
+             )
+          )
+  log INFO "Reports found: [ ${reports[@]} ]"
+  echo "${reports[@]}"
+}
+
+# Generates a list of names from the last reports logged
+get_last_report_names() {
+  local -a reports=()
+  local last_prefix=''
+  last_prefix=$( ls -1 "${BASEDIR}" 2>/dev/null |
+                   awk -F_ '/[0-9]\.log$/ {sub(".log", "", $2); print $2}' |
+                   sort -ur |
+                   head -1 )
+  if [[ -z ${last_prefix} ]]; then
+    log ERROR "No previous run has been found, unable to find report names."
+  else
+    log INFO "Last run was on: ${last_prefix}"
+    reports=( $( ls -1 "${BASEDIR}" 2>/dev/null |
+                   awk -F_ '/'${last_prefix}'\.log$/ {print $1}'
+               )
+            )
+    log INFO "Reports found: [ ${reports[@]} ]"
+  fi
+  echo "${reports[@]}"
+}
+
 # Copy the last log file set to ${BACKUPDIR}
 create_backup() {
   log INFO "Starting backup of reports"
-  for log_file in ${BACKUP_ITEMS}; do
-    ls -1t ${BASEDIR}/${log_file}_*.log 2>/dev/null |
-    head -1 |
-    xargs -I {} cp {} ${BACKUPDIR}
-  done
+  local -a log_files=( $( get_last_report_names ) )
+  if [[ -z ${log_files} ]]; then
+    log ERROR "Unable to backup unexisting reports."
+  else
+    for log_file in ${log_files[@]}; do
+      ls -1t ${BASEDIR}/${log_file}_*.log 2>/dev/null |
+      head -1 |
+      xargs -I {} cp {} ${BACKUPDIR}
+    done
+  fi
   log INFO "Ended backup of reports"
 }
 

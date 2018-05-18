@@ -241,10 +241,6 @@ The following variables are commented out with the defaults values in the config
 
     Default: `LIBDIR="/usr/lib/recap"`
 
-- **BACKUP_ITEMS** - Is the list of reports generated and used by recap scripts
-
-  Default: `BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"`
-
 
 #### Settings used only by `recaplog`
 

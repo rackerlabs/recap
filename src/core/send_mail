@@ -28,7 +28,8 @@ send_mail() {
   local ITEM_USE=""
 
   # echo report files into temporary file for mailing
-  for item in ${BACKUP_ITEMS}; do
+  local -a items=( $( get_report_names_of_run ) )
+  for item in ${items[@]}; do
     ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
     # Build the variable to use and then use indirect ref to obtain its value
     ITEM_USE="USE${item^^}"
