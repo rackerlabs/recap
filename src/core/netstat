@@ -20,8 +20,8 @@
 
 # Print the output of "ss -atunp" to the specified file
 print_netstat() {
-  log INFO "Starting 'network socket' report"
   local LOGFILE="$1"
+  log INFO "Starting 'network socket' report - ${LOGFILE##*/}"
   echo "Network connections" >> "${LOGFILE}"
   if ss ${OPTS_NETSTAT} &>/dev/null; then
     ss ${OPTS_NETSTAT} >> "${LOGFILE}"
@@ -35,8 +35,8 @@ print_netstat() {
 
 # Print the output of "nstat -a" to the specified file
 print_netstat_sum() {
-  log INFO "Starting 'network summary' report"
   local LOGFILE="$1"
+  log INFO "Starting 'network summary' report - ${LOGFILE##*/}"
   echo "Network traffic summary" >> "${LOGFILE}"
   if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
     nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"

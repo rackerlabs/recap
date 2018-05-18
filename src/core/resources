@@ -20,8 +20,8 @@
 
 # Print the output of "uptime" to the specified file
 print_uptime() {
-  log INFO "Starting 'uptime' report"
   local LOGFILE="$1"
+  log INFO "Starting 'uptime' report - ${LOGFILE##*/}"
   echo "UPTIME report" >> "${LOGFILE}"
   uptime >> "${LOGFILE}"
   log INFO "Ended 'uptime' report"
@@ -29,8 +29,8 @@ print_uptime() {
 
 # Print the output of "free" to the specified file
 print_free() {
-  log INFO "Starting 'free' report"
   local LOGFILE="$1"
+  log INFO "Starting 'free' report - ${LOGFILE##*/}"
   echo "FREE report" >> "${LOGFILE}"
   free ${OPTS_FREE} >> "${LOGFILE}"
   log INFO "Ended 'free' report"
@@ -38,8 +38,8 @@ print_free() {
 
 # Print the output of "vmstat" to the specified file
 print_vmstat() {
-  log INFO "Starting 'vmstat' report"
   local LOGFILE="$1"
+  log INFO "Starting 'vmstat' report - ${LOGFILE##*/}"
   echo "VMSTAT report" >> "${LOGFILE}"
   vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
   log INFO "Ended 'vmstat' report"
@@ -47,8 +47,8 @@ print_vmstat() {
 
 # Print the output of "iostat" to the specified file
 print_iostat() {
-  log INFO "Starting 'iostat' report"
   local LOGFILE="$1"
+  log INFO "Starting 'iostat' report - ${LOGFILE##*/}"
   echo "IOSTAT report" >> "${LOGFILE}"
   iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
   log INFO "Ended 'iostat' report"
@@ -56,8 +56,8 @@ print_iostat() {
 
 # Print the output of "iotop" to the specified file
 print_iotop() {
-  log INFO "Starting 'iotop' report"
   local LOGFILE="$1"
+  log INFO "Starting 'iotop' report - ${LOGFILE##*/}"
   echo "IOTOP report" >> "${LOGFILE}"
   iotop ${OPTS_IOTOP} >> "${LOGFILE}"
   log INFO "Ended 'iotop' report"
@@ -65,9 +65,9 @@ print_iotop() {
 
 # Print the output of sar to the specified file
 print_sar() {
-  log INFO "Starting 'sar' report"
   local LOGFILE="$1"
   local OPTION="$2"
+  log INFO "Starting 'sar' report - ${LOGFILE##*/}"
   local FLAGS=''
   # check to see if we're going to use any parameters for sar
   if [[ "${OPTION}" == "r" ]]; then
@@ -85,8 +85,8 @@ print_sar() {
 
 # Print the output of the web server status page to the specified file
 print_http_fullstatus() {
-  log INFO "Starting 'web status page' report"
   local LOGFILE="$1"
+  log INFO "Starting 'web status page' report - ${LOGFILE##*/}"
   echo "Web Status report" >> "${LOGFILE}"
   links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'web status page' report"
@@ -94,8 +94,8 @@ print_http_fullstatus() {
 
 # Print the disk utilization to the defined file
 print_df() {
-  log INFO "Starting 'disk utilization' report"
   local LOGFILE="$1"
+  log INFO "Starting 'disk utilization' report - ${LOGFILE##*/}"
   local LOGFILE="$1"
   echo "Disk Utilization" >> "${LOGFILE}"
   df ${OPTS_DF} >> "${LOGFILE}"
@@ -104,8 +104,8 @@ print_df() {
 
 # Print the slabinfo command to the defined file
 print_slabinfo() {
-  log INFO "Starting 'slab info' report"
   local LOGFILE="$1"
+  log INFO "Starting 'slab info' report - ${LOGFILE##*/}"
   echo "Slab Information" >> "${LOGFILE}"
   printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
   tail -n+2 /proc/slabinfo |
@@ -116,8 +116,8 @@ print_slabinfo() {
 
 # Print the top 10 processes (by cpu usage) to the defined file
 print_top_10_cpu() {
-  log INFO "Starting 'top 10 cpu' report"
   local LOGFILE="$1"
+  log INFO "Starting 'top 10 cpu' report - ${LOGFILE##*/}"
   local pidstat_cpufield=0
   #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
   local version_strings="$( pidstat -V 2>&1 |
@@ -140,8 +140,8 @@ print_top_10_cpu() {
 
 # Print the top 10 processes (by memory usage) to the defined file
 print_top_10_mem() {
-  log INFO "Starting 'top 10 memory' report"
   local LOGFILE="$1"
+  log INFO "Starting 'top 10 memory' report - ${LOGFILE##*/}"
   echo "Top 10 memory using processes" >> "${LOGFILE}"
   ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 memory' report"

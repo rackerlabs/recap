@@ -20,7 +20,7 @@
 
 # Print the output of "mysqladmin status" to the mysql file
 print_mysql() {
-  log INFO "Starting 'mysql status' report"
+  log INFO "Starting 'mysql status' report - ${LOGFILE##*/}"
   local LOGFILE="$1"
   local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"
@@ -44,7 +44,7 @@ print_mysql() {
 
 # Print the non-truncated innodb status to the mysql file
 print_mysql_innodb_status() {
-  log INFO "Starting 'mysql innodb' report"
+  log INFO "Starting 'mysql innodb' report - ${LOGFILE##*/}"
   local LOGFILE="$1"
   local MYCNF="$2"
   local mysql_cmd=''
@@ -91,7 +91,7 @@ print_mysql_innodb_status() {
 
 # Print the output of "mysqladmin processlist" to the mysql file
 print_mysql_procs() {
-  log INFO "Starting 'mysql processlist' report"
+  log INFO "Starting 'mysql processlist' report - ${LOGFILE##*/}"
   local LOGFILE="$1"
   local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"

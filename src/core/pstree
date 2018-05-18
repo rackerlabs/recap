@@ -20,8 +20,8 @@
 
 # Print output of "pstree" to specified file
 print_pstree() {
-  log INFO "Starting 'pstree' report"
   local LOGFILE="$1"
+  log INFO "Starting 'pstree' report - ${LOGFILE##*/}"
   pstree ${OPTS_PSTREE} >> "${LOGFILE}"
   log INFO "Ended 'pstree' report"
 }

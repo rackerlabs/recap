@@ -20,8 +20,8 @@
 
 # Print output of "ps auxfww" to the specified file
 print_ps() {
-  log INFO "Starting 'ps' report"
   local LOGFILE="$1"
+  log INFO "Starting 'ps' report - ${LOGFILE##*/}"
   ps ${OPTS_PS} >> "${LOGFILE}"
   log INFO "Ended 'ps' report"
 }

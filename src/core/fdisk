@@ -20,8 +20,8 @@
 
 # Print the disk partitions to the fdisk file
 print_fdisk() {
-  log INFO "Starting 'disk partition' report"
   local LOGFILE="$1"
+  log INFO "Starting 'disk partition' report - ${LOGFILE##*/}"
   echo "Disk partitions" >> "${LOGFILE}"
   fdisk ${OPTS_FDISK} 2>&1 >> "${LOGFILE}"
   log INFO "Ended 'disk partition' report"
