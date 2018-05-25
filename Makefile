@@ -77,7 +77,10 @@ install-base:
 	@echo "Installing libraries..."
 	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap
 	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap/core
+	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap/plugins-available
+	@install -dm0755 $(DESTDIR)$(LIBDIR)/recap/plugins-enabled
 	@install -Dm0644 src/core/* $(DESTDIR)$(LIBDIR)/recap/core/
+	@install -Dm0644 src/plugins/* $(DESTDIR)$(LIBDIR)/recap/plugins-available/
 	@echo "Installing configuration..."
 	@install -Dm0644 src/recap.conf $(DESTDIR)$(SYSCONFDIR)/recap.conf
 	@echo "Creating log directories..."
@@ -118,6 +121,8 @@ uninstall-base:
 	@rm -f $(DESTDIR)$(BINDIR)/recaptool
 	@echo "Removing libraries..."
 	@rm -Rf $(DESTDIR)$(LIBDIR)/recap/core
+	@rm -Rf $(DESTDIR)$(LIBDIR)/recap/plugins-available
+	@rm -Rf $(DESTDIR)$(LIBDIR)/recap/plugins-enabled
 	@echo "Removing configuration..."
 	@rm -f $(DESTDIR)$(SYSCONFDIR)/recap
 

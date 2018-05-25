@@ -468,6 +468,48 @@ Options used by the tools generating the reports
 
   Default: `OPTS_VMSTAT="-S M 1 3"`
 
+## Plugins
+
+Plugins are stored in the plugin directory, (default when installed: /usr/lib/recap/plugin-available)
+
+Enabling plugins requires:
+
+  - USEPLUGINS="yes" in /etc/recap.conf
+  - Symlinking plugin-enabled/plugin_name to plugin-available/plugin_name
+
+Name conventions:
+
+- Plugin names can be named in anyway, it's desired it describes the purpose of the plugin in one word, when multiple words are required use underscores "_", don't use extension. Some examples:
+
+  - Good names for plugins
+    - redis
+    - memcache
+    - docker_images
+  - Bad names for plugins
+    - johndoe_apache  (not very descriptive)
+    - myplugin      (non explicit)
+    - test.sh       (non explicit, using extension)
+    - recap-plugin  (non explicit, using hyphens)
+    - Sendmail      (CamelCase)		 
+    - redis.bak     (extension)
+    - ms sql        (space between words)
+
+- Allowed name convention for OPTIONS in /etc/recap.conf: PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>
+  Some examples:
+
+  - Good option names:
+    - PLUGIN_OPTS_MEMCACHE_PROTO
+    - PLUGIN_OPTS_AWS_KEY
+    - PLUGIN_OPTS_REDIS_PORT
+    - PLUGIN_OPTS_DOCKER_HUB_URL
+  - Bad option names:
+    - plugin_opts_my_plugin   ( lower case)
+    - PLUGIN_OPTS_MY_VARIABLE (lacking plugin reference)
+    - PLUGIN_OPTS_DOCKER_port (CamelCase)
+    - PLUGIN-OPTS-NTP         (using hyphens instead of underscores, missing the option)
+
+- Inside the plugin file/script it is expected *only* functions. recap will *only* call **one** function: "print_<plugin_name>" where "plugin_name" must match the name of the file.
+
 ## Changelog & Contributions
 
 Information about changes and contributors is documented in the [CHANGELOG.md](https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md)

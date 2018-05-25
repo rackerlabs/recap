@@ -32,7 +32,12 @@ declare -r _VERSION='1.4.0'
 declare -r DATE=$( date +%F_%T )
 declare -r LOCKFILE="/var/lock/recap.lock"
 declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
+declare -r LIBDIR="@LIBDIR@/recap"
+declare -r COREDIR="${LIBDIR}/core"
+declare -r PLUGIN_A_DIR="${LIBDIR}/plugins-available"
+declare -r PLUGIN_E_DIR="${LIBDIR}/plugins-enabled"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
 
 ## Default settings(modified through command line arguments)
 declare -r default_BACKUP="no"
@@ -42,8 +47,6 @@ SNAPSHOT="${default_SNAPSHOT}"
 
 ## Default settings(can be overridden in config file)
 declare -r default_BASEDIR="/var/log/recap"
-declare -r default_LIBDIR="@LIBDIR@/recap"
-declare -r default_COREDIR="${default_LIBDIR}/core"
 declare -r default_RECAPLOG="${default_BASEDIR}/recap.log"
 declare -r default_MAILTO=""
 declare -r default_MIN_FREE_SPACE=0
@@ -51,9 +54,8 @@ declare -r default_USEFDISK="no"
 declare -r default_USEPS="yes"
 declare -r default_USEPSTREE="no"
 declare -r default_USESLAB="no"
+declare -r default_USEPLUGINS="no"
 BASEDIR="${default_BASEDIR}"
-LIBDIR="${default_LIBDIR}"
-COREDIR="${default_COREDIR}"
 RECAPLOG="${default_RECAPLOG}"
 MAILTO="${default_MAILTO}"
 MIN_FREE_SPACE=${default_MIN_FREE_SPACE}
@@ -61,6 +63,7 @@ USEFDISK="${default_USEFDISK}"
 USEPS="${default_USEPS}"
 USEPSTREE="${default_USEPSTREE}"
 USESLAB="${default_USESLAB}"
+USEPLUGINS="${default_USEPLUGINS}"
 
 # Parent setting(other settings depend on this)
 declare -r default_USERESOURCES="yes"
@@ -228,6 +231,37 @@ check_output_file() {
 print_blankline() {
   local LOGFILE="$1"
   echo " " >> "${LOGFILE}"
+}
+
+# Plugin names
+# Obtain the list of files/plugins on a directory
+plugins_list() {
+  local plugin_dir="$1"
+  local p_names=( $( ls -1 "${plugin_dir}" | tr '\n' ' ') )
+  echo ${p_names[@]}
+}
+
+# Plugin info
+plugins_info(){
+  for dir in "${PLUGIN_A_DIR}" "${PLUGIN_E_DIR}"; do
+    log INFO "Finding plugins in ${dir}"
+    plugins=( $( plugins_list "${dir}" ) )
+    if [[ ${#plugins[@]} == 0 ]]; then
+      log INFO "No plugins found."
+    else
+      log INFO "${#plugins[@]} plugins found: ${plugins[@]}"
+    fi
+  done
+}
+
+# Loads plugins
+plugins_load() {
+  local plugin_dir="$1"
+  log INFO "Loading plugins from: ${plugin_dir}"
+  for plugin in "${plugin_dir}"/*; do
+    log INFO "Loading plugin: ${plugin}"
+    source ${plugin}
+  done
 }
 
 # Load core functions
@@ -584,6 +618,23 @@ if [[ "${USEMYSQL,,}" == "yes" ]]; then
     run_mysql_report
   else
     log ERROR "mysql client is not installed, can't run mysql reports"
+  fi
+fi
+
+# Load and Run plugins enabled
+if [[ "${USEPLUGINS,,}" == "yes" ]]; then
+  # Log the info about plugins(available and enabled)
+  plugins_info
+  # Load only enabled plugins
+  plugins_load "${PLUGIN_E_DIR}"
+  plugins=( $( plugins_list "${PLUGIN_E_DIR}" ) )
+  if [[ "${#plugins[@]}" == 0 ]]; then
+    log WARNING "No plugins found to execute in: ${PLUGIN_E_DIR}"
+  else
+    # Run the plugins enabled
+    for plugin in ${plugins[@]}; do
+      run_item_report "${plugin}"
+    done
   fi
 fi
 
