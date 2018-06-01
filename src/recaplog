@@ -127,11 +127,15 @@ get_report_names_of_day() {
   local day="$1"
   local -a reports=()
   log INFO "Finding reports from: ${day}"
-  reports=( $( ls -1 "${BASEDIR}" 2>/dev/null |
-                 awk -F_ '/'${day}'-[0-9]+\.log$/ {print $1}' |
-                 sort -u
-             )
-          )
+  reports=(
+    $( ls -1 "${BASEDIR}" 2>/dev/null |
+         awk -F. \
+         '
+           /'${day}'-[0-9]{6}\.log$/ {sub("_'${day}'-[0-9]{6}","",$1); print $1}
+         ' |
+         sort -u
+     )
+  )
   log INFO "Reports found: [ ${reports[@]} ]"
   echo "${reports[@]}"
 }

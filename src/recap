@@ -436,19 +436,23 @@ get_report_names_of_run() {
 # Generates a list of names from the last reports logged
 get_last_report_names() {
   local -a reports=()
-  local last_prefix=''
-  last_prefix=$( ls -1 "${BASEDIR}" 2>/dev/null |
-                   awk -F_ '/[0-9]\.log$/ {sub(".log", "", $2); print $2}' |
+  local last_suffix=''
+  last_suffix=$( ls -1 "${BASEDIR}" 2>/dev/null |
+                   grep -P '_\d{8}-\d{6}\.log$' |
+                   grep -oP '\d{8}-\d{6}' |
                    sort -ur |
                    head -1 )
-  if [[ -z ${last_prefix} ]]; then
+  if [[ -z ${last_suffix} ]]; then
     log ERROR "No previous run has been found, unable to find report names."
   else
-    log INFO "Last run was on: ${last_prefix}"
-    reports=( $( ls -1 "${BASEDIR}" 2>/dev/null |
-                   awk -F_ '/'${last_prefix}'\.log$/ {print $1}'
-               )
-            )
+    log INFO "Last run was on: ${last_suffix}"
+    reports=(
+      $( ls -1 "${BASEDIR}" 2>/dev/null |
+           awk -F. '
+             /'${last_suffix}'\.log$/ {sub("_'${last_suffix}'","",$1); print $1}
+           '
+       )
+    )
     log INFO "Reports found: [ ${reports[@]} ]"
   fi
   echo "${reports[@]}"
