@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+print_docker_top() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  ##
+  DOCKER=$( type -p docker )
+  if [[ -z ${DOCKER} ]]; then
+    echo "Docker is not installed" >> "${LOGFILE}"
+    log INFO "Ended '${plugin_name}' report"
+    return
+  fi
+  local -a docker_running_containers
+  docker_running_containers+=(
+    $( ${DOCKER} ps 2>/dev/null \
+         --filter status=running \
+         --format="{{.Names}}:{{.ID}}"
+     )
+  )
+  for container in ${docker_running_containers[@]}; do
+    c_name=${container//:*}
+    c_id=${container##*:}
+    echo "${c_name} - ${c_id}" >> "${LOGFILE}"
+    ${DOCKER} top ${c_id} >> "${LOGFILE}"
+    echo -e "---\n" >> "${LOGFILE}"
+  done  
+  ##
+  log INFO "Ended '${plugin_name}' report"
+}
