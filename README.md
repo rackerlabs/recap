@@ -514,6 +514,8 @@ Name conventions:
 
 - The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
 
+- A template of a plugin is provided in `doc/plugin_template`
+
 ## Changelog & Contributions
 
 Information about changes and contributors is documented in the [CHANGELOG.md](https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md)
