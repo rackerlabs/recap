@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+print_redis() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  local redis_cli=$( type -p redis-cli )
+  local host=${PLUGIN_OPTS_REDIS_HOST:-"127.0.0.1"}
+  local port=${PLUGIN_OPTS_REDIS_PORT:-"6379"}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  print_redis_timings "${LOGFILE}"
+  print_blankline "${LOGFILE}"
+  print_redis_info "${LOGFILE}"
+  log INFO "Ended '${plugin_name}' report"
+}
+
+print_redis_timings() {
+  if [[ -n "${redis_cli}" ]]; then
+    print_blankline "${LOGFILE}"
+
+    echo "Redis stat (+delta / 0.5s)" >> "${LOGFILE}"
+    # "--stat" expects a TTY (does an ioctl with TCGETS), stdbuf resolves this neatly
+    timeout 5 stdbuf -oL "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
+    print_blankline "${LOGFILE}"
+
+    # Tests latency by sending "PING" and waiting for "PONG"
+    echo "Redis average latencies (3s)" >> "${LOGFILE}"
+    print_redis_latency "${LOGFILE}"
+    print_redis_latency "${LOGFILE}"
+    print_redis_latency "${LOGFILE}"
+    print_blankline "${LOGFILE}"
+
+    # Tests the client where the command is ran from for system latency
+    echo "Local System Intrinsic Latency (5s)" >> "${LOGFILE}"
+    "${redis_cli}" --intrinsic-latency 5 &>> "${LOGFILE}"
+  fi
+}
+
+print_redis_latency() {
+  local latency=$( timeout 3 "${redis_cli}" -h "${host}" -p "${port}" --latency 2>&1 )
+  # We have to filter the output for the last occurance (splitting on the ANSI "Clear entire line")
+  echo "$( ts ) ${latency##*2K}" >> "${LOGFILE}"
+}
+
+print_redis_info() {
+  echo "Redis INFO ALL" >> "${LOGFILE}"
+  if [[ -n "${redis_cli}" ]]; then
+    "${redis_cli}" -h "${host}" -p "${port}" info all &>> "${LOGFILE}"
+  else
+    ( printf "INFO ALL\r\n"; sleep 1 ) | nc "${host}" "${port}" &>> "${LOGFILE}"
+  fi
+}
