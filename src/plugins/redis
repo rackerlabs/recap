@@ -24,46 +24,75 @@ print_redis() {
   local redis_cli=$( type -p redis-cli )
   local host=${PLUGIN_OPTS_REDIS_HOST:-"127.0.0.1"}
   local port=${PLUGIN_OPTS_REDIS_PORT:-"6379"}
+  # Wrap the more time consuming tests behind a default "no" flag
+  local timings=${PLUGIN_OPTS_REDIS_TIMINGS:-"no"}
+  # Wrap the less useful client listing behind a default "no" flag
+  local clients=${PLUGIN_OPTS_REDIS_CLIENTS:-"no"}
+
   log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
-  print_redis_timings "${LOGFILE}"
   print_blankline "${LOGFILE}"
-  print_redis_info "${LOGFILE}"
+  if [[ -n "${redis_cli}" ]]; then
+
+    if [[ "${timings,,}" == "yes" ]]; then
+      print_redis_timings
+      print_blankline "${LOGFILE}"
+    fi
+
+    print_redis_cmd "INFO ALL"
+    print_blankline "${LOGFILE}"
+
+    if [[ "${clients,,}" == "yes" ]]; then
+      print_redis_cmd "CLIENT LIST"
+      print_blankline "${LOGFILE}"
+    fi
+  else
+    # If the redis-cli is unavailable, fallback to ncat
+    print_redis_cmd_fallback "INFO ALL"
+    if [[ "${clients,,}" == "yes" ]]; then
+      print_redis_cmd_fallback "CLIENT LIST"
+    fi
+  fi
   log INFO "Ended '${plugin_name}' report"
 }
 
+# Executing this functions takes ~20 seconds as each command is sampling performance in a timeframe
 print_redis_timings() {
-  if [[ -n "${redis_cli}" ]]; then
-    print_blankline "${LOGFILE}"
+  echo "Redis stat (+delta / 0.5s)" >> "${LOGFILE}"
+  # stdbuf is used here to ensure we get the output from buffer before it's terminated
+  timeout 5 stdbuf -oL "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
+  print_blankline "${LOGFILE}"
 
-    echo "Redis stat (+delta / 0.5s)" >> "${LOGFILE}"
-    # "--stat" expects a TTY (does an ioctl with TCGETS), stdbuf resolves this neatly
-    timeout 5 stdbuf -oL "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
-    print_blankline "${LOGFILE}"
+  # Tests latency by sending "PING" and waiting for "PONG"
+  echo "Redis average latencies (3s)" >> "${LOGFILE}"
+  print_redis_latency
+  print_redis_latency
+  print_redis_latency
+  print_blankline "${LOGFILE}"
 
-    # Tests latency by sending "PING" and waiting for "PONG"
-    echo "Redis average latencies (3s)" >> "${LOGFILE}"
-    print_redis_latency "${LOGFILE}"
-    print_redis_latency "${LOGFILE}"
-    print_redis_latency "${LOGFILE}"
-    print_blankline "${LOGFILE}"
-
-    # Tests the client where the command is ran from for system latency
-    echo "Local System Intrinsic Latency (5s)" >> "${LOGFILE}"
-    "${redis_cli}" --intrinsic-latency 5 &>> "${LOGFILE}"
-  fi
+  # Tests the client where the command is ran from for system latency
+  echo "Local System Intrinsic Latency (5s)" >> "${LOGFILE}"
+  "${redis_cli}" --intrinsic-latency 5 &>> "${LOGFILE}"
 }
 
 print_redis_latency() {
-  local latency=$( timeout 3 "${redis_cli}" -h "${host}" -p "${port}" --latency 2>&1 )
-  # We have to filter the output for the last occurance (splitting on the ANSI "Clear entire line")
+  # Redis 4 changes the output and auto-exits after 1 second (default interval)
+  # Once 3.2 becomes EOL, we can remove the "timeout" and rely entirely on the set "interval"
+  local latency=$( timeout 3 "${redis_cli}" -h "${host}" -p "${port}" --latency -i 2.5 2>&1 )
+  # We have to filter the output for the last occurance (splitting on the ANSI 2K "Clear entire line")
+  # Running "redis-cli --latency | cat -e" would demonstrate the problem this resolves
   echo "$( ts ) ${latency##*2K}" >> "${LOGFILE}"
 }
 
-print_redis_info() {
-  echo "Redis INFO ALL" >> "${LOGFILE}"
-  if [[ -n "${redis_cli}" ]]; then
-    "${redis_cli}" -h "${host}" -p "${port}" info all &>> "${LOGFILE}"
-  else
-    ( printf "INFO ALL\r\n"; sleep 1 ) | nc "${host}" "${port}" &>> "${LOGFILE}"
-  fi
+print_redis_cmd() {
+  local command="$1"
+  echo "Redis ${command}" >> "${LOGFILE}"
+  # The redis-cli client doesn't have built-in connection timeout handling, thus use "timeout"
+  timeout 3 "${redis_cli}" -h "${host}" -p "${port}" ${command} &>> "${LOGFILE}"
+}
+
+print_redis_cmd_fallback() {
+  local command="$1"
+  echo "Redis ${command} (via ncat)" >> "${LOGFILE}"
+  # Connection timeout of 3 seconds and forcing CRLF for lines
+  ( printf "${command}\r\n"; sleep 1 ) | ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}"
 }
