@@ -55,11 +55,13 @@ print_redis() {
   log INFO "Ended '${plugin_name}' report"
 }
 
-# Executing this functions takes ~20 seconds as each command is sampling performance in a timeframe
+# Executing this functions takes ~20 seconds as each command is sampling
+# performance in a timeframe
 print_redis_timings() {
   echo "Redis stat (+delta / 0.5s)" >> "${LOGFILE}"
-  # stdbuf is used here to ensure we get the output from buffer before it's terminated
-  timeout 5 stdbuf -oL "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
+  # stdbuf is used to ensure we get output from buffer before it's terminated
+  timeout 5 stdbuf -oL \
+    "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
   print_blankline "${LOGFILE}"
 
   # Tests latency by sending "PING" and waiting for "PONG"
@@ -76,23 +78,28 @@ print_redis_timings() {
 
 print_redis_latency() {
   # Redis 4 changes the output and auto-exits after 1 second (default interval)
-  # Once 3.2 becomes EOL, we can remove the "timeout" and rely entirely on the set "interval"
-  local latency=$( timeout 3 "${redis_cli}" -h "${host}" -p "${port}" --latency -i 2.5 2>&1 )
-  # We have to filter the output for the last occurance (splitting on the ANSI 2K "Clear entire line")
-  # Running "redis-cli --latency | cat -e" would demonstrate the problem this resolves
+  # Once 3.2 is EOL, remove the "timeout" and just use the set "interval"
+  local latency=$( timeout 3 \
+    "${redis_cli}" -h "${host}" -p "${port}" --latency -i 2.5 2>&1 )
+  # We have to filter the output for the last occurrence (splitting on the
+  # ANSI 2K "Clear entire line")
+  # Running "redis-cli --latency | cat -e" would show the problem this resolves
   echo "$( ts ) ${latency##*2K}" >> "${LOGFILE}"
 }
 
 print_redis_cmd() {
   local command="$1"
   echo "Redis ${command}" >> "${LOGFILE}"
-  # The redis-cli client doesn't have built-in connection timeout handling, thus use "timeout"
-  timeout 3 "${redis_cli}" -h "${host}" -p "${port}" ${command} &>> "${LOGFILE}"
+  # The redis-cli client doesn't have built-in connection timeout handling,
+  # thus we must use "timeout" to stop it hanging when we don't get a reply
+  timeout 3 \
+    "${redis_cli}" -h "${host}" -p "${port}" ${command} &>> "${LOGFILE}"
 }
 
 print_redis_cmd_fallback() {
   local command="$1"
   echo "Redis ${command} (via ncat)" >> "${LOGFILE}"
   # Connection timeout of 3 seconds and forcing CRLF for lines
-  ( printf "${command}\r\n"; sleep 1 ) | ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}"
+  ( printf "${command}\r\n"; sleep 1 ) | \
+    ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}"
 }
