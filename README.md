@@ -82,7 +82,9 @@ This other example will install `recap` under your homedirectory but using the d
 $ make DESTDIR="~" install
 ```
 
-The `Makefile` scripts attempts to detect systemd if so, the `install` option will install the systemd unit files, otherwise the cronjobs will be installed.
+The `Makefile` scripts attempts to detect systemd if so, the `install` option will install the systemd unit files. The install will **not** enable the timers, but it will show the commands required to enable each of the timers.  When systemd is not detected the cronjobs will be installed.
+
+Is up to each package distribution to follow their own best practices regarding enabling/disabling the timers on install/remove of the package.
 
 ## Cron/Timers and Configuration
 
@@ -92,6 +94,26 @@ Multiple unit files are available to make use of `timers`, here the default sche
 - recap (default every 10min)
 - recap-onboot (runs at boot time)
 - recaplog (default: Once a day 1am)
+
+#### Enabling timers
+
+Each one of the timers can be enabled with:
+
+  ```bash
+  sudo systemctl enable recap.timer --now"
+  sudo systemctl enable recaplog.timer --now"
+  sudo systemctl enable recap-onboot.timer --now"
+  ```
+
+#### Disabling timers
+
+Each one of the timers can be disabled with:
+
+  ```bash
+  sudo systemctl disable recap.timer --now"
+  sudo systemctl disable recaplog.timer --now"
+  sudo systemctl disable recap-onboot.timer --now"
+  ```
 
 ### Cron
 
