@@ -226,7 +226,7 @@ check_output_file() {
 print_ps() {
   log INFO "Starting 'ps' report"
   local LOGFILE="$1"
-  ps ${OPTS_PS} >> "${LOGFILE}"
+  ps ${OPTS_PS} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'ps' report"
 }
 
@@ -234,7 +234,7 @@ print_ps() {
 print_pstree() {
   log INFO "Starting 'pstree' report"
   local LOGFILE="$1"
-  pstree ${OPTS_PSTREE} >> "${LOGFILE}"
+  pstree ${OPTS_PSTREE} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'pstree' report"
 }
 
@@ -249,7 +249,7 @@ print_uptime() {
   log INFO "Starting 'uptime' report"
   local LOGFILE="$1"
   echo "UPTIME report" >> "${LOGFILE}"
-  uptime >> "${LOGFILE}"
+  uptime 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'uptime' report"
 }
 
@@ -258,7 +258,7 @@ print_free() {
   log INFO "Starting 'free' report"
   local LOGFILE="$1"
   echo "FREE report" >> "${LOGFILE}"
-  free ${OPTS_FREE} >> "${LOGFILE}"
+  free ${OPTS_FREE} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'free' report"
 }
 
@@ -267,7 +267,7 @@ print_vmstat() {
   log INFO "Starting 'vmstat' report"
   local LOGFILE="$1"
   echo "VMSTAT report" >> "${LOGFILE}"
-  vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
+  vmstat ${OPTS_VMSTAT} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'vmstat' report"
 }
 
@@ -276,7 +276,7 @@ print_iostat() {
   log INFO "Starting 'iostat' report"
   local LOGFILE="$1"
   echo "IOSTAT report" >> "${LOGFILE}"
-  iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
+  iostat ${OPTS_IOSTAT} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'iostat' report"
 }
 
@@ -285,7 +285,7 @@ print_iotop() {
   log INFO "Starting 'iotop' report"
   local LOGFILE="$1"
   echo "IOTOP report" >> "${LOGFILE}"
-  iotop ${OPTS_IOTOP} >> "${LOGFILE}"
+  iotop ${OPTS_IOTOP} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'iotop' report"
 }
 
@@ -305,7 +305,7 @@ print_sar() {
   fi
 
   echo "SAR${FLAGS} report" >> "${LOGFILE}"
-  sar "${FLAGS}" >> "${LOGFILE}"
+  sar "${FLAGS}" 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'sar' report"
 }
 
@@ -324,9 +324,9 @@ print_netstat() {
   local LOGFILE="$1"
   echo "Network connections" >> "${LOGFILE}"
   if ss ${OPTS_NETSTAT} &>/dev/null; then
-    ss ${OPTS_NETSTAT} >> "${LOGFILE}"
+    ss ${OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
   else
-    ss ${default_OPTS_NETSTAT} >> "${LOGFILE}"
+    ss ${default_OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
     log WARNING "Bad config: '${OPTS_NETSTAT}', "\
                 "using default: '${default_OPTS_NETSTAT}'"
   fi
@@ -339,9 +339,9 @@ print_netstat_sum() {
   local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
   if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
-    nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    nstat ${OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
   else
-    nstat ${default_OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    nstat ${default_OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
     log WARNING "Bad config: '${OPTS_NETSTAT_SUM}', "\
                 "using default: '${default_OPTS_NETSTAT_SUM}'"
   fi
@@ -446,8 +446,8 @@ print_top_10_cpu() {
   fi
   echo "Top 10 cpu using processes" >> "${LOGFILE}"
   # capture header
-  pidstat | sed -n '3p' >> "${LOGFILE}"
-  pidstat -l 2 2 | grep -v '%system' |
+  pidstat 2>/dev/null | sed -n '3p' >> "${LOGFILE}"
+  pidstat -l 2 2 2>/dev/null | grep -v '%system' |
     egrep ^Average: | sort -nr -k ${pidstat_cpufield} |
     head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 cpu' report"
@@ -458,7 +458,7 @@ print_top_10_mem() {
   log INFO "Starting 'top 10 memory' report"
   local LOGFILE="$1"
   echo "Top 10 memory using processes" >> "${LOGFILE}"
-  ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
+  ps auxww --sort=-rss 2>/dev/null | head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 memory' report"
 }
 
@@ -468,7 +468,7 @@ print_df() {
   local LOGFILE="$1"
   local LOGFILE="$1"
   echo "Disk Utilization" >> "${LOGFILE}"
-  df ${OPTS_DF} >> "${LOGFILE}"
+  df ${OPTS_DF} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'disk utilization' report"
 }
 
@@ -487,7 +487,7 @@ print_slabinfo() {
   local LOGFILE="$1"
   echo "Slab Information" >> "${LOGFILE}"
   printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
-  tail -n+2 /proc/slabinfo |
+  tail -n+2 /proc/slabinfo 2>/dev/null |
     awk 'size=$3*$4 {print $1"\t"$2"\t"$3"\t"$4"\t"size/1048576}' |
     sort -k5gr >> "${LOGFILE}"
   log INFO "Ended 'slab info' report"
