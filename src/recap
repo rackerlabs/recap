@@ -355,10 +355,17 @@ print_mysql() {
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL (plesk) status" >> "${LOGFILE}"
-    mysqladmin -uadmin -p$(cat "${PLESK_FILE}") status >> "${LOGFILE}"
+    mysqladmin \
+      -uadmin \
+      -p$(cat "${PLESK_FILE}") \
+      --connect-timeout=5 \
+      status >> "${LOGFILE}"
   else
     echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
-    mysqladmin --defaults-extra-file="${MYCNF}" status >> "${LOGFILE}"
+      mysqladmin \
+        --defaults-extra-file="${MYCNF}" \
+        --connect-timeout=5 \
+        status >> "${LOGFILE}"
   fi
   print_blankline "${LOGFILE}"
   log INFO "Ended 'mysql status' report"
@@ -374,10 +381,10 @@ print_mysql_innodb_status() {
   unset MYVALS PID_FILE TMPDIR
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL (plesk) InnoDB status" >> "${LOGFILE}"
-    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE})"
+    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE}) --connect-timeout=5"
   else
     echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
-    mysql_cmd="mysql --defaults-extra-file=${MYCNF}"
+    mysql_cmd="mysql --defaults-extra-file=${MYCNF} --connect-timeout=5"
   fi
   # First, we establish which tmpdir and pid_file are in use, strip any
   # trailing slash and populate the file with current information.
@@ -417,21 +424,35 @@ print_mysql_procs() {
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL (plesk) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
-      mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist \
+      mysqladmin \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        -v processlist \
+        --connect-timeout=5 \
         >> "${LOGFILE}"
     fi
     if [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" \
+      mysql \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
         >> "${LOGFILE}"
     fi
   else
     echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin --defaults-extra-file="${MYCNF}" -v processlist \
+      mysqladmin \
+        --defaults-extra-file="${MYCNF}" \
+        -v processlist \
+        --connect-timeout=5 \
         >> "${LOGFILE}"
     elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql --defaults-extra-file="${MYCNF}" \
-            -e "show full processlist\G" >> "${LOGFILE}"
+      mysql \
+        --defaults-extra-file="${MYCNF}" \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
+        >> "${LOGFILE}"
     fi
   fi
   print_blankline "${LOGFILE}"
@@ -654,6 +675,15 @@ run_mysql_report() {
     # Don't run reports if can't read the config file
     if [[ ! -r "${MYCNF}" ]]; then
       log ERROR "Unable to read: '${MYCNF}' in the 'DOTMYDOTCNF' config."
+      continue
+    fi
+    # Don't run reports if can't connect to the instance
+    if ! mysqladmin \
+           --defaults-file="${MYCNF}" \
+           --connect-timeout=5 \
+           ping &>/dev/null; then
+      log ERROR "Unable to connect using '${MYCNF}' in the 'DOTMYDOTCNF'"\
+                "config."
       continue
     fi
 
