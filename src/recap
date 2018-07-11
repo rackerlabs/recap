@@ -363,7 +363,7 @@ print_mysql() {
   else
     echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
       mysqladmin \
-        --defaults-extra-file="${MYCNF}" \
+        --defaults-file="${MYCNF}" \
         --connect-timeout=5 \
         status >> "${LOGFILE}"
   fi
@@ -384,7 +384,7 @@ print_mysql_innodb_status() {
     mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE}) --connect-timeout=5"
   else
     echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
-    mysql_cmd="mysql --defaults-extra-file=${MYCNF} --connect-timeout=5"
+    mysql_cmd="mysql --defaults-file=${MYCNF} --connect-timeout=5"
   fi
   # First, we establish which tmpdir and pid_file are in use, strip any
   # trailing slash and populate the file with current information.
@@ -400,18 +400,20 @@ print_mysql_innodb_status() {
   local TMPDIR="${MYVALS[3]%/}"
 
   # Next, we grab a list of descriptors in the tmpdir:
-  for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
-    # We know that InnoDB's temporary files are always in the mysql tmpdir
-    # and start with the string 'ib' followed by a randomly generated series
-    # of characters.  Now we can compare the canonicalized path of fd to the
-    # tmpdir/ib* pattern:
-    if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
-      # If any files match that pattern, we see if the first line in the file
-      # starts with "===", which is the case in the particular InnoDB file we
-      # care about:
-      head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
-    fi
-  done
+  if [[ -r "${PID_FILE}" -a -d "${TMPDIR}" ]]; then
+    for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
+      # We know that InnoDB's temporary files are always in the mysql tmpdir
+      # and start with the string 'ib' followed by a randomly generated series
+      # of characters.  Now we can compare the canonicalized path of fd to the
+      # tmpdir/ib* pattern:
+      if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
+        # If any files match that pattern, we see if the first line in the file
+        # starts with "===", which is the case in the particular InnoDB file we
+        # care about:
+        head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
+      fi
+    done
+  fi
   log INFO "Ended 'mysql innodb' report"
 }
 
@@ -443,13 +445,13 @@ print_mysql_procs() {
     echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
       mysqladmin \
-        --defaults-extra-file="${MYCNF}" \
+        --defaults-file="${MYCNF}" \
         -v processlist \
         --connect-timeout=5 \
         >> "${LOGFILE}"
     elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
       mysql \
-        --defaults-extra-file="${MYCNF}" \
+        --defaults-file="${MYCNF}" \
         --connect-timeout=5 \
         -e "show full processlist\G" \
         >> "${LOGFILE}"
