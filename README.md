@@ -98,7 +98,8 @@ git checkout ${LATEST} -- debian
 # Build the package
 debuild -us -uc --lintian-opts --profile debian
 
-# Package will be created in ../recap_<version-release>_all.deb
+# Package will be created in ../recap_${latest_tag}-<RELEASE>_all.deb
+# RELEASE comes from the changelog in the debian repository.
 ```
 
 #### Manual install
