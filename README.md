@@ -51,13 +51,60 @@ dnf install recap
 yum install recap
 ```
 
-### Ubuntu
+### Debian / Ubuntu
 
-At the moment there is no public repository for Ubuntu, use the [manual installation](#manual) method.
+At the moment there is no public repository for Debian nor Ubuntu, two options are available:
 
-### Debian
+#### Build a package
 
-At the moment there is no public repository for Debian, use the [manual installation](#manual) method.
+This repository https://github.com/raxpkg/recap contains the debian files required to build a deb package
+
+These are the steps:
+
+```bash
+# Install all the packages required for building the package
+apt-get update
+apt-get install debhelper devscripts git -y
+
+## For Ubuntu:
+apt-get install equivs -y
+
+# Create the working dir:
+mkdir recap
+cd recap
+
+# Get the debian configs
+git init
+git remote add origin https://github.com/raxpkg/recap.git
+git fetch --no-tags origin
+git checkout -qf FETCH_HEAD
+git submodule update --init --recursive
+export LATEST=$( git log --format="%h" --no-merges -1 )
+
+# Build dependencies
+echo "yes" | mk-build-deps --install --remove debian/control
+
+# Get upstream recap code
+git checkout --orphan upstream
+git reset --hard
+git remote add upstream https://github.com/rackerlabs/recap.git
+git fetch -t upstream
+latest_tag=$( git tag | tail -1 )
+git archive ${latest_tag} -o ../recap_${latest_tag}.orig.tar.gz
+tar -zxf ../recap_${latest_tag}.orig.tar.gz
+git fetch --no-tags origin
+git checkout ${LATEST} -- debian
+
+# Build the package
+debuild -us -uc --lintian-opts --profile debian
+
+# Package will be created in ../recap_<version-release>_all.deb
+```
+
+#### Manual install
+
+Use the [manual installation](#manual) method.
+
 
 ### Manual
 
