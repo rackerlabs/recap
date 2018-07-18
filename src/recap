@@ -26,7 +26,7 @@
 #~
 
 ## Version
-declare -r _VERSION='1.3.0'
+declare -r _VERSION='1.4.0'
 
 ## Default settings(can *NOT* be overriden in config file)
 declare -r DATE=$( date +%F_%T )
@@ -179,7 +179,7 @@ recaplock() {
     log ERROR "$( basename $0 )[$$]: Lock File exists - exiting"
     exit 1
   else
-    trap 'exit 2' 1 2 15 17 19 23
+    trap 'exit 2' 1 2 15 17 23
     trap 'cleanup' EXIT
     log INFO "$( basename $0 )[$$]: Created lock file: ${LOCKFILE}"
   fi
@@ -198,6 +198,7 @@ create_output_dirs() {
       mkdir -p "${OUTPUT_DIR}"
     fi
   done
+  chmod 0750 "${BASEDIR}"
 }
 
 # Create output file
@@ -225,7 +226,7 @@ check_output_file() {
 print_ps() {
   log INFO "Starting 'ps' report"
   local LOGFILE="$1"
-  ps ${OPTS_PS} >> "${LOGFILE}"
+  ps ${OPTS_PS} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'ps' report"
 }
 
@@ -233,7 +234,7 @@ print_ps() {
 print_pstree() {
   log INFO "Starting 'pstree' report"
   local LOGFILE="$1"
-  pstree ${OPTS_PSTREE} >> "${LOGFILE}"
+  pstree ${OPTS_PSTREE} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'pstree' report"
 }
 
@@ -248,7 +249,7 @@ print_uptime() {
   log INFO "Starting 'uptime' report"
   local LOGFILE="$1"
   echo "UPTIME report" >> "${LOGFILE}"
-  uptime >> "${LOGFILE}"
+  uptime 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'uptime' report"
 }
 
@@ -257,7 +258,7 @@ print_free() {
   log INFO "Starting 'free' report"
   local LOGFILE="$1"
   echo "FREE report" >> "${LOGFILE}"
-  free ${OPTS_FREE} >> "${LOGFILE}"
+  free ${OPTS_FREE} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'free' report"
 }
 
@@ -266,7 +267,7 @@ print_vmstat() {
   log INFO "Starting 'vmstat' report"
   local LOGFILE="$1"
   echo "VMSTAT report" >> "${LOGFILE}"
-  vmstat ${OPTS_VMSTAT} >> "${LOGFILE}"
+  vmstat ${OPTS_VMSTAT} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'vmstat' report"
 }
 
@@ -275,7 +276,7 @@ print_iostat() {
   log INFO "Starting 'iostat' report"
   local LOGFILE="$1"
   echo "IOSTAT report" >> "${LOGFILE}"
-  iostat ${OPTS_IOSTAT} >> "${LOGFILE}"
+  iostat ${OPTS_IOSTAT} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'iostat' report"
 }
 
@@ -284,7 +285,7 @@ print_iotop() {
   log INFO "Starting 'iotop' report"
   local LOGFILE="$1"
   echo "IOTOP report" >> "${LOGFILE}"
-  iotop ${OPTS_IOTOP} >> "${LOGFILE}"
+  iotop ${OPTS_IOTOP} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'iotop' report"
 }
 
@@ -304,7 +305,7 @@ print_sar() {
   fi
 
   echo "SAR${FLAGS} report" >> "${LOGFILE}"
-  sar "${FLAGS}" >> "${LOGFILE}"
+  sar "${FLAGS}" 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'sar' report"
 }
 
@@ -323,9 +324,9 @@ print_netstat() {
   local LOGFILE="$1"
   echo "Network connections" >> "${LOGFILE}"
   if ss ${OPTS_NETSTAT} &>/dev/null; then
-    ss ${OPTS_NETSTAT} >> "${LOGFILE}"
+    ss ${OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
   else
-    ss ${default_OPTS_NETSTAT} >> "${LOGFILE}"
+    ss ${default_OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
     log WARNING "Bad config: '${OPTS_NETSTAT}', "\
                 "using default: '${default_OPTS_NETSTAT}'"
   fi
@@ -338,9 +339,9 @@ print_netstat_sum() {
   local LOGFILE="$1"
   echo "Network traffic summary" >> "${LOGFILE}"
   if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
-    nstat ${OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    nstat ${OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
   else
-    nstat ${default_OPTS_NETSTAT_SUM} >> "${LOGFILE}"
+    nstat ${default_OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
     log WARNING "Bad config: '${OPTS_NETSTAT_SUM}', "\
                 "using default: '${default_OPTS_NETSTAT_SUM}'"
   fi
@@ -351,13 +352,21 @@ print_netstat_sum() {
 print_mysql() {
   log INFO "Starting 'mysql status' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL status" >> "${LOGFILE}"
-    mysqladmin -uadmin -p$(cat "${PLESK_FILE}") status >> "${LOGFILE}"
+    echo "MySQL (plesk) status" >> "${LOGFILE}"
+    mysqladmin \
+      -uadmin \
+      -p$(cat "${PLESK_FILE}") \
+      --connect-timeout=5 \
+      status >> "${LOGFILE}"
   else
-    echo "MySQL ${DOTMYDOTCNF} status" >> "${LOGFILE}"
-    mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" status >> "${LOGFILE}"
+    echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
+      mysqladmin \
+        --defaults-file="${MYCNF}" \
+        --connect-timeout=5 \
+        status >> "${LOGFILE}"
   fi
   print_blankline "${LOGFILE}"
   log INFO "Ended 'mysql status' report"
@@ -367,35 +376,46 @@ print_mysql() {
 print_mysql_innodb_status() {
   log INFO "Starting 'mysql innodb' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
+  local mysql_cmd=''
+
+  unset MYVALS PID_FILE TMPDIR
+  if [[ -r "${PLESK_FILE}" ]]; then
+    echo "MySQL (plesk) InnoDB status" >> "${LOGFILE}"
+    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE}) --connect-timeout=5"
+  else
+    echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
+    mysql_cmd="mysql --defaults-file=${MYCNF} --connect-timeout=5"
+  fi
   # First, we establish which tmpdir and pid_file are in use, strip any
   # trailing slash and populate the file with current information.
   # We throw away the output of the "show engine innodb status" command as
   # it is likely being truncated, which we attempt to work around:
-
-  echo "MySQL InnoDB status"  >> "${LOGFILE}"
-  unset MYVALS PID_FILE TMPDIR
-  MYVALS=( $( IFS=$'\t' mysql --defaults-extra-file="${DOTMYDOTCNF}" \
-                              -Bse "SHOW VARIABLES LIKE 'pid_file'; \
-                                    SHOW VARIABLES LIKE 'tmpdir'; \
-                                    SHOW ENGINE INNODB STATUS;" \
-                              2>/dev/null \
-                | head -n 2 ) )
-  PID_FILE="${MYVALS[1]%/}"
-  TMPDIR="${MYVALS[3]%/}"
+  local -a MYVALS=( $( IFS=$'\t' ${mysql_cmd} \
+                         -Bse "SHOW VARIABLES LIKE 'pid_file'; \
+                               SHOW VARIABLES LIKE 'tmpdir'; \
+                               SHOW ENGINE INNODB STATUS;" \
+                         2>/dev/null \
+                       | head -n 2 ) )
+  local PID_FILE="${MYVALS[1]%/}"
+  local TMPDIR="${MYVALS[3]%/}"
 
   # Next, we grab a list of descriptors in the tmpdir:
-  for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
-    # We know that InnoDB's temporary files are always in the mysql tmpdir
-    # and start with the string 'ib' followed by a randomly generated series
-    # of characters.  Now we can compare the canonicalized path of fd to the
-    # tmpdir/ib* pattern:
-    if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
-      # If any files match that pattern, we see if the first line in the file
-      # starts with "===", which is the case in the particular InnoDB file we
-      # care about:
-      head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
-    fi
-  done
+  if [[ -r "${PID_FILE}" &&
+        -d "${TMPDIR}" ]]; then
+    for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
+      # We know that InnoDB's temporary files are always in the mysql tmpdir
+      # and start with the string 'ib' followed by a randomly generated series
+      # of characters.  Now we can compare the canonicalized path of fd to the
+      # tmpdir/ib* pattern:
+      if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
+        # If any files match that pattern, we see if the first line in the file
+        # starts with "===", which is the case in the particular InnoDB file we
+        # care about:
+        head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
+      fi
+    done
+  fi
   log INFO "Ended 'mysql innodb' report"
 }
 
@@ -403,25 +423,40 @@ print_mysql_innodb_status() {
 print_mysql_procs() {
   log INFO "Starting 'mysql processlist' report"
   local LOGFILE="$1"
+  local MYCNF="$2"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL processes" >> "${LOGFILE}"
+    echo "MySQL (plesk) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
-      mysqladmin -uadmin -p$( cat "${PLESK_FILE}" ) -v processlist \
+      mysqladmin \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        -v processlist \
+        --connect-timeout=5 \
         >> "${LOGFILE}"
     fi
     if [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql -uadmin -p$( cat "${PLESK_FILE}" ) -e "show full processlist\G" \
+      mysql \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
         >> "${LOGFILE}"
     fi
   else
-    echo "MySQL ${DOTMYDOTCNF} processes" >> "${LOGFILE}"
+    echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin --defaults-extra-file="${DOTMYDOTCNF}" -v processlist \
+      mysqladmin \
+        --defaults-file="${MYCNF}" \
+        -v processlist \
+        --connect-timeout=5 \
         >> "${LOGFILE}"
     elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql --defaults-extra-file="${DOTMYDOTCNF}" \
-            -e "show full processlist\G" >> "${LOGFILE}"
+      mysql \
+        --defaults-file="${MYCNF}" \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
+        >> "${LOGFILE}"
     fi
   fi
   print_blankline "${LOGFILE}"
@@ -445,8 +480,8 @@ print_top_10_cpu() {
   fi
   echo "Top 10 cpu using processes" >> "${LOGFILE}"
   # capture header
-  pidstat | sed -n '3p' >> "${LOGFILE}"
-  pidstat -l 2 2 | grep -v '%system' |
+  pidstat 2>/dev/null | sed -n '3p' >> "${LOGFILE}"
+  pidstat -l 2 2 2>/dev/null | grep -v '%system' |
     egrep ^Average: | sort -nr -k ${pidstat_cpufield} |
     head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 cpu' report"
@@ -457,7 +492,7 @@ print_top_10_mem() {
   log INFO "Starting 'top 10 memory' report"
   local LOGFILE="$1"
   echo "Top 10 memory using processes" >> "${LOGFILE}"
-  ps auxww --sort=-rss | head -11 >> "${LOGFILE}"
+  ps auxww --sort=-rss 2>/dev/null | head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 memory' report"
 }
 
@@ -467,7 +502,7 @@ print_df() {
   local LOGFILE="$1"
   local LOGFILE="$1"
   echo "Disk Utilization" >> "${LOGFILE}"
-  df ${OPTS_DF} >> "${LOGFILE}"
+  df ${OPTS_DF} 2>/dev/null >> "${LOGFILE}"
   log INFO "Ended 'disk utilization' report"
 }
 
@@ -486,7 +521,7 @@ print_slabinfo() {
   local LOGFILE="$1"
   echo "Slab Information" >> "${LOGFILE}"
   printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
-  tail -n+2 /proc/slabinfo |
+  tail -n+2 /proc/slabinfo 2>/dev/null |
     awk 'size=$3*$4 {print $1"\t"$2"\t"$3"\t"$4"\t"size/1048576}' |
     sort -k5gr >> "${LOGFILE}"
   log INFO "Ended 'slab info' report"
@@ -637,25 +672,39 @@ run_mysql_report() {
 
   create_output_file "${ITEM_FILE}"
   check_output_file "${ITEM_FILE}"
-  # Don't run reports if can't read the config file
-  if [[ ! -r "${DOTMYDOTCNF}" ]]; then
-    echo "Error when attempting to read: ${DOTMYDOTCNF}, please check the" \
-         "DOTMYDOTCNF setting in the configuration file" >> "${ITEM_FILE}"
-    return
-  fi
+  log INFO "Starting iteration of mysql report(s)"
+  # Iterate through the list of DOTMYDOTCNF config files
+  local -a MYCNFS=( ${DOTMYDOTCNF//,/ } )
+  for MYCNF in ${MYCNFS[@]}; do
+    # Don't run reports if can't read the config file
+    if [[ ! -r "${MYCNF}" ]]; then
+      log ERROR "Unable to read: '${MYCNF}' in the 'DOTMYDOTCNF' config."
+      continue
+    fi
+    # Don't run reports if can't connect to the instance
+    if ! mysqladmin \
+           --defaults-file="${MYCNF}" \
+           --connect-timeout=5 \
+           ping &>/dev/null; then
+      log ERROR "Unable to connect using '${MYCNF}' in the 'DOTMYDOTCNF'"\
+                "config."
+      continue
+    fi
 
-  print_mysql "${ITEM_FILE}"
+    print_mysql "${ITEM_FILE}" "${MYCNF}"
 
-  # check to see if the optional mysql process list should be generated
-  if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
-    print_blankline "${ITEM_FILE}"
-    print_mysql_procs "${ITEM_FILE}"
-  fi
-  if [[ "${USEINNODB,,}" == "yes" ]]; then
-    # send df -h output to output file
-    print_blankline "${ITEM_FILE}"
-    print_mysql_innodb_status "${ITEM_FILE}"
-  fi
+    # check to see if the optional mysql process list should be generated
+    if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
+      print_blankline "${ITEM_FILE}"
+      print_mysql_procs "${ITEM_FILE}" "${MYCNF}"
+    fi
+    if [[ "${USEINNODB,,}" == "yes" ]]; then
+      # send df -h output to output file
+      print_blankline "${ITEM_FILE}"
+      print_mysql_innodb_status "${ITEM_FILE}" "${MYCNF}"
+    fi
+  done
+  log INFO "Ended iteration of mysql report(s)"
 }
 
 # Copy the last log file set to ${BACKUPDIR}
@@ -676,7 +725,7 @@ check_disk_space() {
     log INFO "Ended check for disk space"
     return 0
   else
-    FREE_SPACE=$( df -BM --output=avail "${BASEDIR}" | tail -1 )
+    FREE_SPACE=$( df -PBM "${BASEDIR}" | awk '!/-blocks/ {print $4}' )
     FREE_SPACE=${FREE_SPACE%M}
     if [[ "${MIN_FREE_SPACE}" -ge "${FREE_SPACE}" ]]; then
       log ERROR "Unable to run recap due to not enough disk space"
@@ -736,20 +785,21 @@ log INFO "${banner_start}"
 log INFO "-- bash info: ${BASH_VERSINFO[@]}"
 
 # Check for the configuration file.
-# The following create awareness about the new the config location in
-# /etc/recap.conf, taking precendence the actual /etc/recap config.
+# The following creates awareness about the old config location in
+# /etc/recap, taking precendence the new config location /etc/recap.conf.
 if [[ -r /etc/recap &&
       -r /etc/recap.conf ]]; then
   log WARNING "Configuration files exist at old(/etc/recap) and"\
-              "new(/etc/recap.conf) locations. The file from the old"\
-              "location will be read."
-  log WARNING "Please move your configuration to /etc/recap.conf."
-  source /etc/recap
+              "new(/etc/recap.conf) locations. The file from the new"\
+              "location will be used."
+  log WARNING "Please move any missing configuration to /etc/recap.conf."
+  source /etc/recap.conf
 elif [[ -r /etc/recap &&
         ! -r /etc/recap.conf ]]; then
-  log WARNING "Configuration file exists at old(/etc/recap) location. "\
-              "The file will be read."
-              "Please move your configuration file to /etc/recap.conf."
+  log WARNING "Configuration file exists at old(/etc/recap) location."\
+              "The file will be read."\
+              "Please move your configuration file to /etc/recap.conf."\
+              "Next version of recap will not read /etc/recap"
   source /etc/recap
 elif [[ ! -r /etc/recap.conf ]]; then
   log WARNING "No configuration file found. Expecting /etc/recap.conf."
@@ -761,11 +811,11 @@ fi
 # Create lock
 recaplock
 
-# Check disk space before generating reports
-check_disk_space
-
 # Create output directory if it is not already present
 create_output_dirs
+
+# Check disk space before generating reports
+check_disk_space
 
 # Take a backup when needed
 if [[ "${BACKUP,,}" == "yes" ]]; then
@@ -811,9 +861,12 @@ fi
 
 # Run the mysql report
 #TODO: standardize the run_mysql_report
-type -p 'mysqladmin' > /dev/null
-if [[ $? -eq 0 && "${USEMYSQL,,}" == "yes" ]]; then
-  run_mysql_report
+if [[ "${USEMYSQL,,}" == "yes" ]]; then
+  if type -p 'mysqladmin' > /dev/null; then
+    run_mysql_report
+  else
+    log ERROR "mysql client is not installed, can't run mysql reports"
+  fi
 fi
 
 # Check to see if report should be emailed
@@ -823,4 +876,5 @@ if [[ -n "${MAILTO}" ]]; then
 fi
 
 # We're done, time to exit
+log INFO "Ended all the reports"
 exit 0

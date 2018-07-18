@@ -87,7 +87,10 @@ install-systemd: recap.systemd
 	@install -dm0755 $(DESTDIR)$(SYSTEMDDIR)
 	@install -Dm0644 src/utils/*.service $(DESTDIR)$(SYSTEMDDIR)/
 	@install -Dm0644 src/utils/*.timer $(DESTDIR)$(SYSTEMDDIR)/
-	@echo "Is recommended to enable timers and reload systemd daemon."
+	@echo "Use the following to enable the systemd timers:"
+	@echo "sudo systemctl enable recap.timer --now"
+	@echo "sudo systemctl enable recaplog.timer --now"
+	@echo "sudo systemctl enable recap-onboot.timer --now"
 
 install-man:
 	@echo "Installing man pages..."
@@ -116,7 +119,10 @@ uninstall-cron:
 uninstall-systemd:
 	@echo "Removing systemd timers and services..."
 	@rm -f $(DESTDIR)$(SYSTEMDDIR)/recap*.{service,timer}
-	@echo "Is recommended to reload systemd daemon."
+	@echo "Use the following to disable the systemd timers:"
+	@echo "sudo systemctl disable recap.timer --now"
+	@echo "sudo systemctl disable recaplog.timer --now"
+	@echo "sudo systemctl disable recap-onboot.timer --now"
 
 uninstall-man:
 	@echo "Removing man pages..."

@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] -
+- Plugin support
+
+## [1.4.0] - 2018-07-12
+- Continue with the deprecation of `/etc/recap` config file for `/etc/recap.conf`
+  - New config file now takes precedence over old one.
+- Added support to multiple mysql config files.
+- Bug fixes:
+  - Use defaults-file instead of defaults-extra-file
+  - Better handling on stderr.
+  - Disk space compatibility for el6.
+  - Set right perms to BASEDIR on runtime.
+
 ## [1.3.0] - 2017-12-06
 - Start the deprecation of `/etc/recap` config file for `/etc/recap.conf`.
 - Add systemd support for units and timers.
