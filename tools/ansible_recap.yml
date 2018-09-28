@@ -1,0 +1,93 @@
+---
+- name: Install recap from repo
+  hosts: all
+  become: "yes"
+  vars:
+    repo: https://github.com/rackerlabs/recap.git
+    ref: master
+    binpath: "/sbin"
+    destdir: ""
+    prefix: "/usr"
+    tmp_install_dir: /tmp/recap
+    install_deps:
+      - git
+      - make
+  tasks:
+  - name: Set dependencies
+    set_fact:
+      dependencies:
+        - bash
+        - coreutils
+        - gawk
+        - grep
+        - iotop
+        - "iproute{{'2' if ansible_os_family is match('Debian|Archlinux') else ''}}"
+        - links
+        - "{{ 'procps-ng' if ansible_os_family is match('Archlinux') else 'procps' }}"
+        - psmisc
+        - sysstat
+        - "{{ install_deps }}"
+
+  - name: Install deps
+    package:
+      name: "{{ item }}"
+      state: present
+      update_cache: "yes"
+    with_items: "{{ dependencies }}"
+    when: uninstall is undefined
+
+  - name: Clone the repo
+    git:
+      repo: "{{ repo }}"
+      version: "{{ ref }}"
+      dest: "{{ tmp_install_dir }}"
+
+  - name: Installation
+    block:
+    - name: Install recap
+      make:
+        chdir: "{{ tmp_install_dir }}"
+        target: install
+        params:
+          BINPATH: "{{ binpath }}"
+          DESTDIR: "{{ destdir }}"
+          PREFIX: "{{ prefix }}"
+
+    - name: Enable systemd timers
+      shell: >
+        systemctl enable recap.timer --now &&
+        systemctl enable recaplog.timer --now &&
+        systemctl enable recap-onboot.timer --now
+      when: ansible_service_mgr == 'systemd'
+
+    - name: Run manually recap
+      shell: >
+        recap &&
+        recap --version
+      register: recap_version
+
+    - name: Print recap version
+      debug:
+        var: recap_version.stdout_lines[0]
+    when: uninstall is undefined
+
+  - name: Uninstall
+    block:
+    # NOTE: this does not work with debian 8 due to systemd version
+    # not supporting '--now'
+    - name: Disable systemd timers
+      shell: >
+        systemctl disable recap.timer --now &&
+        systemctl disable recaplog.timer --now &&
+        systemctl disable recap-onboot.timer --now
+      when: ansible_service_mgr == 'systemd'
+
+    - name: Uninstall recap
+      make:
+        chdir: "{{ tmp_install_dir }}"
+        target: uninstall
+        params:
+          DESTDIR: "{{ destdir }}"
+          PREFIX: "{{ prefix }}"
+    when: uninstall is defined
+...
