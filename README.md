@@ -512,6 +512,11 @@ Name conventions:
 
 - Inside the plugin file/script it is expected **only** functions. recap will **only** call **one** function: `print_<plugin_name>` where `plugin_name` must match the name of the file.
 
+- Optionally, other functions can be defined to create different entries in the
+  log. Those other functions could be controlled by plugin variables (**PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**). Those variables are set in `/etc/recap.conf` and conditionally called from the main plugin function `plugin_name`
+
+- Any plugin variable defined **must** have a default value.
+
 - The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
 
 - A template of a plugin is provided in `doc/plugin_template`
