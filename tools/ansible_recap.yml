@@ -54,10 +54,14 @@
           PREFIX: "{{ prefix }}"
 
     - name: Enable systemd timers
-      shell: >
-        systemctl enable recap.timer --now &&
-        systemctl enable recaplog.timer --now &&
-        systemctl enable recap-onboot.timer --now
+      systemd:
+        name: "{{ item }}"
+        enabled: "yes"
+        state: started
+      with_items:
+        - recap.timer
+        - recaplog.timer
+        - recap-onboot.timer
       when: ansible_service_mgr == 'systemd'
 
     - name: Run manually recap
@@ -73,13 +77,15 @@
 
   - name: Uninstall
     block:
-    # NOTE: this does not work with debian 8 due to systemd version
-    # not supporting '--now'
     - name: Disable systemd timers
-      shell: >
-        systemctl disable recap.timer --now &&
-        systemctl disable recaplog.timer --now &&
-        systemctl disable recap-onboot.timer --now
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: "no"
+      with_items:
+        - recap.timer
+        - recaplog.timer
+        - recap-onboot.timer
       when: ansible_service_mgr == 'systemd'
 
     - name: Uninstall recap
