@@ -134,6 +134,60 @@ The `Makefile` scripts attempts to detect systemd if so, the `install` option wi
 
 Is up to each package distribution to follow their own best practices regarding enabling/disabling the timers on install/remove of the package.
 
+### Ansible
+
+An ansible playbook could be used to install `recap` from a git repository. The playbook is located in `tools` under `ansible_recap.yml` the playbook can be used to install it on Red Hat based and Debian based distros. Or to uninstall it defining the `uninstall` variable.
+
+#### Variables
+
+- `repo` - The location of the repository, default: `https://github.com/rackerlabs/recap.git`.
+- `ref` - The reference to use this could be a branch, a tag or commit, default: `master`.
+- `binpath` - The value of *BINPATH*, default: `/sbin`.
+- `destdir` - The value of *DESTDIR*, default: `""`.
+- `prefix` - The value of *PREFIX*, default: `/usr`.
+- `tmp_install_dir` - The location where the cloned repo will be placed, default: `/tmp/recap`.
+- `uninstall` - Then this is defined it will remove `recap`, default: *undefined*.
+
+#### Install (default)
+
+Install the stable version of `recap`:
+
+```
+ansible-playbook tools/ansible_recap.yml
+```
+
+Install the development version of `recap`:
+
+```
+ansible-playbook tools/ansible_recap.yml -e ref=development
+```
+
+Install branch `foo` from a different repository:
+
+```
+ansible-playbook tools/ansible_recap.yml -e ref=foo -e repo=https://github.com/bar/recap.git
+```
+
+Install recap with *BINPATH* in `/bin`:
+
+```
+ansible-playbook tools/ansible_recap.yml -e binpath=/bin
+```
+
+#### Uninstall
+
+Uninstall `recap` from the default path:
+
+```
+ansible-playbook tools/ansible_recap.yml -e uninstall=yes
+```
+
+Uninstall `recap` from a custom location:
+
+```
+ansible-playbook tools/ansible_recap.yml -e uninstall=yes -e destdir=/tmp/test
+```
+
 ## Cron/Timers and Configuration
 
 ### Timers(systemd)
