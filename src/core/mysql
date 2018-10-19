@@ -1,0 +1,134 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+# Print the output of "mysqladmin status" to the mysql file
+print_mysql() {
+  log INFO "Starting 'mysql status' report - ${LOGFILE##*/}"
+  local LOGFILE="$1"
+  local MYCNF="$2"
+  local PLESK_FILE="/etc/psa/.psa.shadow"
+  if [[ -r "${PLESK_FILE}" ]]; then
+    echo "MySQL (plesk) status" >> "${LOGFILE}"
+    mysqladmin \
+      -uadmin \
+      -p$(cat "${PLESK_FILE}") \
+      --connect-timeout=5 \
+      status >> "${LOGFILE}"
+  else
+    echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
+      mysqladmin \
+        --defaults-file="${MYCNF}" \
+        --connect-timeout=5 \
+        status >> "${LOGFILE}"
+  fi
+  print_blankline "${LOGFILE}"
+  log INFO "Ended 'mysql status' report"
+}
+
+# Print the non-truncated innodb status to the mysql file
+print_mysql_innodb_status() {
+  log INFO "Starting 'mysql innodb' report - ${LOGFILE##*/}"
+  local LOGFILE="$1"
+  local MYCNF="$2"
+  local mysql_cmd=''
+
+  unset MYVALS PID_FILE TMPDIR
+  if [[ -r "${PLESK_FILE}" ]]; then
+    echo "MySQL (plesk) InnoDB status" >> "${LOGFILE}"
+    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE}) --connect-timeout=5"
+  else
+    echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
+    mysql_cmd="mysql --defaults-file=${MYCNF} --connect-timeout=5"
+  fi
+  # First, we establish which tmpdir and pid_file are in use, strip any
+  # trailing slash and populate the file with current information.
+  # We throw away the output of the "show engine innodb status" command as
+  # it is likely being truncated, which we attempt to work around:
+  local -a MYVALS=( $( IFS=$'\t' ${mysql_cmd} \
+                         -Bse "SHOW VARIABLES LIKE 'pid_file'; \
+                               SHOW VARIABLES LIKE 'tmpdir'; \
+                               SHOW ENGINE INNODB STATUS;" \
+                         2>/dev/null \
+                       | head -n 2 ) )
+  local PID_FILE="${MYVALS[1]%/}"
+  local TMPDIR="${MYVALS[3]%/}"
+
+  # Next, we grab a list of descriptors in the tmpdir:
+  if [[ -r "${PID_FILE}" &&
+        -d "${TMPDIR}" ]]; then
+    for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
+      # We know that InnoDB's temporary files are always in the mysql tmpdir
+      # and start with the string 'ib' followed by a randomly generated series
+      # of characters.  Now we can compare the canonicalized path of fd to the
+      # tmpdir/ib* pattern:
+      if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
+        # If any files match that pattern, we see if the first line in the file
+        # starts with "===", which is the case in the particular InnoDB file we
+        # care about:
+        head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
+      fi
+    done
+  fi
+  log INFO "Ended 'mysql innodb' report"
+}
+
+# Print the output of "mysqladmin processlist" to the mysql file
+print_mysql_procs() {
+  log INFO "Starting 'mysql processlist' report - ${LOGFILE##*/}"
+  local LOGFILE="$1"
+  local MYCNF="$2"
+  local PLESK_FILE="/etc/psa/.psa.shadow"
+  if [[ -r "${PLESK_FILE}" ]]; then
+    echo "MySQL (plesk) processes" >> "${LOGFILE}"
+    if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
+      mysqladmin \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        -v processlist \
+        --connect-timeout=5 \
+        >> "${LOGFILE}"
+    fi
+    if [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
+      mysql \
+        -uadmin \
+        -p$( cat "${PLESK_FILE}" ) \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
+        >> "${LOGFILE}"
+    fi
+  else
+    echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
+    if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
+      mysqladmin \
+        --defaults-file="${MYCNF}" \
+        -v processlist \
+        --connect-timeout=5 \
+        >> "${LOGFILE}"
+    elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
+      mysql \
+        --defaults-file="${MYCNF}" \
+        --connect-timeout=5 \
+        -e "show full processlist\G" \
+        >> "${LOGFILE}"
+    fi
+  fi
+  print_blankline "${LOGFILE}"
+  log INFO "Ended 'mysql processlist' report"
+}

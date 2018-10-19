@@ -165,7 +165,7 @@ All notable changes to this project will be documented in this file.
 - Jay Goldberg
 - Jeffrey Ness
 - John Schwinghammer (schwing)
-- LukeHandle
+- Luke Hanley (LukeHandle)
 - Man Chung (man-chung)
 - Piers Cornwell (piersc)
 - rackerjimmy

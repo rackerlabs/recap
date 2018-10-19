@@ -231,9 +231,15 @@ The following variables are commented out with the defaults values in the config
 
   Default: `BASEDIR="/var/log/recap"`
 
-- **BACKUP_ITEMS** - Is the list of reports generated and used by recap scripts
+- **LIBDIR** - Directory where the libraries/functions are located.
 
-  Default: `BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"`
+  The default value depends on the `PREFIX` used when installing, the default `PREFIX` on the `Makefile` is `/usr/local`, then:
+
+    Default: `LIBDIR="/usr/local/lib/recap"`
+
+  But packages use `/usr` as the `PREFIX`, then through a package it is expected to be:
+
+    Default: `LIBDIR="/usr/lib/recap"`
 
 
 #### Settings used only by `recaplog`
@@ -461,6 +467,59 @@ Options used by the tools generating the reports
   Required by: `USERESOURCES`
 
   Default: `OPTS_VMSTAT="-S M 1 3"`
+
+## Plugins
+
+Plugins are stored in the plugin directory, (default when installed: /usr/lib/recap/plugin-available)
+
+Enabling plugins requires:
+
+  - `USEPLUGINS="yes"` in `/etc/recap.conf`
+  - Symlinking `plugin-enabled/plugin_name` to `plugin-available/plugin_name`
+
+Name conventions:
+
+- Plugin names can be named in anyway, it's desired it describes the purpose of the plugin in one word, when multiple words are required use underscores "_", don't use extension, don't use dates in them(YYYYMMDD). Some examples:
+
+  - **Good** names for plugins
+    - redis
+    - memcache
+    - docker_images
+    - memcache_13
+  - **Bad** names for plugins
+    - johndoe_apache   (not very descriptive)
+    - myplugin         (non explicit)
+    - test.sh          (non explicit, using extension)
+    - recap-plugin     (non explicit, using hyphens)
+    - Sendmail         (CamelCase)		 
+    - redis.bak        (extension)
+    - ms sql           (space between words)
+    - reports_20202020 (use of a date)
+
+- Allowed name convention for **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
+  Some examples:
+
+  - **Good** option names:
+    - **PLUGIN_OPTS_MEMCACHE_PROTO**
+    - **PLUGIN_OPTS_AWS_KEY**
+    - **PLUGIN_OPTS_REDIS_PORT**
+    - **PLUGIN_OPTS_DOCKER_HUB_URL**
+  - **Bad** option names:
+    - plugin_opts_my_plugin   ( lower case)
+    - PLUGIN_OPTS_MY_VARIABLE (lacking plugin reference)
+    - PLUGIN_OPTS_DOCKER_port (CamelCase)
+    - PLUGIN-OPTS-NTP         (using hyphens instead of underscores, missing the option)
+
+- Inside the plugin file/script it is expected **only** functions. recap will **only** call **one** function: `print_<plugin_name>` where `plugin_name` must match the name of the file.
+
+- Optionally, other functions can be defined to create different entries in the
+  log. Those other functions could be controlled by plugin variables (**PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**). Those variables are set in `/etc/recap.conf` and conditionally called from the main plugin function `plugin_name`
+
+- Any plugin variable defined **must** have a default value.
+
+- The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
+
+- A template of a plugin is provided in `doc/plugin_template`
 
 ## Changelog & Contributions
 

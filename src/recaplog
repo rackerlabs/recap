@@ -37,7 +37,6 @@ BASEDIR="/var/log/recap"
 LOCKFILE="/var/lock/recaplog.lock"
 LOG_COMPRESS=1
 LOG_EXPIRY=15
-BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 LOGFILE="${BASEDIR}/recaplog.log"
 
 
@@ -123,6 +122,24 @@ delete_old_logs() {
   fi
 }
 
+# Generates a list of names from a date with the format "YYYYMMDD"
+get_report_names_of_day() {
+  local day="$1"
+  local -a reports=()
+  log INFO "Finding reports from: ${day}"
+  reports=(
+    $( ls -1 "${BASEDIR}" 2>/dev/null |
+         awk -F. \
+         '
+           /'${day}'-[0-9]{6}\.log$/ {sub("_'${day}'-[0-9]{6}","",$1); print $1}
+         ' |
+         sort -u
+     )
+  )
+  log INFO "Reports found: [ ${reports[@]} ]"
+  echo "${reports[@]}"
+}
+
 # Function to compress/move daily log files
 # Previously the logs were concatenated and could be compressed, that is a
 # problem for parsing them at a later time as reported in:
@@ -137,8 +154,13 @@ pack_old_logs() {
   else
     log INFO "Not compressing old log files"
   fi
-  # Backing up only items defined in the config
-  for item in ${BACKUP_ITEMS}; do
+  # Backing up only items found in the YESTERDAYDATE
+  local -a items=( $( get_report_names_of_day "${YESTERDAYDATE}" ) )
+  if [[ -z ${items} ]]; then
+    log ERROR "Unable to archive unexisting reports."
+    return 0
+  fi
+  for item in ${items[@]}; do
     YESTERDAY_ITEM_DIR="${BASEDIR}/${item}_daily_${YESTERDAYDATE}"
     err=''
     log INFO "Packing ${item}..."
