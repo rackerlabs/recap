@@ -1,0 +1,30 @@
+---
+language: bash
+sudo: enabled
+branches:
+  only:
+    - master
+    - development
+    - testing
+
+addons:
+  apt:
+    update: true
+    packages:
+      - bash
+      - coreutils
+      - gawk
+      - grep
+      - iotop
+      - iproute2
+      - links
+      - procps
+      - psmisc
+      - sysstat
+
+script:
+  - sudo make PREFIX="/usr" install
+  - sudo recap
+  - sudo cat /var/log/recap/recap.log
+
+...
