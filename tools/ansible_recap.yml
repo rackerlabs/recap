@@ -12,8 +12,9 @@
     install_deps:
       - git
       - make
+    systemd_unit_dir: "{{ destdir }}/usr/lib/systemd/system"
   tasks:
-  - name: Set dependencies
+  - name: Set dependencies and timers
     set_fact:
       dependencies:
         - bash
@@ -26,14 +27,16 @@
         - "{{ 'procps-ng' if ansible_os_family is match('Archlinux') else 'procps' }}"
         - psmisc
         - sysstat
-        - "{{ install_deps }}"
+      timers:
+        - recap.timer
+        - recaplog.timer
+        - recap-onboot.timer
 
-  - name: Install deps
+  - name: Install package and build dependencies
     package:
-      name: "{{ item }}"
+      name: "{{ dependencies + install_deps }}"
       state: present
       update_cache: "yes"
-    with_items: "{{ dependencies }}"
     when: uninstall is undefined
 
   - name: Clone the repo
@@ -58,16 +61,15 @@
         name: "{{ item }}"
         enabled: "yes"
         state: started
-      with_items:
-        - recap.timer
-        - recaplog.timer
-        - recap-onboot.timer
+        daemon_reload: "yes"
+      with_items: "{{ timers }}"
       when: ansible_service_mgr == 'systemd'
 
     - name: Run manually recap
-      shell: >
-        recap &&
-        recap --version
+      shell: recap
+
+    - name: Get recap version
+      shell: recap --version
       register: recap_version
 
     - name: Print recap version
@@ -77,16 +79,21 @@
 
   - name: Uninstall
     block:
+    - name: Look for the timer units
+      stat:
+        path: "{{ systemd_unit_dir }}/{{ item }}"
+      register: timer_units
+      with_items: "{{ timers }}"
+      when: ansible_service_mgr == 'systemd'
+
     - name: Disable systemd timers
       systemd:
-        name: "{{ item }}"
+        name: "{{ item.item }}"
         state: stopped
         enabled: "no"
-      with_items:
-        - recap.timer
-        - recaplog.timer
-        - recap-onboot.timer
-      when: ansible_service_mgr == 'systemd'
+      with_items: "{{ timer_units.results }}"
+      when: >
+        ansible_service_mgr == 'systemd' and item.stat.exists
 
     - name: Uninstall recap
       make:
@@ -95,5 +102,12 @@
         params:
           DESTDIR: "{{ destdir }}"
           PREFIX: "{{ prefix }}"
+      notify: Reload systemd
     when: uninstall is defined
+
+  handlers:
+  - name: Reload systemd
+    systemd:
+      daemon_reload: "yes"
+
 ...
