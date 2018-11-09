@@ -1,5 +1,7 @@
 # Recap
 
+[![Build Master Status](https://img.shields.io/travis/rackerlabs/recap/master.svg?logo=travis&label=master)](https://travis-ci.org/rackerlabs/recap)
+[![Build Development Status](https://img.shields.io/travis/rackerlabs/recap/development.svg?logo=travis&label=development)](https://travis-ci.org/rackerlabs/recap)
 [![GitHub release](https://img.shields.io/github/release/rackerlabs/recap.svg)](https://github.com/rackerlabs/recap/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/rackerlabs/recap.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
 [![GitHub stars](https://img.shields.io/github/stars/rackerlabs/recap.svg?style=social&label=Star)](https://github.com/rackerlabs/recap)
