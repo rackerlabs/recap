@@ -20,7 +20,7 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 - grep
 - iotop
 - iproute/iproute2
-- links
+- elinks
 - procps
 - psmisc
 - sysstat >= 9
@@ -337,7 +337,7 @@ These are the type of reports generated and their dependencies.
 
 - **USERESOURCES** - Generates "resources"(uptime, free, vmstat, iostat, iotop) log
 
-  Required by: `USEDF`, `USESLAB`, `USESAR`, `USESARQ`, `USESARR`, `USEFULLSTATUS`
+  Required by: `USEDF`, `USESLAB`, `USESAR`, `USESARQ`, `USESARR`
 
   Default: `USERESOURCES="yes"`
 
@@ -375,12 +375,6 @@ These are the type of reports generated and their dependencies.
 
   Default: `USESARR="no"`
 
-- **USEFULLSTATUS** - Performs an http request(GET) to the URL defined in `OPTS_STATUSURL`. Needs a webserver configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server-stats) offer this functionality that needs to be enabled.
-
-  Requires: `USERESOURCES`
-
-  Default: `USEFULLSTATUS="no"`
-
 
 #### Options
 
@@ -397,11 +391,6 @@ Options used by the tools generating the reports
   Required by: `USEMYSQLPROCESSLIST`
 
   Default: `MYSQL_PROCESS_LIST="table"`
-
-- **OPTS_LINKS** - Options used by links.
-  Required by: `USEFULLSTATUS`
-
-  Default: `OPTS_LINKS="-dump"`
 
 - **OPTS_DF** - df options
 
@@ -457,12 +446,6 @@ Options used by the tools generating the reports
 
   Default: `OPTS_PSTREE="-p"`
 
-
-- **OPTS_STATUSURL** - URL to perform the http request  when USEFULLSTATUS is enabled.
-
-  Required by: `USEFULLSTATUS`
-
-  Default: `OPTS_STATUSURL="http://localhost:80/server-status"`
 
 - **OPTS_VMSTAT** - vmstat options
 

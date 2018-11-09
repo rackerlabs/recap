@@ -23,7 +23,7 @@
         - grep
         - iotop
         - "iproute{{'2' if ansible_os_family is match('Debian|Archlinux') else ''}}"
-        - links
+        - elinks
         - "{{ 'procps-ng' if ansible_os_family is match('Archlinux') else 'procps' }}"
         - psmisc
         - sysstat
