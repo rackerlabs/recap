@@ -17,13 +17,20 @@ addons:
       - grep
       - iotop
       - iproute2
-      - links
+      - elinks
       - procps
       - psmisc
       - sysstat
 
 script:
   - sudo make PREFIX="/usr" install
+  - sudo sed -i 's/^#\(USEPLUGINS\)=.*$/\1="yes"/' /etc/recap.conf
+  - |
+    for plugin in $(ls /usr/lib/recap/plugins-available/); do
+      sudo ln -s \
+        /usr/lib/recap/plugins-available/${plugin} \
+        /usr/lib/recap/plugins-enabled/${plugin}
+    done
   - sudo recap
   - sudo cat /var/log/recap/recap.log
 
