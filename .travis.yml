@@ -53,7 +53,7 @@ install:
 script:
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
   # For testing recap should exit immediately if an error occurs
-  - docker exec recap_on_${DISTRO/:/_} bash -c 'sed -i "2iset -e" $(which recap); recap'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'sed -i "2iset -e" $(type -p recap); recap'
   - docker exec recap_on_${DISTRO/:/_} cat /var/log/recap/recap.log
 
 ...
