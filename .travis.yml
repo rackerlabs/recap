@@ -43,6 +43,8 @@ install:
       --detach \
       --rm \
       --tty \
+      --privileged \
+      --network=host \
       --name recap_on_${DISTRO/:/_} \
       --mount type=bind,src="$(pwd)",dst=/recap \
       ${DISTRO}
