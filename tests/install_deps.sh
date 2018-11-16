@@ -9,6 +9,7 @@ packages=(
           "grep" 
           "iotop" 
           "elinks" 
+          "make"
           "procps" 
           "psmisc" 
           "sysstat" 
