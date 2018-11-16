@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Switch to the bind mount to install recap
+cd /recap
+
 # Install recap
 make PREFIX="/usr" BINPATH="/bin" install
 
