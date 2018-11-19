@@ -49,11 +49,10 @@ install:
       --mount type=bind,src="$(pwd)",dst=/recap \
       ${DISTRO}
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/install_deps.sh ${DISTRO}
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
 
 script:
-  - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
-  # For testing recap should exit immediately if an error occurs
-  - docker exec recap_on_${DISTRO/:/_} bash -c 'sed -i "2iset -e" $(type -p recap); recap'
-  - docker exec recap_on_${DISTRO/:/_} cat /var/log/recap/recap.log
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recap.sh
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
 
 ...
