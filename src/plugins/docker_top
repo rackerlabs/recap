@@ -23,7 +23,7 @@ print_docker_top() {
   local plugin_name=${FUNCNAME[0]/print_/}
   log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
   ##
-  DOCKER=$( type -p docker )
+  DOCKER=$( type -p docker || true )
   if [[ -z ${DOCKER} ]]; then
     echo "Docker is not installed" >> "${LOGFILE}"
     log INFO "Ended '${plugin_name}' report"

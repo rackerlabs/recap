@@ -101,5 +101,6 @@ print_redis_cmd_fallback() {
   echo "Redis ${command} (via ncat)" >> "${LOGFILE}"
   # Connection timeout of 3 seconds and forcing CRLF for lines
   ( printf "${command}\r\n"; sleep 1 ) | \
-    ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}"
+    ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}" ||
+      echo "Unable to connect to Redis on ${host}:${port}" >> "${LOGFILE}"
 }
