@@ -313,7 +313,7 @@ else
   source /etc/recap.conf
 fi
 
-# Aquire lock
+# Acquire lock
 recaploglock
 
 # recap the logs
