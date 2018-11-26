@@ -116,8 +116,8 @@ delete_old_logs() {
   fi
   log INFO "Deleting: ${count_dirs} empty directories."
   if [[ "${count_dirs}" -gt 0 ]]; then
-    while read emtpy_dir; do
-      rmdir "${emtpy_dir}"
+    while read empty_dir; do
+      rmdir "${empty_dir}"
     done <<< "${empty_dirs}"
   fi
 }
