@@ -363,7 +363,7 @@ These are the type of reports generated and their dependencies.
 
   Default: `USESAR="yes"`
 
-- **USESARQ** - Generates logs from "sar -q" (logs queue lenght, load data)
+- **USESARQ** - Generates logs from "sar -q" (logs queue length, load data)
 
   Requires: `USERESOURCES`
 
