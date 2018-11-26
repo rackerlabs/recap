@@ -542,7 +542,7 @@ log INFO "-- bash info: ${BASH_VERSINFO[@]}"
 
 # Check for the configuration file.
 # The following creates awareness about the old config location in
-# /etc/recap, taking precendence the new config location /etc/recap.conf.
+# /etc/recap, taking precedence the new config location /etc/recap.conf.
 if [[ -r /etc/recap &&
       -r /etc/recap.conf ]]; then
   log WARNING "Configuration files exist at old(/etc/recap) and"\
