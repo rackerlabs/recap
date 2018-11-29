@@ -120,7 +120,7 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 #### About the locations of the scripts
 
-The default location of the install is `"/"` it can be overriden with `DESTDIR`, the scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overriden with `PREFIX`. The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
+The default location of the install is `"/"` it can be overridden with `DESTDIR`, the scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
 
   ```
 $ sudo make PREFIX="/usr" install 
@@ -225,7 +225,7 @@ The cron file (`/etc/cron.d/recap`) is used to determine the execution time of `
 
 ### Configuration
 
-The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overriden.
+The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overridden.
 
 #### Settings shared by recap scripts
 
@@ -363,7 +363,7 @@ These are the type of reports generated and their dependencies.
 
   Default: `USESAR="yes"`
 
-- **USESARQ** - Generates logs from "sar -q" (logs queue lenght, load data)
+- **USESARQ** - Generates logs from "sar -q" (logs queue length, load data)
 
   Requires: `USERESOURCES`
 

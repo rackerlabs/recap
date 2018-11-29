@@ -116,8 +116,8 @@ delete_old_logs() {
   fi
   log INFO "Deleting: ${count_dirs} empty directories."
   if [[ "${count_dirs}" -gt 0 ]]; then
-    while read emtpy_dir; do
-      rmdir "${emtpy_dir}"
+    while read empty_dir; do
+      rmdir "${empty_dir}"
     done <<< "${empty_dirs}"
   fi
 }
@@ -168,7 +168,7 @@ pack_old_logs() {
     output=$( ls -1 "${BASEDIR}/${item}_${YESTERDAYDATE}"-*.log 2>&1 )
     if [[ $? -ne 0 ]]; then
       output=$( tr -d '\n' <<< "${output}" )
-      log ERROR "An error ocurred while reading logs: '${output}', skipping..."
+      log ERROR "An error occurred while reading logs: '${output}', skipping..."
       continue
     fi
     log_count=$( wc -l <<< "${output}" )
@@ -186,7 +186,7 @@ pack_old_logs() {
       )
       err=$( tr -d '\n' <<< "${err}" )
       if [[ ! -z "${err}" ]]; then
-        log ERROR "An error ocurred while attempting to move logs: '${err}', "\
+        log ERROR "An error occurred while attempting to move logs: '${err}', "\
                   "skipping..."
         continue
       fi
@@ -212,7 +212,7 @@ pack_old_logs() {
     )
     err=$(tr -d '\n' <<< "${err}" )
     if [[ ! -z "${err}" ]]; then
-      log ERROR "An error ocurred while attempting to compress logs: '${err}'"\
+      log ERROR "An error occurred while attempting to compress logs: '${err}'"\
                 ", skipping..."
       continue
     fi
@@ -220,7 +220,7 @@ pack_old_logs() {
     rm_err=$( { rm -Rf "${YESTERDAY_ITEM_DIR}"; } 2>&1 >/dev/null )
     rm_err=$( tr -d '\n' <<< "${rm_err}" )
     if [[ ! -z "${rm_err}" ]]; then
-      log ERROR "An error ocurred while deleting logs '${rm_err}', skipping..."
+      log ERROR "An error occurred while deleting logs '${rm_err}', skipping..."
     fi
   done
 }
@@ -291,7 +291,7 @@ log INFO "${banner_start}"
 
 # Check for the configuration file.
 # The following creates awareness about the old config location in
-# /etc/recap, taking precendence the new config location /etc/recap.conf.
+# /etc/recap, taking precedence the new config location /etc/recap.conf.
 if [[ -r /etc/recap &&
       -r /etc/recap.conf ]]; then
   log WARNING "Configuration files exist at old(/etc/recap) and"\
@@ -313,7 +313,7 @@ else
   source /etc/recap.conf
 fi
 
-# Aquire lock
+# Acquire lock
 recaploglock
 
 # recap the logs
