@@ -28,7 +28,7 @@
 ## Version
 declare -r _VERSION='1.4.0'
 
-## Default settings(can *NOT* be overriden in config file)
+## Default settings(can *NOT* be overridden in config file)
 declare -r DATE=$( date +%F_%T )
 declare -r LOCKFILE="/var/lock/recap.lock"
 declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
@@ -98,7 +98,7 @@ MYSQL_PROCESS_LIST="${default_MYSQL_PROCESS_LIST}"
 USEINNODB="${default_USEINNODB}"
 USEMYSQLPROCESSLIST="${default_USEMYSQLPROCESSLIST}"
 
-# Default command options(can be overriden in config file)
+# Default command options(can be overridden in config file)
 declare -r default_OPTS_DF="-x nfs"
 declare -r default_OPTS_FDISK="-l"
 declare -r default_OPTS_FREE=""
@@ -529,7 +529,7 @@ log INFO "-- bash info: ${BASH_VERSINFO[@]}"
 
 # Check for the configuration file.
 # The following creates awareness about the old config location in
-# /etc/recap, taking precendence the new config location /etc/recap.conf.
+# /etc/recap, taking precedence the new config location /etc/recap.conf.
 if [[ -r /etc/recap &&
       -r /etc/recap.conf ]]; then
   log WARNING "Configuration files exist at old(/etc/recap) and"\
