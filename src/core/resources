@@ -83,15 +83,6 @@ print_sar() {
   log INFO "Ended 'sar' report"
 }
 
-# Print the output of the web server status page to the specified file
-print_http_fullstatus() {
-  local LOGFILE="$1"
-  log INFO "Starting 'web status page' report - ${LOGFILE##*/}"
-  echo "Web Status report" >> "${LOGFILE}"
-  links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'web status page' report"
-}
-
 # Print the disk utilization to the defined file
 print_df() {
   local LOGFILE="$1"

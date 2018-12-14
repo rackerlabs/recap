@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+# Performs an http request(GET) to the defined URL
+
+print_http_status() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  ##
+  # Default settings:
+  local default_args='-dump'
+  local default_timeout=5
+  local default_url='http://localhost:80/server-status'
+
+  # These values can be overriden in the config file, Examples:
+  # PLUGIN_OPTS_HTTP_STATUS_ARGS='-dump -dump-width 90 -dump-charset iso-8859-2'
+  # PLUGIN_OPTS_HTTP_STATUS_URL='http://localhost/nginx_status'
+  local http_status_args=${PLUGIN_OPTS_HTTP_STATUS_ARGS:-${default_args}}
+  local http_status_url=${PLUGIN_OPTS_HTTP_STATUS_URL:-${default_url}}
+
+  # Check if html dump tool is available
+  http_tool=$( type -p elinks )
+  if [[ -z ${http_tool} ]]; then
+    echo "elinks is not installed" >> "${LOGFILE}"
+    log INFO "Ended '${plugin_name}' report"
+    return
+  fi
+
+  timeout ${default_timeout} \
+    ${http_tool} \
+      ${http_status_args} \
+      "${http_status_url}" \
+      2>/dev/null >> "${LOGFILE}"
+
+  ##
+  log INFO "Ended '${plugin_name}' report"
+}

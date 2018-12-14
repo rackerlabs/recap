@@ -70,12 +70,10 @@ declare -r default_USERESOURCES="yes"
 USERESOURCES="${default_USERESOURCES}"
 # These depend on USERRESOURCES to be enabled("yes")
 declare -r default_USEDF="yes"
-declare -r default_USEFULLSTATUS="no"
 declare -r default_USESAR="yes"
 declare -r default_USESARQ="no"
 declare -r default_USESARR="no"
 USEDF="${default_USEDF}"
-USEFULLSTATUS="${default_USEFULLSTATUS}"
 USESAR="${default_USESAR}"
 USESARQ="${default_USESARQ}"
 USESARR="${default_USESARR}"
@@ -101,7 +99,6 @@ USEINNODB="${default_USEINNODB}"
 USEMYSQLPROCESSLIST="${default_USEMYSQLPROCESSLIST}"
 
 # Default command options(can be overridden in config file)
-declare -r default_OPTS_LINKS="-dump"
 declare -r default_OPTS_DF="-x nfs"
 declare -r default_OPTS_FDISK="-l"
 declare -r default_OPTS_FREE=""
@@ -112,8 +109,6 @@ declare -r default_OPTS_NETSTAT_SUM="-a"
 declare -r default_OPTS_PS="auxfww"
 declare -r default_OPTS_PSTREE="-p"
 declare -r default_OPTS_VMSTAT="-S M 1 3"
-declare -r default_OPTS_STATUSURL="http://localhost:80/server-status"
-OPTS_LINKS="${default_OPTS_LINKS}"
 OPTS_DF="${default_OPTS_DF}"
 OPTS_FDISK="${default_OPTS_FDISK}"
 OPTS_FREE="${default_OPTS_FREE}"
@@ -124,7 +119,6 @@ OPTS_NETSTAT_SUM="${default_OPTS_NETSTAT_SUM}"
 OPTS_PS="${default_OPTS_PS}"
 OPTS_PSTREE="${default_OPTS_PSTREE}"
 OPTS_VMSTAT="${default_OPTS_VMSTAT}"
-OPTS_STATUSURL="${default_OPTS_STATUSURL}"
 
 # Internal variables
 banner_start="--- Starting $( basename $0 )[$$] ---"
@@ -327,13 +321,6 @@ run_resources_report() {
     # send sar -q output to output file
     print_blankline "${ITEM_FILE}"
     print_sar "${ITEM_FILE}" "q"
-  fi
-
-  # check to see if webserver fullstatus should be run
-  type -p 'links' > /dev/null
-  if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
-    print_blankline "${ITEM_FILE}"
-    print_http_fullstatus "${ITEM_FILE}"
   fi
 
   if [[ "${USEDF,,}" == "yes" ]]; then

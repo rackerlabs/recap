@@ -89,7 +89,7 @@ delete_old_logs() {
   matched_files=$(
     find "${BASEDIR}" -maxdepth 2 -regextype posix-extended \
       -type f -mtime +${LOG_EXPIRY} -regex \
-      "^${BASEDIR}/(.*/)?[a-z]+_([a-z]+_)?[0-9]{8}(-[0-9]{6})?\.log(\.tar)?(\.gz)?$"
+      "^${BASEDIR}/(.*/)?[a-z]+_([a-z]+_)*[0-9]{8}(-[0-9]{6})?\.log(\.tar)?(\.gz)?$"
   )
   if [[ -n "${matched_files}" ]]; then
     count_files=$( wc -l <<<"${matched_files}" )
