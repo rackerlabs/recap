@@ -252,7 +252,7 @@ plugins_info(){
 plugins_load() {
   local plugin_dir="$1"
   log INFO "Loading plugins from: ${plugin_dir}"
-  for plugin in "${plugin_dir}"/*; do
+  for plugin in $( ls -1 "${plugin_dir}" ); do
     log INFO "Loading plugin: ${plugin}"
     source ${plugin}
   done
