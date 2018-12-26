@@ -17,14 +17,17 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#~ Usage: _tool_ [OPTIONS]
+#~ Usage: _tool_ OPTIONS
 #~ Options:
-#~   {proc|mem|memproc} PROCESS_NAME  Show proc/mem info of PROCESS_NAME.
-#~   {net|netestab} PORT              Show network connections of a PORT.
-#~   querycount                       Show mysql connections.
-#~   -d PATH                          Specify the recap log PATH.
-#~   -h,--help                        Print this help.
-#~   -V,--version                     Print version and exit.
+#~   -c, --connections PORT           Show all network connections of a PORT.
+#~   -e, --established PORT           Show only established network connections of a PORT.
+#~   -d, --path PATH                  Specify the recap log PATH.
+#~   -m, --mem  PROCESS_NAME          Show mem info of PROCESS_NAME.
+#~   -p, --proc PROCESS_NAME          Show proc info of PROCESS_NAME.
+#~   -b, --memproc PROCESS_NAME       Show both mem and proc info of PROCESS_NAME.
+#~   -q, --querycount                 Show mysql connections.
+#~   -h, --help                       Print this help.
+#~   -V, --version                    Print version and exit.
 #~
 
 ## Version
@@ -41,127 +44,172 @@ if [[ -r "${CONFFILE}" ]]; then
 fi
 
 memproc() {
-	PROCESS="${1}"
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/ps_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep "${PROCESS}" "${i}" -c | tr "\n" "\t" >> "${TMP}"
-		egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+  set -x
+  PROCESS="${@}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/ps_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    egrep "${PROCESS}" "${i}" -c | tr "\n" "\t" >> "${TMP}"
+    egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
+  set +x
 }
 
 proc() {
-	PROCESS="${1}"
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/ps_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep "${PROCESS}" "${i}" -c >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+  PROCESS="${@}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/ps_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    egrep "${PROCESS}" "${i}" -c >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
 }
 
 mem() {
-	PROCESS="${1}"
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/ps_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+  PROCESS="${@}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/ps_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    egrep "${PROCESS}" "${i}" | awk '{ SUM += $6 } END {print SUM/1024, "M"};' >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
 }
 
-net() {
-	PORT="${1}"
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep -c ":${PORT} " "${i}" >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+connections() {
+  PORT="${@}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/netstat_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    egrep -c ":${PORT} " "${i}" >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
 }
 
-netestab() {
-	PORT="${1}"
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/netstat_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		egrep -c "ESTAB .*:${PORT} " "${i}" >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+established() {
+  PORT="${@}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/netstat_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    egrep -c "ESTAB .*:${PORT} " "${i}" >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
 }
 
 querycount() {
-	TMP=$( mktemp )
-	>"${TMP}"
-	for i in $( ls "${BASEDIR}"/mysql_*.log ); do
-		head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
-		grep "Query" -c "${i}" >> "${TMP}"
-	done
-	sort "${TMP}"
-	rm -f "${TMP}"
+  TMP=$( mktemp )
+  >"${TMP}"
+  for i in $( ls "${BASEDIR}"/mysql_*.log ); do
+    head -n 1 "${i}" | tr "\n" "\t" >> "${TMP}"
+    grep "Query" -c "${i}" >> "${TMP}"
+  done
+  sort "${TMP}"
+  rm -f "${TMP}"
 }
 
 print_usage() {
+  echo
   grep -E '^#~' "${0}" | sed -e 's/^#~\s\?//' \
                              -e "s/_tool_/$( basename ${0} )/"
 }
 
-if [[ ${#} -eq 0 ]]; then
-  echo "Error: No arguments provided."
-	print_usage
-	exit 1
+# Set options
+OPTIONS=Vc:d:e:m:p:b:qh
+LONG_OPTIONS=version,connections:,path:,established:,mem:,proc:,memproc:,querycount,help
+
+# Parse options and show usage if invalid options provided
+! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  print_usage
+  exit 1
 fi
 
+# Set the positional parameters to the parsed options
+eval set -- "${ALL_ARGS}"
+
+# Create an array to store commands to be executed
+declare -a CMDS
+
+# Act on the valid arguments provided
 while [[ ${#} -gt 0 ]]; do
-	case "${1}" in
+  case "${1}" in
     -V|--version)
       echo "${_VERSION}"
       exit 0
       ;;
-		-d)
-			if [[ -d "${2}" ]]; then
-				BASEDIR="${2}"
-				shift 2
-			else
-				echo "Error: ${2} is not a valid directory."
-				print_usage
-				exit 1
-			fi
-			;;
+    -c|--connections)
+        PORT=${2}
+        shift 2
+        CMDS+=("connections ${PORT}")
+      ;;
+    -e|--established)
+        PORT=${2}
+        shift 2
+        CMDS+=("established ${PORT}")
+      ;;
+    -d|--path)
+      DIR=true
+      if [[ -d "${2}" ]]; then
+        BASEDIR="${2}"
+        shift 2
+      else
+        echo "Error: ${2} is not a valid directory."
+        print_usage
+        exit 1
+      fi
+      ;;
+    -m|--mem)
+        PROCESS_NAME="${2}"
+        shift 2
+        CMDS+=("mem ${PROCESS_NAME}")
+      ;;
+    -p|--proc)
+        PROCESS_NAME="${2}"
+        shift 2
+        CMDS+=("proc ${PROCESS_NAME}")
+      ;;
+    -b|--memproc)
+        PROCESS_NAME="${2}"
+        shift 2
+        CMDS+=("memproc ${PROCESS_NAME}")
+      ;;
+    -q|--querycount)
+        CMDS+=(querycount)
+        shift
+      ;;
     -h|--help)
         print_usage
         exit 0
       ;;
-		memproc|proc|mem|net|netestab)
-			cmds="${cmds}${1} ${2} "
-			shift 2
-			;;
-		querycount)
-			cmds="${cmds}${1} "
-			shift
-			;;
-		*)
-			echo "Error: Invalid command ${1}"
-			print_usage
-			exit 1
-			;;
-	esac
+    --)
+      shift; break ;;
+  esac
 done
 
-echo "Information: Using ${BASEDIR} as recap log path"
-echo "Information: Executing ${cmds}"
+if [[ ${#CMDS[@]} -eq 0 ]]; then
+  msg="Error: Please supply more arguments."
+  [[ $DIR ]] && msg="${msg} The 'path' option is not enough."
+  echo "${msg}"
+  print_usage
+  exit 1
+fi
 
-${cmds}
+echo "Information: Using ${BASEDIR} as recap log path"
+
+for cmd in "${CMDS[@]}"; do
+  echo "Information: Executing ${cmd}"
+  eval ${cmd}
+  echo
+done
 
 exit 0

@@ -17,12 +17,12 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#~ Usage: _tool_ [-hnv]
+#~ Usage: _tool_ [OPTIONS]
 #~ Options:
-#~   -h             Print this help.
-#~   -n             Dry run.
-#~   -v             Verbose.
-#~   -V             Print version and exit.
+#~   -h, --help         Print this help.
+#~   -n, --dry-run      Dry run.
+#~   -v, --verbose      Verbose.
+#~   -V, --version      Print version and exit.
 #~
 #~ recaplog will not produce output if no tty is found, this is useful when
 #~ running from cron.
@@ -39,6 +39,10 @@ LOG_COMPRESS=1
 LOG_EXPIRY=15
 LOGFILE="${BASEDIR}/recaplog.log"
 
+# Usage Function
+print_usage() {
+  grep -E '^#~' "${0}" | sed -e 's/^#~\s\?//' -e "s/_tool_/$( basename ${0} )/"
+}
 
 # Function to generate timestamps
 ts() {
@@ -123,9 +127,9 @@ delete_old_logs() {
 }
 
 # Generates a list of names from a date with the format "YYYYMMDD"
+declare -a reports=()
 get_report_names_of_day() {
   local day="$1"
-  local -a reports=()
   log INFO "Finding reports from: ${day}"
   reports=(
     $( ls -1 "${BASEDIR}" 2>/dev/null |
@@ -137,7 +141,6 @@ get_report_names_of_day() {
      )
   )
   log INFO "Reports found: [ ${reports[@]} ]"
-  echo "${reports[@]}"
 }
 
 # Function to compress/move daily log files
@@ -155,7 +158,8 @@ pack_old_logs() {
     log INFO "Not compressing old log files"
   fi
   # Backing up only items found in the YESTERDAYDATE
-  local -a items=( $( get_report_names_of_day "${YESTERDAYDATE}" ) )
+  get_report_names_of_day "${YESTERDAYDATE}"
+  local -a items=${reports[@]}
   if [[ -z ${items} ]]; then
     log ERROR "Unable to archive unexisting reports."
     return 0
@@ -245,29 +249,46 @@ recaploglock() {
   fi
 }
 
+# Set options
+OPTIONS=hnvV
+LONG_OPTIONS=help,dry-run,verbose,version
+
+# Parse options and show usage if invalid options provided
+! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  print_usage
+  exit 1
+fi
+
+# Set the positional parameters to the parsed options
+eval set -- "${ALL_ARGS}"
+
 
 # Avoid external variables to be defined
 unset VERBOSE
 unset DRYRUN
 
-while getopts hnvV flag; do
-  case ${flag} in
-    n)
-      DRYRUN=1
-      VERBOSE=1
+while [[ ${#} -gt 0 ]]; do
+  case "${1}" in
+    -n|--dry-run)
+      DRYRUN=true
+      VERBOSE=true
+      shift
       ;;
-    v)
-      VERBOSE=1
+    -v|--verbose)
+      VERBOSE=true
+      shift
       ;;
-    V)
+    -V|--version)
       echo "${_VERSION}"
       exit 0
       ;;
-    h|*)
-      grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
-                             -e "s/_tool_/$( basename $0 )/"
+    -h|--help)
+      print_usage
       exit 1
       ;;
+    --)
+      shift; break ;;
  esac
 done
 

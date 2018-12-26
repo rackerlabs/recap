@@ -19,10 +19,10 @@
 #
 #~ Usage: _tool_ [OPTION]
 #~ Options:
-#~   -h,--help       Print this help.
-#~   -B,--backup     Copy the last log file to the backups dir.
-#~   -S,--snapshot   Take a timestamped snapshot outside the regular rotation.
-#~   -V,--version    Print version and exit.
+#~   -h, --help       Print this help.
+#~   -B, --backup     Copy the last log file to the backups dir.
+#~   -S, --snapshot   Take a timestamped snapshot outside the regular rotation.
+#~   -V, --version    Print version and exit.
 #~
 
 ## Version
@@ -32,7 +32,7 @@ declare -r _VERSION='1.4.0'
 declare -r DATE=$( date +%F_%T )
 declare -r LOCKFILE="/var/lock/recap.lock"
 declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
-declare -r LIBDIR="@LIBDIR@/recap"
+declare -r LIBDIR="/usr/local/lib/recap"
 declare -r COREDIR="${LIBDIR}/core"
 declare -r PLUGIN_A_DIR="${LIBDIR}/plugins-available"
 declare -r PLUGIN_E_DIR="${LIBDIR}/plugins-enabled"
@@ -479,15 +479,22 @@ check_disk_space() {
 
 ## Main
 
-# Evaluate input flags, print usage if more than one flag is used.
-if [[ "$#" -gt 1 ]]; then
- log ERROR "Error: Only one flag is allowed"
- print_usage
- exit 1
+# Set options
+OPTIONS=VBhS
+LONG_OPTIONS=version,backup,help,snapshot
+
+# Parse options and show usage if invalid options provided
+! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  print_usage
+  exit 1
 fi
 
-# If we only have one flag, see if we know how to handle it.
-if [[ "$#" -gt 0 ]]; then
+# Set the positional parameters to the parsed options
+set -- ${ALL_ARGS}
+
+# Act on the valid arguments provided
+while true; do
   case "$1" in
     -V|--version)
       echo "${_VERSION}"
@@ -496,6 +503,7 @@ if [[ "$#" -gt 0 ]]; then
     -B|--backup)
       # backup latest log files
       BACKUP="yes"
+      shift
       ;;
     -h|--help)
       # print usage
@@ -505,13 +513,29 @@ if [[ "$#" -gt 0 ]]; then
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
       SNAPSHOT="yes"
+      shift
       ;;
+    --)
+      shift; break ;;
     *)
       # user entered an invalid flag, print warning and exit
       log ERROR "Invalid Input"
       print_usage
       exit 1
   esac
+done
+
+if [[ "${BACKUP,,}" == "yes" && "${SNAPSHOT,,}" == "yes" ]]; then
+  log ERROR "Backup and Snapshot options are mutually exclusive"
+  print_usage
+  exit 1
+fi
+
+# Error if unparsed arguments exist
+if [[ "$#" -gt 0 ]]; then
+  log ERROR "Error: Unexpected argument(s): $@"
+  print_usage
+  exit 1
 fi
 
 # Verify that script is being run as root
