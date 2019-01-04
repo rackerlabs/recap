@@ -252,10 +252,10 @@ plugins_info(){
 plugins_load() {
   local plugin_dir="$1"
   log INFO "Loading plugins from: ${plugin_dir}"
-  for plugin in $( ls -1 "${plugin_dir}" ); do
+  while read plugin; do
     log INFO "Loading plugin: ${plugin}"
-    source ${plugin}
-  done
+    source "${plugin_dir}/${plugin}"
+  done < <(ls -1 "${plugin_dir}" 2>/dev/null)
 }
 
 # Load core functions
