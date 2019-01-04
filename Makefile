@@ -104,7 +104,7 @@ install-systemd: recap.systemd
 
 install-man:
 	@echo "Installing man pages..."
-	@install -Dm0644 src/recap.5 $(DESTDIR)$(MANDIR)/man5/recap.5
+	@install -Dm0644 src/recap.conf.5 $(DESTDIR)$(MANDIR)/man5/recap.conf.5
 	@install -Dm0644 src/recap.8 $(DESTDIR)$(MANDIR)/man8/recap.8
 	@install -Dm0644 src/recaplog.8 $(DESTDIR)$(MANDIR)/man8/recaplog.8
 	@install -Dm0644 src/recaptool.8 $(DESTDIR)$(MANDIR)/man8/recaptool.8
@@ -140,7 +140,7 @@ uninstall-systemd:
 
 uninstall-man:
 	@echo "Removing man pages..."
-	@rm -f $(DESTDIR)$(MANDIR)/man5/recap.5
+	@rm -f $(DESTDIR)$(MANDIR)/man5/recap.conf.5
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recap.8
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recaplog.8
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recaptool.8
