@@ -52,11 +52,11 @@ all:
 	@echo "Current type detected is: $(type)"
 
 recap.cron:
-	@sed -e 's|\(^BINDIR=\).*|\1$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
+	@sed -e 's|^[ ]*\(BINDIR=\).*$$|\1$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
 
 recap.systemd:
 	@for service_file in src/utils/*.service.in; do \
-	sed -e 's|\(=BINDIR=\).*|\1$(BINDIR)|' $${service_file} > $${service_file%.in}; \
+	sed -e 's|^[ ]*\(Environment=BINDIR=\).*$$|\1$(BINDIR)|' $${service_file} > $${service_file%.in}; \
 	done
 
 clean:
@@ -69,7 +69,7 @@ uninstall: uninstall-base uninstall-man uninstall-doc uninstall-$(type)
 
 install-base:
 	@echo "Installing scripts..."
-	@sed -i.orig 's|\(declare.* LIBDIR=\).*|\1"$(DESTDIR)$(LIBDIR)/recap"|' src/recap
+	@sed -i.orig 's|^[ ]*\(declare\s\+-r\s\+LIBDIR=\).*$$|\1"$(DESTDIR)$(LIBDIR)/recap"|' src/recap
 	@install -Dm0755 src/recap $(DESTDIR)$(BINDIR)/recap
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool

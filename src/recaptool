@@ -44,7 +44,6 @@ if [[ -r "${CONFFILE}" ]]; then
 fi
 
 memproc() {
-  set -x
   PROCESS="${@}"
   TMP=$( mktemp )
   >"${TMP}"
@@ -55,7 +54,6 @@ memproc() {
   done
   sort "${TMP}"
   rm -f "${TMP}"
-  set +x
 }
 
 proc() {
