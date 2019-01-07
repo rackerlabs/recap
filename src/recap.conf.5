@@ -19,16 +19,14 @@
 .\" Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 .\" Boston, MA 02110-1301 USA.
 .\"
-.TH RECAP 5 "July 7, 2017"
+.TH RECAP.CONF 5 "July 7, 2017"
 .SH NAME
-recap - dumps periodic information about running applications and resource usage
-.SH SYNOPSIS
-.BI "recap"
+recap.conf \- recap configuration file
 .SH DESCRIPTION
-recap is a user-configurable script that can be run once, or run periodically out of cron to dump information about running processes and resource usage. It is useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
+The
+.IR /etc/recap.conf
+file contains configuration information for recap. It stores the default values that determine which reports get generated and how many reports are generated.
 
-The default values for which reports are generated and how many reports are stored can be
-.IR /etc/recap.conf "."
 The output files from the script are written to
 .IR BASEDIR "."
 .SH OPTIONS
@@ -87,7 +85,7 @@ Can be set to yes or no depending on whether or not "sar \-r"(memory data) outpu
 
 .IP \fBUSEFULLSTATUS\fR
 .br
-Can be set to yes or no depending on whether or not a http request(GET) to OPTS_STATUSURL is required, it requires that the webserver url(OPTS_STATUSURL) is configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server-status) offer a functionality to provide the status of the webserver via URL. This requires that USERESOURCES be set to yes. (default: no)
+Can be set to yes or no depending on whether or not a http request(GET) to OPTS_STATUSURL is required, it requires that the webserver url(OPTS_STATUSURL) is configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server\-status) offer a functionality to provide the status of the webserver via URL. This requires that USERESOURCES be set to yes. (default: no)
 
 .IP \fBUSEPSTREE\fR
 .br
@@ -194,7 +192,7 @@ pstree options
 .IP \fBOPTS_STATUSURL\fR
 .br
 URL to perform the http request when USEFULLSTATUS is enabled.
-(default: "http://localhost:80/server-status")
+(default: "http://localhost:80/server\-status")
 
 .IP \fBOPTS_VMSTAT\fR
 .br

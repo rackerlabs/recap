@@ -52,11 +52,11 @@ all:
 	@echo "Current type detected is: $(type)"
 
 recap.cron:
-	@sed -e 's|@BINDIR@|$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
+	@sed -e 's|^\s*\(BINDIR=\).*$$|\1$(BINDIR)|' src/utils/recap.cron.in > src/utils/recap.cron
 
 recap.systemd:
 	@for service_file in src/utils/*.service.in; do \
-	sed -e 's|@BINDIR@|$(BINDIR)|' $${service_file} > $${service_file%.in}; \
+	sed -e 's|^\s*\(Environment=BINDIR=\).*$$|\1$(BINDIR)|' $${service_file} > $${service_file%.in}; \
 	done
 
 clean:
@@ -69,7 +69,7 @@ uninstall: uninstall-base uninstall-man uninstall-doc uninstall-$(type)
 
 install-base:
 	@echo "Installing scripts..."
-	@sed -i.orig 's|@LIBDIR@|$(DESTDIR)$(LIBDIR)|' src/recap
+	@sed -i.orig 's|^\s*\(declare\s\+-r\s\+LIBDIR=\).*$$|\1"$(DESTDIR)$(LIBDIR)/recap"|' src/recap
 	@install -Dm0755 src/recap $(DESTDIR)$(BINDIR)/recap
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool
@@ -104,7 +104,7 @@ install-systemd: recap.systemd
 
 install-man:
 	@echo "Installing man pages..."
-	@install -Dm0644 src/recap.5 $(DESTDIR)$(MANDIR)/man5/recap.5
+	@install -Dm0644 src/recap.conf.5 $(DESTDIR)$(MANDIR)/man5/recap.conf.5
 	@install -Dm0644 src/recap.8 $(DESTDIR)$(MANDIR)/man8/recap.8
 	@install -Dm0644 src/recaplog.8 $(DESTDIR)$(MANDIR)/man8/recaplog.8
 	@install -Dm0644 src/recaptool.8 $(DESTDIR)$(MANDIR)/man8/recaptool.8
@@ -140,7 +140,7 @@ uninstall-systemd:
 
 uninstall-man:
 	@echo "Removing man pages..."
-	@rm -f $(DESTDIR)$(MANDIR)/man5/recap.5
+	@rm -f $(DESTDIR)$(MANDIR)/man5/recap.conf.5
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recap.8
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recaplog.8
 	@rm -f $(DESTDIR)$(MANDIR)/man8/recaptool.8
