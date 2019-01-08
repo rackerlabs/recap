@@ -122,7 +122,7 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 The default location of the install is `"/"` it can be overridden with `DESTDIR`.
 The scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. Main scripts are installed on in "`./sbin`" by default, this can be overriden with `BINDIR`.
-The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugin-available`" by default, this can be overridden wit `LIBDIR`
+The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugin-available`" by default, this can be overridden with `LIBDIR`
 
 The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
 
