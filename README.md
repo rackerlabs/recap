@@ -120,10 +120,14 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 #### About the locations of the scripts
 
-The default location of the install is `"/"` it can be overridden with `DESTDIR`, the scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
+The default location of the install is `"/"` it can be overridden with `DESTDIR`.
+The scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. Main scripts are installed on in "`./sbin`" by default, this can be overriden with `BINDIR`.
+The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugin-available`" by default, this can be overridden wit `LIBDIR`
+
+The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
 
   ```
-$ sudo make PREFIX="/usr" install 
+$ sudo make PREFIX="/usr" install
 ```
 
 This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~./usr/local"`:
@@ -455,16 +459,24 @@ Options used by the tools generating the reports
 
 ## Plugins
 
-Plugins are stored in the plugin directory, (default when installed: /usr/lib/recap/plugin-available)
+- **USEPLUGINS** - Enable/Disable plugins usage.
 
-Enabling plugins requires:
+  Default: `USEPLUGINS=no`
+
+Plugins are stored in the plugin directory, defined by **LIBDIR**/plugin-available
+
+ Default: /usr/lib/local/recap/plugin-available
+
+### Enabling plugins
+
+To enable plugins it is required to:
 
   - `USEPLUGINS="yes"` in `/etc/recap.conf`
   - Symlinking `plugin-enabled/plugin_name` to `plugin-available/plugin_name`
 
-Name conventions:
+### Name conventions:
 
-- Plugin names can be named in anyway, it's desired it describes the purpose of the plugin in one word, when multiple words are required use underscores "_", don't use extension, don't use dates in them(YYYYMMDD). Some examples:
+- Plugin scripts can be named in any way, it's desired that they describe the purpose of the plugin in one word, when multiple words are required use underscores "_", don't use extension, don't use dates in them(YYYYMMDD). Some examples:
 
   - **Good** names for plugins
     - redis
@@ -476,21 +488,21 @@ Name conventions:
     - myplugin         (non explicit)
     - test.sh          (non explicit, using extension)
     - recap-plugin     (non explicit, using hyphens)
-    - Sendmail         (CamelCase)		 
+    - Sendmail         (CamelCase)		
     - redis.bak        (extension)
     - ms sql           (space between words)
     - reports_20202020 (use of a date)
 
-- Allowed name convention for **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
+- Allowed name convention for plugin **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
   Some examples:
 
-  - **Good** option names:
+  - **Good** option plugin names:
     - **PLUGIN_OPTS_MEMCACHE_PROTO**
     - **PLUGIN_OPTS_AWS_KEY**
     - **PLUGIN_OPTS_REDIS_PORT**
     - **PLUGIN_OPTS_DOCKER_HUB_URL**
-  - **Bad** option names:
-    - plugin_opts_my_plugin   ( lower case)
+  - **Bad** option plugin names:
+    - plugin_opts_my_plugin   (lower case)
     - PLUGIN_OPTS_MY_VARIABLE (lacking plugin reference)
     - PLUGIN_OPTS_DOCKER_port (CamelCase)
     - PLUGIN-OPTS-NTP         (using hyphens instead of underscores, missing the option)
