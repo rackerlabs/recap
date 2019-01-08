@@ -52,6 +52,7 @@ install:
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
 
 script:
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap --version'
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recap.sh
   - docker exec recap_on_${DISTRO/:/_} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
 
