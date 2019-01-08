@@ -2,7 +2,26 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
-- Plugin support
+
+## [2.0.0] - 2018-01-22
+- Add plugin support [(#155)][155].
+  - Split recap functionality between core functions and plugins.
+  - Plugins are not enabled by default on this version.
+  - Plugins added:redis, docker_top, http_status, kernel_cmd.
+- Complete the deprecation of `/etc/recap` config file for `/etc/recap.conf` [(#80)][80].
+  - All the old config references have been removed.
+  - Old config is now ignored.
+- Deprecating BACKUP_ITEMS, instead finding reports/logs dynamically [(#115)][115].
+- Dependency change, `elinks` used instead of `links` for `http_status` plugin [(#169)][169] [(#170)][170].
+- Replace the use of `@PATTERN@` in cron/timers to make dev and testing easier.
+- Add multi-distro testing on travis (CI).
+- Add ansible playbook to (un)install recap.
+- More detailed information included in the `recap.log` regarding reports.
+- Standardize options across scripts [(#111)][111].
+  - All script now support short and long argument options.
+  - `recaplog` deprecates the use of action options.
+- Rename of man pages now including `recap.conf(5)` [(#175)][175].
+- Fix version inconsistency on recap scripts [(#174)][174].
 
 ## [1.4.0] - 2018-07-12
 - Continue with the deprecation of `/etc/recap` config file for `/etc/recap.conf`
@@ -22,10 +41,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.0] - 2017-11-01
 - Use of modern tools for netstat reports, `net-tools` are now deprecated.
-- Deprecated the use of `OPTS_CURL` in favor of `OPTS_LINKS` [(#125)][0]
-- Default changed for `OPTS_STATUSURL` [(#125)][0]
-- Deprecated the use of `MAXLOAD`. [(#123)][1]
-- Timeout added to cronjobs with a default of 5m for most cases. [(#123)][1]
+- Deprecated the use of `OPTS_CURL` in favor of `OPTS_LINKS` [(#125)][125]
+- Default changed for `OPTS_STATUSURL` [(#125)][125]
+- Deprecated the use of `MAXLOAD`. [(#123)][123]
+- Timeout added to cronjobs with a default of 5m for most cases. [(#123)][123]
 - Added `version` option.
 - Dependencies:
   - Removed:`bc`, `net-tools`.
@@ -161,6 +180,7 @@ All notable changes to this project will be documented in this file.
 - Erik Ljungstrom
 - Jacob Walcik
 - James Belchamber
+- Josh Soref (jsoref)
 - Sean Dennis (jamrok)
 - Jay Goldberg
 - Jeffrey Ness
@@ -177,5 +197,33 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-[0]: https://github.com/rackerlabs/recap/issues/125
-[1]: https://github.com/rackerlabs/recap/issues/123
+[80]: https://github.com/rackerlabs/recap/issues/80
+[111]: https://github.com/rackerlabs/recap/issues/111
+[115]: https://github.com/rackerlabs/recap/issues/115
+[123]: https://github.com/rackerlabs/recap/issues/123
+[125]: https://github.com/rackerlabs/recap/issues/125
+[155]: https://github.com/rackerlabs/recap/issues/155
+[169]: https://github.com/rackerlabs/recap/issues/169
+[170]: https://github.com/rackerlabs/recap/issues/170
+[174]: https://github.com/rackerlabs/recap/issues/174
+[175]: https://github.com/rackerlabs/recap/issues/175
+
+<!---
+# One-liners to help generate content for CHANGELOG.md
+git checkout development
+echo "== Get contributors since last release:"
+git log \
+  --no-merges \
+  --format="%an %ae" \
+  master... |
+    sed -e 's/@.*//' |
+    sort -u
+echo
+echo "== Get changes description since last release"
+git log \
+  --no-merges \
+  --format="%s" \
+  ...master |
+    cat
+echo
+-->
