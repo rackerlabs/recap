@@ -59,7 +59,7 @@ At the moment there is no public repository for Debian nor Ubuntu, two options a
 
 #### Build a package
 
-This repository https://github.com/raxpkg/recap contains the debian files required to build a deb package
+This repository https://github.com/raxpkg/recap contains the Debian files required to build a deb package
 
 These are the steps:
 
@@ -75,7 +75,7 @@ apt-get install equivs -y
 mkdir recap
 cd recap
 
-# Get the debian configs
+# Get the Debian configs
 git init
 git remote add origin https://github.com/raxpkg/recap.git
 git fetch --no-tags origin
@@ -101,7 +101,7 @@ git checkout ${LATEST} -- debian
 debuild -us -uc --lintian-opts --profile debian
 
 # Package will be created in ../recap_${latest_tag}-<RELEASE>_all.deb
-# RELEASE comes from the changelog in the debian repository.
+# RELEASE comes from the changelog in the Debian repository.
 ```
 
 #### Manual install
@@ -120,9 +120,9 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 #### About the locations of the scripts
 
-The default location of the install is `"/"` it can be overridden with `DESTDIR`.
-The scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. Main scripts are installed on in "`./sbin`" by default, this can be overriden with `BINDIR`.
-The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugin-available`" by default, this can be overridden with `LIBDIR`
+- The default location of the install is `"/"` it can be overridden with `DESTDIR`.
+- The scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. Main scripts are installed on in "`./sbin`" by default, this can be overriden with `BINDIR`.
+- The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugins-available`" by default, this can be overridden with `LIBDIR`
 
 The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
 
@@ -130,7 +130,7 @@ The following example is a common location for most of the distributions, this w
 $ sudo make PREFIX="/usr" install
 ```
 
-This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~./usr/local"`:
+This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~/usr/local"`:
 
   ```
 $ make DESTDIR="~" install
@@ -463,20 +463,20 @@ Options used by the tools generating the reports
 
   Default: `USEPLUGINS=no`
 
-Plugins are stored in the plugin directory, defined by **LIBDIR**/plugin-available
+Plugins are stored in the plugin directory, defined by **LIBDIR**/plugins-available
 
- Default: /usr/lib/local/recap/plugin-available
+  Default: /usr/lib/local/recap/plugin-available
 
 ### Enabling plugins
 
-To enable plugins it is required to:
+To enable plugins, the following is required to:
 
-  - `USEPLUGINS="yes"` in `/etc/recap.conf`
-  - Symlinking `plugin-enabled/plugin_name` to `plugin-available/plugin_name`
+  - Setting `USEPLUGINS="yes"` in `/etc/recap.conf`
+  - Symlinking `plugins-enabled/plugin_name` to `plugins-available/plugin_name`
 
-### Name conventions:
+### Naming conventions:
 
-- Plugin scripts can be named in any way, it's desired that they describe the purpose of the plugin in one word, when multiple words are required use underscores "_", don't use extension, don't use dates in them(YYYYMMDD). Some examples:
+- Plugin scripts can be named in any way. It's desired that they describe the purpose of the plugin in one word. When multiple words are required use underscores (`_`). Don't use extensions or dates (e.g. `YYYYMMDD`) in the plugin name. Some examples:
 
   - **Good** names for plugins
     - redis
@@ -493,15 +493,15 @@ To enable plugins it is required to:
     - ms sql           (space between words)
     - reports_20202020 (use of a date)
 
-- Allowed name convention for plugin **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
+- Allowed naming convention for plugin **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
   Some examples:
 
-  - **Good** option plugin names:
+  - **Good** plugin option names:
     - **PLUGIN_OPTS_MEMCACHE_PROTO**
     - **PLUGIN_OPTS_AWS_KEY**
     - **PLUGIN_OPTS_REDIS_PORT**
     - **PLUGIN_OPTS_DOCKER_HUB_URL**
-  - **Bad** option plugin names:
+  - **Bad** plugin option names:
     - plugin_opts_my_plugin   (lower case)
     - PLUGIN_OPTS_MY_VARIABLE (lacking plugin reference)
     - PLUGIN_OPTS_DOCKER_port (CamelCase)
