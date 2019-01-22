@@ -4,7 +4,7 @@
 cd /recap
 
 # Install recap
-make install
+make install --debug=v
 
 # Clean temporary files
 make clean
