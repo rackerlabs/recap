@@ -21,33 +21,32 @@
 .\"
 .TH RECAP 8 "Aug 18, 2017"
 .SH NAME
-recap - dumps periodic information about running applications and resource usage
+recap \- dumps periodic information about running applications and resource usage
 .SH SYNOPSIS
 .BI "recap " [OPTION]
 .SH DESCRIPTION
-recap is a user-configurable script that can be run once, or run periodically out of cron or systemd.timers to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
+recap is a user\-configurable script that can be run once, or run periodically out of cron or systemd.timers to dump information about running processes and resource usage. It's useful on servers that have periodic, mysterious performance anomalies for tracking down what may be going on at the time of any particular incident.
 
 The values for which reports are generated and how many reports are stored can be overridden in
 .IR /etc/recap.conf "."
 The output files from the script are written to
 .IR BASEDIR "."
 .TP
-\fB\-B\fR, \fB\-\-backup\fR
+.BR "\-B, \-\-backup"
 This will perform a "backup". It will copy the latest log files from the last execution to the "backups" directory inside BASEDIR. The files will be identified by a timestamp in the name.
 .TP
-\fB\-S\fR, \fB\-\-snapshot\fR
+.BR "\-S, \-\-snapshot"
 This will perform a "snapshot" report. It will generate a set of output files in the "snapshot" directory inside BASEDIR outside of the standard rotation. The files will be identified by a timestamp in the name.
 .TP
-\fB\-V\fR, \fB\-\-version\fR
+.BR "\-V, \-\-version"
 Print version and exit.
 .TP
 .SH FILES
 .nf
 /etc/recap.conf
 /etc/cron.d/recap
-/etc/recap
-/usr/lib/systemd/sytem/recap.{service,timer} - Unit files for running recap periodically.
-/usr/lib/systemd/sytem/recap-onboot.{service,timer} - Unit files for running recap on boot.
+/usr/lib/systemd/system/recap.{service,timer} \- Unit files for running recap periodically.
+/usr/lib/systemd/system/recap\-onboot.{service,timer} \- Unit files for running recap on boot.
 
 .SH "REPORTING BUGS"
 Bugs and issues to be submitted via github
@@ -56,7 +55,7 @@ Bugs and issues to be submitted via github
 .SH AUTHOR
 The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 .SH "SEE ALSO"
-.BR recap (5),
+.BR recap.conf (5),
 .BR recaplog (8),
 .BR crontab (5),
 .BR systemd.timer (5)

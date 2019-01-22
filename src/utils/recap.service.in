@@ -1,9 +1,10 @@
 [Unit]
 Description=recap
-Documentation=man:recap(5) man:recap(8)
+Documentation=man:recap.conf(5) man:recap(8)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
+Environment=BINDIR=/usr/local/bin
 Type=oneshot
-ExecStart=@BINDIR@/recap
+ExecStart=/bin/sh -c "${BINDIR}/recap"

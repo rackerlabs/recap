@@ -1,5 +1,7 @@
 # Recap
 
+[![Build Master Status](https://img.shields.io/travis/rackerlabs/recap/master.svg?logo=travis&label=master)](https://travis-ci.org/rackerlabs/recap)
+[![Build Development Status](https://img.shields.io/travis/rackerlabs/recap/development.svg?logo=travis&label=development)](https://travis-ci.org/rackerlabs/recap)
 [![GitHub release](https://img.shields.io/github/release/rackerlabs/recap.svg)](https://github.com/rackerlabs/recap/releases/latest)
 [![GitHub license](https://img.shields.io/github/license/rackerlabs/recap.svg)](https://raw.githubusercontent.com/rackerlabs/recap/master/COPYING)
 [![GitHub stars](https://img.shields.io/github/stars/rackerlabs/recap.svg?style=social&label=Star)](https://github.com/rackerlabs/recap)
@@ -18,7 +20,7 @@ Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rac
 - grep
 - iotop
 - iproute/iproute2
-- links
+- elinks
 - procps
 - psmisc
 - sysstat >= 9
@@ -57,7 +59,7 @@ At the moment there is no public repository for Debian nor Ubuntu, two options a
 
 #### Build a package
 
-This repository https://github.com/raxpkg/recap contains the debian files required to build a deb package
+This repository https://github.com/raxpkg/recap contains the Debian files required to build a deb package
 
 These are the steps:
 
@@ -73,7 +75,7 @@ apt-get install equivs -y
 mkdir recap
 cd recap
 
-# Get the debian configs
+# Get the Debian configs
 git init
 git remote add origin https://github.com/raxpkg/recap.git
 git fetch --no-tags origin
@@ -99,7 +101,7 @@ git checkout ${LATEST} -- debian
 debuild -us -uc --lintian-opts --profile debian
 
 # Package will be created in ../recap_${latest_tag}-<RELEASE>_all.deb
-# RELEASE comes from the changelog in the debian repository.
+# RELEASE comes from the changelog in the Debian repository.
 ```
 
 #### Manual install
@@ -118,13 +120,17 @@ The information captured will be found in log files in the `/var/log/recap/` dir
 
 #### About the locations of the scripts
 
-The default location of the install is `"/"` it can be overriden with `DESTDIR`, the scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overriden with `PREFIX`. The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
+- The default location of the install is `"/"` it can be overridden with `DESTDIR`.
+- The scripts, man pages and docs are installed under "`"/usr/local"` by default, this can be overridden with `PREFIX`. Main scripts are installed on in "`./sbin`" by default, this can be overriden with `BINDIR`.
+- The core scripts and the plugins are installed on top of `PREFIX` in "`./recap/plugins-available`" by default, this can be overridden with `LIBDIR`
+
+The following example is a common location for most of the distributions, this will install `recap` under `/usr`:
 
   ```
-$ sudo make PREFIX="/usr" install 
+$ sudo make PREFIX="/usr" install
 ```
 
-This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~./usr/local"`:
+This other example will install `recap` under your homedirectory but using the default locations for the script, i.e. under `"~/usr/local"`:
 
   ```
 $ make DESTDIR="~" install
@@ -133,6 +139,60 @@ $ make DESTDIR="~" install
 The `Makefile` scripts attempts to detect systemd if so, the `install` option will install the systemd unit files. The install will **not** enable the timers, but it will show the commands required to enable each of the timers.  When systemd is not detected the cronjobs will be installed.
 
 Is up to each package distribution to follow their own best practices regarding enabling/disabling the timers on install/remove of the package.
+
+### Ansible
+
+An ansible playbook could be used to install `recap` from a git repository. The playbook is located in `tools` under `ansible_recap.yml` the playbook can be used to install it on Red Hat based and Debian based distros. Or to uninstall it defining the `uninstall` variable.
+
+#### Variables
+
+- `repo` - The location of the repository, default: `https://github.com/rackerlabs/recap.git`.
+- `ref` - The reference to use this could be a branch, a tag or commit, default: `master`.
+- `binpath` - The value of *BINPATH*, default: `/sbin`.
+- `destdir` - The value of *DESTDIR*, default: `""`.
+- `prefix` - The value of *PREFIX*, default: `/usr`.
+- `tmp_install_dir` - The location where the cloned repo will be placed, default: `/tmp/recap`.
+- `uninstall` - Then this is defined it will remove `recap`, default: *undefined*.
+
+#### Install (default)
+
+Install the stable version of `recap`:
+
+```
+ansible-playbook tools/ansible_recap.yml
+```
+
+Install the development version of `recap`:
+
+```
+ansible-playbook tools/ansible_recap.yml -e ref=development
+```
+
+Install branch `foo` from a different repository:
+
+```
+ansible-playbook tools/ansible_recap.yml -e ref=foo -e repo=https://github.com/bar/recap.git
+```
+
+Install recap with *BINPATH* in `/bin`:
+
+```
+ansible-playbook tools/ansible_recap.yml -e binpath=/bin
+```
+
+#### Uninstall
+
+Uninstall `recap` from the default path:
+
+```
+ansible-playbook tools/ansible_recap.yml -e uninstall=yes
+```
+
+Uninstall `recap` from a custom location:
+
+```
+ansible-playbook tools/ansible_recap.yml -e uninstall=yes -e destdir=/tmp/test
+```
 
 ## Cron/Timers and Configuration
 
@@ -169,7 +229,7 @@ The cron file (`/etc/cron.d/recap`) is used to determine the execution time of `
 
 ### Configuration
 
-The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overriden.
+The following variables are commented out with the defaults values in the configuration file `/etc/recap.conf` which can be overridden.
 
 #### Settings shared by recap scripts
 
@@ -177,9 +237,15 @@ The following variables are commented out with the defaults values in the config
 
   Default: `BASEDIR="/var/log/recap"`
 
-- **BACKUP_ITEMS** - Is the list of reports generated and used by recap scripts
+- **LIBDIR** - Directory where the libraries/functions are located.
 
-  Default: `BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"`
+  The default value depends on the `PREFIX` used when installing, the default `PREFIX` on the `Makefile` is `/usr/local`, then:
+
+    Default: `LIBDIR="/usr/local/lib/recap"`
+
+  But packages use `/usr` as the `PREFIX`, then through a package it is expected to be:
+
+    Default: `LIBDIR="/usr/lib/recap"`
 
 
 #### Settings used only by `recaplog`
@@ -275,7 +341,7 @@ These are the type of reports generated and their dependencies.
 
 - **USERESOURCES** - Generates "resources"(uptime, free, vmstat, iostat, iotop) log
 
-  Required by: `USEDF`, `USESLAB`, `USESAR`, `USESARQ`, `USESARR`, `USEFULLSTATUS`
+  Required by: `USEDF`, `USESLAB`, `USESAR`, `USESARQ`, `USESARR`
 
   Default: `USERESOURCES="yes"`
 
@@ -301,7 +367,7 @@ These are the type of reports generated and their dependencies.
 
   Default: `USESAR="yes"`
 
-- **USESARQ** - Generates logs from "sar -q" (logs queue lenght, load data)
+- **USESARQ** - Generates logs from "sar -q" (logs queue length, load data)
 
   Requires: `USERESOURCES`
 
@@ -312,12 +378,6 @@ These are the type of reports generated and their dependencies.
   Requires: `USERESOURCES`
 
   Default: `USESARR="no"`
-
-- **USEFULLSTATUS** - Performs an http request(GET) to the URL defined in `OPTS_STATUSURL`. Needs a webserver configured to respond to this request. Nginx(nginx_status) and Apache HTTPD(server-stats) offer this functionality that needs to be enabled.
-
-  Requires: `USERESOURCES`
-
-  Default: `USEFULLSTATUS="no"`
 
 
 #### Options
@@ -335,11 +395,6 @@ Options used by the tools generating the reports
   Required by: `USEMYSQLPROCESSLIST`
 
   Default: `MYSQL_PROCESS_LIST="table"`
-
-- **OPTS_LINKS** - Options used by links.
-  Required by: `USEFULLSTATUS`
-
-  Default: `OPTS_LINKS="-dump"`
 
 - **OPTS_DF** - df options
 
@@ -396,17 +451,72 @@ Options used by the tools generating the reports
   Default: `OPTS_PSTREE="-p"`
 
 
-- **OPTS_STATUSURL** - URL to perform the http request  when USEFULLSTATUS is enabled.
-
-  Required by: `USEFULLSTATUS`
-
-  Default: `OPTS_STATUSURL="http://localhost:80/server-status"`
-
 - **OPTS_VMSTAT** - vmstat options
 
   Required by: `USERESOURCES`
 
   Default: `OPTS_VMSTAT="-S M 1 3"`
+
+## Plugins
+
+- **USEPLUGINS** - Enable/Disable plugins usage.
+
+  Default: `USEPLUGINS=no`
+
+Plugins are stored in the plugin directory, defined by **LIBDIR**/plugins-available
+
+  Default: /usr/lib/local/recap/plugin-available
+
+### Enabling plugins
+
+To enable plugins, the following is required to:
+
+  - Setting `USEPLUGINS="yes"` in `/etc/recap.conf`
+  - Symlinking `plugins-enabled/plugin_name` to `plugins-available/plugin_name`
+
+### Naming conventions:
+
+- Plugin scripts can be named in any way. It's desired that they describe the purpose of the plugin in one word. When multiple words are required use underscores (`_`). Don't use extensions or dates (e.g. `YYYYMMDD`) in the plugin name. Some examples:
+
+  - **Good** names for plugins
+    - redis
+    - memcache
+    - docker_images
+    - memcache_13
+  - **Bad** names for plugins
+    - johndoe_apache   (not very descriptive)
+    - myplugin         (non explicit)
+    - test.sh          (non explicit, using extension)
+    - recap-plugin     (non explicit, using hyphens)
+    - Sendmail         (CamelCase)		
+    - redis.bak        (extension)
+    - ms sql           (space between words)
+    - reports_20202020 (use of a date)
+
+- Allowed naming convention for plugin **OPTIONS** in /etc/recap.conf: **PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**
+  Some examples:
+
+  - **Good** plugin option names:
+    - **PLUGIN_OPTS_MEMCACHE_PROTO**
+    - **PLUGIN_OPTS_AWS_KEY**
+    - **PLUGIN_OPTS_REDIS_PORT**
+    - **PLUGIN_OPTS_DOCKER_HUB_URL**
+  - **Bad** plugin option names:
+    - plugin_opts_my_plugin   (lower case)
+    - PLUGIN_OPTS_MY_VARIABLE (lacking plugin reference)
+    - PLUGIN_OPTS_DOCKER_port (CamelCase)
+    - PLUGIN-OPTS-NTP         (using hyphens instead of underscores, missing the option)
+
+- Inside the plugin file/script it is expected **only** functions. recap will **only** call **one** function: `print_<plugin_name>` where `plugin_name` must match the name of the file.
+
+- Optionally, other functions can be defined to create different entries in the
+  log. Those other functions could be controlled by plugin variables (**PLUGIN_OPTS_<PLUGIN>_<OPT_NAME>**). Those variables are set in `/etc/recap.conf` and conditionally called from the main plugin function `plugin_name`
+
+- Any plugin variable defined **must** have a default value.
+
+- The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
+
+- A template of a plugin is provided in `doc/plugin_template`
 
 ## Changelog & Contributions
 

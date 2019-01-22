@@ -19,20 +19,25 @@
 #
 #~ Usage: _tool_ [OPTION]
 #~ Options:
-#~   -h,--help       Print this help.
-#~   -B,--backup     Copy the last log file to the backups dir.
-#~   -S,--snapshot   Take a timestamped snapshot outside the regular rotation.
-#~   -V,--version    Print version and exit.
+#~   -h, --help       Print this help.
+#~   -B, --backup     Copy the last log file to the backups dir.
+#~   -S, --snapshot   Take a timestamped snapshot outside the regular rotation.
+#~   -V, --version    Print version and exit.
 #~
 
 ## Version
-declare -r _VERSION='1.4.0'
+declare -r _VERSION='2.0.0'
 
-## Default settings(can *NOT* be overriden in config file)
+## Default settings(can *NOT* be overridden in config file)
 declare -r DATE=$( date +%F_%T )
 declare -r LOCKFILE="/var/lock/recap.lock"
 declare -r LOG_SUFFIX=$( date +%Y%m%d-%H%M%S )
+declare -r LIBDIR="/usr/local/lib/recap"
+declare -r COREDIR="${LIBDIR}/core"
+declare -r PLUGIN_A_DIR="${LIBDIR}/plugins-available"
+declare -r PLUGIN_E_DIR="${LIBDIR}/plugins-enabled"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
 
 ## Default settings(modified through command line arguments)
 declare -r default_BACKUP="no"
@@ -41,7 +46,6 @@ BACKUP="${default_BACKUP}"
 SNAPSHOT="${default_SNAPSHOT}"
 
 ## Default settings(can be overridden in config file)
-declare -r default_BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 declare -r default_BASEDIR="/var/log/recap"
 declare -r default_RECAPLOG="${default_BASEDIR}/recap.log"
 declare -r default_MAILTO=""
@@ -50,27 +54,26 @@ declare -r default_USEFDISK="no"
 declare -r default_USEPS="yes"
 declare -r default_USEPSTREE="no"
 declare -r default_USESLAB="no"
-BACKUP_ITEMS="${default_BACKUP_ITEMS}"
+declare -r default_USEPLUGINS="no"
 BASEDIR="${default_BASEDIR}"
-RECAPLOG="${BASEDIR}/recap.log"
+RECAPLOG="${default_RECAPLOG}"
 MAILTO="${default_MAILTO}"
 MIN_FREE_SPACE=${default_MIN_FREE_SPACE}
 USEFDISK="${default_USEFDISK}"
 USEPS="${default_USEPS}"
 USEPSTREE="${default_USEPSTREE}"
 USESLAB="${default_USESLAB}"
+USEPLUGINS="${default_USEPLUGINS}"
 
 # Parent setting(other settings depend on this)
 declare -r default_USERESOURCES="yes"
 USERESOURCES="${default_USERESOURCES}"
 # These depend on USERRESOURCES to be enabled("yes")
 declare -r default_USEDF="yes"
-declare -r default_USEFULLSTATUS="no"
 declare -r default_USESAR="yes"
 declare -r default_USESARQ="no"
 declare -r default_USESARR="no"
 USEDF="${default_USEDF}"
-USEFULLSTATUS="${default_USEFULLSTATUS}"
 USESAR="${default_USESAR}"
 USESARQ="${default_USESARQ}"
 USESARR="${default_USESARR}"
@@ -95,8 +98,7 @@ MYSQL_PROCESS_LIST="${default_MYSQL_PROCESS_LIST}"
 USEINNODB="${default_USEINNODB}"
 USEMYSQLPROCESSLIST="${default_USEMYSQLPROCESSLIST}"
 
-# Default command options(can be overriden in config file)
-declare -r default_OPTS_LINKS="-dump"
+# Default command options(can be overridden in config file)
 declare -r default_OPTS_DF="-x nfs"
 declare -r default_OPTS_FDISK="-l"
 declare -r default_OPTS_FREE=""
@@ -107,8 +109,6 @@ declare -r default_OPTS_NETSTAT_SUM="-a"
 declare -r default_OPTS_PS="auxfww"
 declare -r default_OPTS_PSTREE="-p"
 declare -r default_OPTS_VMSTAT="-S M 1 3"
-declare -r default_OPTS_STATUSURL="http://localhost:80/server-status"
-OPTS_LINKS="${default_OPTS_LINKS}"
 OPTS_DF="${default_OPTS_DF}"
 OPTS_FDISK="${default_OPTS_FDISK}"
 OPTS_FREE="${default_OPTS_FREE}"
@@ -119,7 +119,6 @@ OPTS_NETSTAT_SUM="${default_OPTS_NETSTAT_SUM}"
 OPTS_PS="${default_OPTS_PS}"
 OPTS_PSTREE="${default_OPTS_PSTREE}"
 OPTS_VMSTAT="${default_OPTS_VMSTAT}"
-OPTS_STATUSURL="${default_OPTS_STATUSURL}"
 
 # Internal variables
 banner_start="--- Starting $( basename $0 )[$$] ---"
@@ -222,343 +221,51 @@ check_output_file() {
   fi
 }
 
-# Print output of "ps auxfww" to the specified file
-print_ps() {
-  log INFO "Starting 'ps' report"
-  local LOGFILE="$1"
-  ps ${OPTS_PS} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'ps' report"
-}
-
-# Print output of "pstree" to specified file
-print_pstree() {
-  log INFO "Starting 'pstree' report"
-  local LOGFILE="$1"
-  pstree ${OPTS_PSTREE} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'pstree' report"
-}
-
 # Print a blank line to the specified file
 print_blankline() {
   local LOGFILE="$1"
   echo " " >> "${LOGFILE}"
 }
 
-# Print the output of "uptime" to the specified file
-print_uptime() {
-  log INFO "Starting 'uptime' report"
-  local LOGFILE="$1"
-  echo "UPTIME report" >> "${LOGFILE}"
-  uptime 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'uptime' report"
+# Plugin names
+# Obtain the list of files/plugins on a directory
+plugins_list() {
+  local plugin_dir="$1"
+  local p_names=( $( ls -1 "${plugin_dir}" | tr '\n' ' ') )
+  echo ${p_names[@]}
 }
 
-# Print the output of "free" to the specified file
-print_free() {
-  log INFO "Starting 'free' report"
-  local LOGFILE="$1"
-  echo "FREE report" >> "${LOGFILE}"
-  free ${OPTS_FREE} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'free' report"
-}
-
-# Print the output of "vmstat" to the specified file
-print_vmstat() {
-  log INFO "Starting 'vmstat' report"
-  local LOGFILE="$1"
-  echo "VMSTAT report" >> "${LOGFILE}"
-  vmstat ${OPTS_VMSTAT} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'vmstat' report"
-}
-
-# Print the output of "iostat" to the specified file
-print_iostat() {
-  log INFO "Starting 'iostat' report"
-  local LOGFILE="$1"
-  echo "IOSTAT report" >> "${LOGFILE}"
-  iostat ${OPTS_IOSTAT} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'iostat' report"
-}
-
-# Print the output of "iotop" to the specified file
-print_iotop() {
-  log INFO "Starting 'iotop' report"
-  local LOGFILE="$1"
-  echo "IOTOP report" >> "${LOGFILE}"
-  iotop ${OPTS_IOTOP} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'iotop' report"
-}
-
-# Print the output of sar to the specified file
-print_sar() {
-  log INFO "Starting 'sar' report"
-  local LOGFILE="$1"
-  local OPTION="$2"
-  local FLAGS=''
-  # check to see if we're going to use any parameters for sar
-  if [[ "${OPTION}" == "r" ]]; then
-    FLAGS="-r"
-  elif [[ "${OPTION}" == "q" ]]; then
-    FLAGS="-q"
-  else
-    FLAGS=""
-  fi
-
-  echo "SAR${FLAGS} report" >> "${LOGFILE}"
-  sar "${FLAGS}" 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'sar' report"
-}
-
-# Print the output of the web server status page to the specified file
-print_http_fullstatus() {
-  log INFO "Starting 'web status page' report"
-  local LOGFILE="$1"
-  echo "Web Status report" >> "${LOGFILE}"
-  links ${OPTS_LINKS} "${OPTS_STATUSURL}" 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'web status page' report"
-}
-
-# Print the output of "ss -atunp" to the specified file
-print_netstat() {
-  log INFO "Starting 'network socket' report"
-  local LOGFILE="$1"
-  echo "Network connections" >> "${LOGFILE}"
-  if ss ${OPTS_NETSTAT} &>/dev/null; then
-    ss ${OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
-  else
-    ss ${default_OPTS_NETSTAT} 2>/dev/null >> "${LOGFILE}"
-    log WARNING "Bad config: '${OPTS_NETSTAT}', "\
-                "using default: '${default_OPTS_NETSTAT}'"
-  fi
-  log INFO "Ended 'network socket' report"
-}
-
-# Print the output of "nstat -a" to the specified file
-print_netstat_sum() {
-  log INFO "Starting 'network summary' report"
-  local LOGFILE="$1"
-  echo "Network traffic summary" >> "${LOGFILE}"
-  if nstat ${OPTS_NETSTAT_SUM} &>/dev/null; then
-    nstat ${OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
-  else
-    nstat ${default_OPTS_NETSTAT_SUM} 2>/dev/null >> "${LOGFILE}"
-    log WARNING "Bad config: '${OPTS_NETSTAT_SUM}', "\
-                "using default: '${default_OPTS_NETSTAT_SUM}'"
-  fi
-  log INFO "Ended 'network summary' report"
-}
-
-# Print the output of "mysqladmin status" to the mysql file
-print_mysql() {
-  log INFO "Starting 'mysql status' report"
-  local LOGFILE="$1"
-  local MYCNF="$2"
-  local PLESK_FILE="/etc/psa/.psa.shadow"
-  if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL (plesk) status" >> "${LOGFILE}"
-    mysqladmin \
-      -uadmin \
-      -p$(cat "${PLESK_FILE}") \
-      --connect-timeout=5 \
-      status >> "${LOGFILE}"
-  else
-    echo "MySQL (${MYCNF}) status" >> "${LOGFILE}"
-      mysqladmin \
-        --defaults-file="${MYCNF}" \
-        --connect-timeout=5 \
-        status >> "${LOGFILE}"
-  fi
-  print_blankline "${LOGFILE}"
-  log INFO "Ended 'mysql status' report"
-}
-
-# Print the non-truncated innodb status to the mysql file
-print_mysql_innodb_status() {
-  log INFO "Starting 'mysql innodb' report"
-  local LOGFILE="$1"
-  local MYCNF="$2"
-  local mysql_cmd=''
-
-  unset MYVALS PID_FILE TMPDIR
-  if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL (plesk) InnoDB status" >> "${LOGFILE}"
-    mysql_cmd="mysql -uadmin -p$(cat ${PLESK_FILE}) --connect-timeout=5"
-  else
-    echo "MySQL (${MYCNF}) InnoDB status"  >> "${LOGFILE}"
-    mysql_cmd="mysql --defaults-file=${MYCNF} --connect-timeout=5"
-  fi
-  # First, we establish which tmpdir and pid_file are in use, strip any
-  # trailing slash and populate the file with current information.
-  # We throw away the output of the "show engine innodb status" command as
-  # it is likely being truncated, which we attempt to work around:
-  local -a MYVALS=( $( IFS=$'\t' ${mysql_cmd} \
-                         -Bse "SHOW VARIABLES LIKE 'pid_file'; \
-                               SHOW VARIABLES LIKE 'tmpdir'; \
-                               SHOW ENGINE INNODB STATUS;" \
-                         2>/dev/null \
-                       | head -n 2 ) )
-  local PID_FILE="${MYVALS[1]%/}"
-  local TMPDIR="${MYVALS[3]%/}"
-
-  # Next, we grab a list of descriptors in the tmpdir:
-  if [[ -r "${PID_FILE}" &&
-        -d "${TMPDIR}" ]]; then
-    for name in "/proc/"$(cat ${PID_FILE})"/fd/"*; do
-      # We know that InnoDB's temporary files are always in the mysql tmpdir
-      # and start with the string 'ib' followed by a randomly generated series
-      # of characters.  Now we can compare the canonicalized path of fd to the
-      # tmpdir/ib* pattern:
-      if [[ "$(readlink -f "${name}")" == "${TMPDIR}"/ib* ]]; then
-        # If any files match that pattern, we see if the first line in the file
-        # starts with "===", which is the case in the particular InnoDB file we
-        # care about:
-        head -c8 "${name}" | grep -q '^====' && cat "${name}"  >> "${LOGFILE}"
-      fi
-    done
-  fi
-  log INFO "Ended 'mysql innodb' report"
-}
-
-# Print the output of "mysqladmin processlist" to the mysql file
-print_mysql_procs() {
-  log INFO "Starting 'mysql processlist' report"
-  local LOGFILE="$1"
-  local MYCNF="$2"
-  local PLESK_FILE="/etc/psa/.psa.shadow"
-  if [[ -r "${PLESK_FILE}" ]]; then
-    echo "MySQL (plesk) processes" >> "${LOGFILE}"
-    if [[ ${MYSQL_PROCESS_LIST,,} == "table" ]]; then
-      mysqladmin \
-        -uadmin \
-        -p$( cat "${PLESK_FILE}" ) \
-        -v processlist \
-        --connect-timeout=5 \
-        >> "${LOGFILE}"
-    fi
-    if [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql \
-        -uadmin \
-        -p$( cat "${PLESK_FILE}" ) \
-        --connect-timeout=5 \
-        -e "show full processlist\G" \
-        >> "${LOGFILE}"
-    fi
-  else
-    echo "MySQL (${MYCNF}) processes" >> "${LOGFILE}"
-    if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
-      mysqladmin \
-        --defaults-file="${MYCNF}" \
-        -v processlist \
-        --connect-timeout=5 \
-        >> "${LOGFILE}"
-    elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
-      mysql \
-        --defaults-file="${MYCNF}" \
-        --connect-timeout=5 \
-        -e "show full processlist\G" \
-        >> "${LOGFILE}"
-    fi
-  fi
-  print_blankline "${LOGFILE}"
-  log INFO "Ended 'mysql processlist' report"
-}
-
-# Print the top 10 processes (by cpu usage) to the defined file
-print_top_10_cpu() {
-  log INFO "Starting 'top 10 cpu' report"
-  local LOGFILE="$1"
-  local pidstat_cpufield=0
-  #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
-  local version_strings="$( pidstat -V 2>&1 |
-                              awk '{if(NR==1){print $NF}}' ) 10.1.4"
-  local sorted_versions="$( echo ${version_strings} | tr ' ' '\n' |
-                              sort --version-sort | tr '\n' ' ' )"
-  if [[ "${version_strings}" == "${sorted_versions}" ]]; then
-    pidstat_cpufield=6
-  else
-    pidstat_cpufield=7
-  fi
-  echo "Top 10 cpu using processes" >> "${LOGFILE}"
-  # capture header
-  pidstat 2>/dev/null | sed -n '3p' >> "${LOGFILE}"
-  pidstat -l 2 2 2>/dev/null | grep -v '%system' |
-    egrep ^Average: | sort -nr -k ${pidstat_cpufield} |
-    head -11 >> "${LOGFILE}"
-  log INFO "Ended 'top 10 cpu' report"
-}
-
-# Print the top 10 processes (by memory usage) to the defined file
-print_top_10_mem() {
-  log INFO "Starting 'top 10 memory' report"
-  local LOGFILE="$1"
-  echo "Top 10 memory using processes" >> "${LOGFILE}"
-  ps auxww --sort=-rss 2>/dev/null | head -11 >> "${LOGFILE}"
-  log INFO "Ended 'top 10 memory' report"
-}
-
-# Print the disk utilization to the defined file
-print_df() {
-  log INFO "Starting 'disk utilization' report"
-  local LOGFILE="$1"
-  local LOGFILE="$1"
-  echo "Disk Utilization" >> "${LOGFILE}"
-  df ${OPTS_DF} 2>/dev/null >> "${LOGFILE}"
-  log INFO "Ended 'disk utilization' report"
-}
-
-# Print the disk partitions to the fdisk file
-print_fdisk() {
-  log INFO "Starting 'disk partition' report"
-  local LOGFILE="$1"
-  echo "Disk partitions" >> "${LOGFILE}"
-  fdisk ${OPTS_FDISK} 2>&1 >> "${LOGFILE}"
-  log INFO "Ended 'disk partition' report"
-}
-
-# Print the slabinfo command to the defined file
-print_slabinfo() {
-  log INFO "Starting 'slab info' report"
-  local LOGFILE="$1"
-  echo "Slab Information" >> "${LOGFILE}"
-  printf "name\tactive\tnum_obj\tobj_size\thuh\n" >> "${LOGFILE}"
-  tail -n+2 /proc/slabinfo 2>/dev/null |
-    awk 'size=$3*$4 {print $1"\t"$2"\t"$3"\t"$4"\t"size/1048576}' |
-    sort -k5gr >> "${LOGFILE}"
-  log INFO "Ended 'slab info' report"
-}
-
-# Send the report via email
-send_mail() {
-  log INFO "Starting email report"
-  # create a temp directory
-  local TEMPDIR=$( mktemp -d "/tmp/rs.XXXXXXXXXX" )
-  local REPORT="${TEMPDIR}/report.log"
-  local ITEM_FILE=""
-  local ITEM_USE=""
-
-  # echo report files into temporary file for mailing
-  for item in ${BACKUP_ITEMS}; do
-    ITEM_FILE="${BASEDIR}/${item}_${LOG_SUFFIX}.log"
-    # Build the variable to use and then use indirect ref to obtain its value
-    ITEM_USE="USE${item^^}"
-    if [[ -r "${ITEM_FILE}" && "${!ITEM_USE,,}" == "yes" ]]; then
-      echo "-----BEGIN ${item^^} REPORT-----" >> "${REPORT}"
-      cat "${ITEM_FILE}" >> "${REPORT}"
-      echo "-----END ${item^^} REPORT-----" >> "${REPORT}"
-      echo " " >> "${REPORT}"
+# Plugin info
+plugins_info(){
+  for dir in "${PLUGIN_A_DIR}" "${PLUGIN_E_DIR}"; do
+    log INFO "Finding plugins in ${dir}"
+    plugins=( $( plugins_list "${dir}" ) )
+    if [[ ${#plugins[@]} == 0 ]]; then
+      log INFO "No plugins found."
+    else
+      log INFO "${#plugins[@]} plugins found: ${plugins[@]}"
     fi
   done
-  log INFO "Ended email report"
-
-  # send email summary to MAILTO address
-  log INFO "Sending email report to: ${MAILTO}"
-  if [[ -r "${REPORT}" ]]; then
-    cat "${REPORT}" | mail -s "System Monitor Report - ${HOSTNAME}" "${MAILTO}"
-    # Remove the temporary files
-    rm -rf "${TEMPDIR}"
-  fi
-  log INFO "Sent email report"
 }
+
+# Loads plugins
+plugins_load() {
+  local plugin_dir="$1"
+  log INFO "Loading plugins from: ${plugin_dir}"
+  while read plugin; do
+    log INFO "Loading plugin: ${plugin}"
+    source "${plugin_dir}/${plugin}"
+  done < <(ls -1 "${plugin_dir}" 2>/dev/null)
+}
+
+# Load core functions
+source ${COREDIR}/ps
+source ${COREDIR}/fdisk
+source ${COREDIR}/mysql
+source ${COREDIR}/pstree
+source ${COREDIR}/netstat
+source ${COREDIR}/resources
+source ${COREDIR}/send_mail
 
 # Manage item report
 run_item_report() {
@@ -614,13 +321,6 @@ run_resources_report() {
     # send sar -q output to output file
     print_blankline "${ITEM_FILE}"
     print_sar "${ITEM_FILE}" "q"
-  fi
-
-  # check to see if webserver fullstatus should be run
-  type -p 'links' > /dev/null
-  if [[ $? -eq 0 && "${USEFULLSTATUS,,}" == "yes" ]]; then
-    print_blankline "${ITEM_FILE}"
-    print_http_fullstatus "${ITEM_FILE}"
   fi
 
   if [[ "${USEDF,,}" == "yes" ]]; then
@@ -707,14 +407,57 @@ run_mysql_report() {
   log INFO "Ended iteration of mysql report(s)"
 }
 
+# Generates a list of names from the current run, using LOG_SUFFIX
+get_report_names_of_run() {
+  local -a reports=()
+  log INFO "Finding reports from this run: ${LOG_SUFFIX}"
+  reports=( $( ls -1 "${BASEDIR}" 2>/dev/null |
+                 awk -F_ '/'${LOG_SUFFIX}'\.log$/ {print $1}' |
+                 sort -u
+             )
+          )
+  log INFO "Reports found: [ ${reports[@]} ]"
+  echo "${reports[@]}"
+}
+
+# Generates a list of names from the last reports logged
+get_last_report_names() {
+  local -a reports=()
+  local last_suffix=''
+  last_suffix=$( ls -1 "${BASEDIR}" 2>/dev/null |
+                   grep -P '_\d{8}-\d{6}\.log$' |
+                   grep -oP '\d{8}-\d{6}' |
+                   sort -ur |
+                   head -1 )
+  if [[ -z ${last_suffix} ]]; then
+    log ERROR "No previous run has been found, unable to find report names."
+  else
+    log INFO "Last run was on: ${last_suffix}"
+    reports=(
+      $( ls -1 "${BASEDIR}" 2>/dev/null |
+           awk -F. '
+             /'${last_suffix}'\.log$/ {sub("_'${last_suffix}'","",$1); print $1}
+           '
+       )
+    )
+    log INFO "Reports found: [ ${reports[@]} ]"
+  fi
+  echo "${reports[@]}"
+}
+
 # Copy the last log file set to ${BACKUPDIR}
 create_backup() {
   log INFO "Starting backup of reports"
-  for log_file in ${BACKUP_ITEMS}; do
-    ls -1t ${BASEDIR}/${log_file}_*.log 2>/dev/null |
-    head -1 |
-    xargs -I {} cp {} ${BACKUPDIR}
-  done
+  local -a log_files=( $( get_last_report_names ) )
+  if [[ -z ${log_files} ]]; then
+    log ERROR "Unable to backup unexisting reports."
+  else
+    for log_file in ${log_files[@]}; do
+      ls -1t ${BASEDIR}/${log_file}_*.log 2>/dev/null |
+      head -1 |
+      xargs -I {} cp {} ${BACKUPDIR}
+    done
+  fi
   log INFO "Ended backup of reports"
 }
 
@@ -736,15 +479,22 @@ check_disk_space() {
 
 ## Main
 
-# Evaluate input flags, print usage if more than one flag is used.
-if [[ "$#" -gt 1 ]]; then
- log ERROR "Error: Only one flag is allowed"
- print_usage
- exit 1
+# Set options
+OPTIONS=VBhS
+LONG_OPTIONS=version,backup,help,snapshot
+
+# Parse options and show usage if invalid options provided
+! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  print_usage
+  exit 1
 fi
 
-# If we only have one flag, see if we know how to handle it.
-if [[ "$#" -gt 0 ]]; then
+# Set the positional parameters to the parsed options
+set -- ${ALL_ARGS}
+
+# Act on the valid arguments provided
+while true; do
   case "$1" in
     -V|--version)
       echo "${_VERSION}"
@@ -753,6 +503,7 @@ if [[ "$#" -gt 0 ]]; then
     -B|--backup)
       # backup latest log files
       BACKUP="yes"
+      shift
       ;;
     -h|--help)
       # print usage
@@ -762,13 +513,29 @@ if [[ "$#" -gt 0 ]]; then
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
       SNAPSHOT="yes"
+      shift
       ;;
+    --)
+      shift; break ;;
     *)
       # user entered an invalid flag, print warning and exit
       log ERROR "Invalid Input"
       print_usage
       exit 1
   esac
+done
+
+if [[ "${BACKUP,,}" == "yes" && "${SNAPSHOT,,}" == "yes" ]]; then
+  log ERROR "Backup and Snapshot options are mutually exclusive"
+  print_usage
+  exit 1
+fi
+
+# Error if unparsed arguments exist
+if [[ "$#" -gt 0 ]]; then
+  log ERROR "Error: Unexpected argument(s): $@"
+  print_usage
+  exit 1
 fi
 
 # Verify that script is being run as root
@@ -785,23 +552,7 @@ log INFO "${banner_start}"
 log INFO "-- bash info: ${BASH_VERSINFO[@]}"
 
 # Check for the configuration file.
-# The following creates awareness about the old config location in
-# /etc/recap, taking precendence the new config location /etc/recap.conf.
-if [[ -r /etc/recap &&
-      -r /etc/recap.conf ]]; then
-  log WARNING "Configuration files exist at old(/etc/recap) and"\
-              "new(/etc/recap.conf) locations. The file from the new"\
-              "location will be used."
-  log WARNING "Please move any missing configuration to /etc/recap.conf."
-  source /etc/recap.conf
-elif [[ -r /etc/recap &&
-        ! -r /etc/recap.conf ]]; then
-  log WARNING "Configuration file exists at old(/etc/recap) location."\
-              "The file will be read."\
-              "Please move your configuration file to /etc/recap.conf."\
-              "Next version of recap will not read /etc/recap"
-  source /etc/recap
-elif [[ ! -r /etc/recap.conf ]]; then
+if [[ ! -r /etc/recap.conf ]]; then
   log WARNING "No configuration file found. Expecting /etc/recap.conf."
   log WARNING "Proceeding with defaults."
 else
@@ -866,6 +617,23 @@ if [[ "${USEMYSQL,,}" == "yes" ]]; then
     run_mysql_report
   else
     log ERROR "mysql client is not installed, can't run mysql reports"
+  fi
+fi
+
+# Load and Run plugins enabled
+if [[ "${USEPLUGINS,,}" == "yes" ]]; then
+  # Log the info about plugins(available and enabled)
+  plugins_info
+  # Load only enabled plugins
+  plugins_load "${PLUGIN_E_DIR}"
+  plugins=( $( plugins_list "${PLUGIN_E_DIR}" ) )
+  if [[ "${#plugins[@]}" == 0 ]]; then
+    log WARNING "No plugins found to execute in: ${PLUGIN_E_DIR}"
+  else
+    # Run the plugins enabled
+    for plugin in ${plugins[@]}; do
+      run_item_report "${plugin}"
+    done
   fi
 fi
 

@@ -23,99 +23,115 @@
 
 .SH NAME
 .PP
-recaptool - parses the logs and prints specific information about memory,
+recaptool \- parses the logs and prints specific information about memory,
 processes, network connections or queries to a mysql db.
 
 .SH SYNOPSIS
-.BR "recaptool " "{proc|mem|procmen} "
-.I PROCESS_NAME
-
-.BR "recaptool " "{net|netestab}"
-.I PORT
-
-.BR "recaptool " "querycount"
-
-.BR "recaptool " "\-d"
-.I PATH
-
-.BR "recaptool " "\-V, --version"
+.BR "recaptool " "OPTIONS... "
 
 .SH DESCRIPTION
-recaptool  is a parsing tool for recap logs that shows specific information
+recaptool is a parsing tool for recap logs that shows specific information
 like processes, memory, network or querycount. Useful for seeing trends on
 a particular option in the logs.
 
 .SH "OPTIONS"
+Note: Different options can be combined to get more information.
+
 .TP
-.BI "mem " "PROCESS_NAME"
+.BI "\-m, \-\-mem " "PROCESS_NAME"
 .RI "Shows the memory consumption for " "PROCESS_NAME" " from the logs."
 
 .TP
-.BI "proc " "PROCESS_NAME"
+.BI "\-p, \-\-proc " "PROCESS_NAME"
 .RI "Shows the amount of processes found for " "PROCESS_NAME" " from the logs."
 
 .TP
-.BI "procmem " "PROCESS_NAME"
-.RI "Shows both(process and memory) for " "PROCESS_NAME" " from the logs."
+.BI "\-b, \-\-memproc " "PROCESS_NAME"
+.RI "Shows both process count and memory consumption for " "PROCESS_NAME" " from the logs."
 
 .TP
-.BI "net " "PORT"
+.BI "\-c, \-\-connections " "PORT"
 .RI "Shows the amount of connections to " "PORT" " from the logs."
 
 .TP
-.BI "netestab " "PORT"
+.BI "\-e, \-\-established " "PORT"
 .RB "Shows the amount of " "ESTABLISHED" " connections to "
 .IR "PORT" " from the logs."
 
 .TP
-.BI "querycount"
+.BI "\-q, \-\-querycount"
 .RB "Shows the amount of " "mysql" " connections from the logs."
 
 .TP
-.BI "\-d " "PATH"
+.BI "\-d, \-\-path " "PATH"
 .RB "Overrides the recap log " "PATH" ". Default uses BASEDIR"
 .I /var/log/recap/
-.RB "Can be changed in config file."
+.RB "(can be changed in config file)."
 
 .TP
 .BI "\-V, \-\-version"
 .RB "Print version and exit."
 
+.TP
+.BI "\-h, \-\-help"
+.RB "Prints the help information and exit."
+
 .SH FILES
-.I /var/log/recap/*.log
+.IR /var/log/recap/*.log " (unless overridden by 'path' option)"
 
 .SH EXAMPLES
 .TP
 Show the memory and amount of processes running for httpd:
 .nf
-$ sudo recaptool memproc http
+$ sudo recaptool \-\-memproc http
 Information: Using /var/log/recap as recap log path
 Information: Executing memproc http
-2016-10-07_00:00:01     1101    3032.535 M
-2016-10-07_00:10:01     1120    3132.832 M
-2016-10-07_00:20:01     1128    3186.153 M
+2016\-10\-07_00:00:01     1101    3032.535 M
+2016\-10\-07_00:10:01     1120    3132.832 M
+2016\-10\-07_00:20:01     1128    3186.153 M
 .fi
 
 .TP
 .RB "Show the amount of " "established " "connections on port 443:"
 .nf
-$ sudo recaptool netestab 443
+$ sudo recaptool \-e 443
 Information: Using /var/log/recap as recap log path
-Information: Executing netestab 443
-2016-10-07_00:00:01     302
-2016-10-07_00:10:01     311
-2016-10-07_00:20:01     312
+Information: Executing established 443
+2016\-10\-07_00:00:01     302
+2016\-10\-07_00:10:01     311
+2016\-10\-07_00:20:01     312
 .fi
 
 .TP
 Show the amount of query connections to the mysql db:
 .nf
-$ sudo recaptool querycount
+$ sudo recaptool \-\-querycount
 Information: Using /var/log/recap as recap log path
 Information: Executing querycount
-2016-10-07_00:00:01     124
-2016-10-07_00:10:01     125
-2016-10-07_00:20:01     128
+2016\-10\-07_00:00:01     124
+2016\-10\-07_00:10:01     125
+2016\-10\-07_00:20:01     128
+.fi
+
+.TP
+Show all of the above in a single command:
+.nf
+$ sudo recaptool \-\-memproc http \-e 443 \-\-querycount
+Information: Using /var/log/recap as recap log path
+Information: Executing memproc http
+2016\-10\-07_00:00:01     1101    3032.535 M
+2016\-10\-07_00:10:01     1120    3132.832 M
+2016\-10\-07_00:20:01     1128    3186.153 M
+
+Information: Executing established 443
+2016\-10\-07_00:00:01     302
+2016\-10\-07_00:10:01     311
+2016\-10\-07_00:20:01     312
+
+Information: Executing querycount
+2016\-10\-07_00:00:01     124
+2016\-10\-07_00:10:01     125
+2016\-10\-07_00:20:01     128
 .fi
 
 .SH "REPORTING BUGS"
@@ -126,5 +142,5 @@ Bugs and issues to be submitted via github
 The recap scripts are maintained by Rackspace, the list of contributors is available at https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md#contributors.
 
 .SH "SEE ALSO"
-.BR recap (5),
+.BR recap.conf (5),
 .BR recap (8),

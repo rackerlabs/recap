@@ -1,0 +1,59 @@
+---
+language: bash
+sudo: enabled
+branches:
+  only:
+    - master
+    - development
+    - testing
+
+matrix:
+  include:
+    - name: "CentOS 6"
+      env:
+        - DISTRO='centos:6'
+    - name: "CentOS 7"
+      env:
+        - DISTRO='centos:7'
+    - name: "Ubuntu 14.04 (trusty)"
+      env:
+        - DISTRO='ubuntu:14.04'
+    - name: "Ubuntu 16.04 (xenial)"
+      env:
+        - DISTRO='ubuntu:16.04'
+    - name: "Ubuntu 18.04 (bionic)"
+      env:
+        - DISTRO='ubuntu:18.04'
+    - name: "Debian 8 (jessie)"
+      env:
+        - DISTRO='debian:8'
+    - name: "Debian 9 (stretch)"
+      env:
+        - DISTRO='debian:9'
+    - name: "Debian (buster)"
+      env:
+        - DISTRO='debian:buster'
+
+before_install:
+  - docker pull ${DISTRO}
+
+install:
+  - |
+    docker run \
+      --detach \
+      --rm \
+      --tty \
+      --privileged \
+      --network=host \
+      --name recap_on_${DISTRO/:/_} \
+      --mount type=bind,src="$(pwd)",dst=/recap \
+      ${DISTRO}
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/install_deps.sh ${DISTRO}
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
+
+script:
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap --version'
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recap.sh
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
+
+...

@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+print_redis() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  local redis_cli=$( type -p redis-cli )
+  local host=${PLUGIN_OPTS_REDIS_HOST:-"127.0.0.1"}
+  local port=${PLUGIN_OPTS_REDIS_PORT:-"6379"}
+  # Wrap the more time consuming tests behind a default "no" flag
+  local timings=${PLUGIN_OPTS_REDIS_TIMINGS:-"no"}
+  # Wrap the less useful client listing behind a default "no" flag
+  local clients=${PLUGIN_OPTS_REDIS_CLIENTS:-"no"}
+
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  print_blankline "${LOGFILE}"
+  if [[ -n "${redis_cli}" ]]; then
+
+    if [[ "${timings,,}" == "yes" ]]; then
+      print_redis_timings
+      print_blankline "${LOGFILE}"
+    fi
+
+    print_redis_cmd "INFO ALL"
+    print_blankline "${LOGFILE}"
+
+    if [[ "${clients,,}" == "yes" ]]; then
+      print_redis_cmd "CLIENT LIST"
+      print_blankline "${LOGFILE}"
+    fi
+  else
+    # If the redis-cli is unavailable, fallback to ncat
+    print_redis_cmd_fallback "INFO ALL"
+    if [[ "${clients,,}" == "yes" ]]; then
+      print_redis_cmd_fallback "CLIENT LIST"
+    fi
+  fi
+  log INFO "Ended '${plugin_name}' report"
+}
+
+# Executing this functions takes ~20 seconds as each command is sampling
+# performance in a timeframe
+print_redis_timings() {
+  echo "Redis stat (+delta / 0.5s)" >> "${LOGFILE}"
+  # stdbuf is used to ensure we get output from buffer before it's terminated
+  timeout 5 stdbuf -oL \
+    "${redis_cli}" -h "${host}" -p "${port}" --stat -i 0.5 &>> "${LOGFILE}"
+  print_blankline "${LOGFILE}"
+
+  # Tests latency by sending "PING" and waiting for "PONG"
+  echo "Redis average latencies (3s)" >> "${LOGFILE}"
+  print_redis_latency
+  print_redis_latency
+  print_redis_latency
+  print_blankline "${LOGFILE}"
+
+  # Tests the client where the command is ran from for system latency
+  echo "Local System Intrinsic Latency (5s)" >> "${LOGFILE}"
+  "${redis_cli}" --intrinsic-latency 5 &>> "${LOGFILE}"
+}
+
+print_redis_latency() {
+  # Redis 4 changes the output and auto-exits after 1 second (default interval)
+  # Once 3.2 is EOL, remove the "timeout" and just use the set "interval"
+  local latency=$( timeout 3 \
+    "${redis_cli}" -h "${host}" -p "${port}" --latency -i 2.5 2>&1 )
+  # We have to filter the output for the last occurrence (splitting on the
+  # ANSI 2K "Clear entire line")
+  # Running "redis-cli --latency | cat -e" would show the problem this resolves
+  echo "$( ts ) ${latency##*2K}" >> "${LOGFILE}"
+}
+
+print_redis_cmd() {
+  local command="$1"
+  echo "Redis ${command}" >> "${LOGFILE}"
+  # The redis-cli client doesn't have built-in connection timeout handling,
+  # thus we must use "timeout" to stop it hanging when we don't get a reply
+  timeout 3 \
+    "${redis_cli}" -h "${host}" -p "${port}" ${command} &>> "${LOGFILE}"
+}
+
+print_redis_cmd_fallback() {
+  local command="$1"
+  echo "Redis ${command} (via ncat)" >> "${LOGFILE}"
+  # Connection timeout of 3 seconds and forcing CRLF for lines
+  ( printf "${command}\r\n"; sleep 1 ) | \
+    ncat -w 3 -C "${host}" "${port}" &>> "${LOGFILE}" ||
+      echo "Unable to connect to Redis on ${host}:${port}" >> "${LOGFILE}"
+}

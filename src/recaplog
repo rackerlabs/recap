@@ -17,19 +17,19 @@
 #   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 #
-#~ Usage: _tool_ [-hnv]
+#~ Usage: _tool_ [OPTIONS]
 #~ Options:
-#~   -h             Print this help.
-#~   -n             Dry run.
-#~   -v             Verbose.
-#~   -V             Print version and exit.
+#~   -h, --help         Print this help.
+#~   -n, --dry-run      Dry run.
+#~   -v, --verbose      Verbose.
+#~   -V, --version      Print version and exit.
 #~
 #~ recaplog will not produce output if no tty is found, this is useful when
 #~ running from cron.
 #~
 
 ## Version
-declare -r _VERSION='1.3.0'
+declare -r _VERSION='2.0.0'
 
 ## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
@@ -37,9 +37,12 @@ BASEDIR="/var/log/recap"
 LOCKFILE="/var/lock/recaplog.lock"
 LOG_COMPRESS=1
 LOG_EXPIRY=15
-BACKUP_ITEMS="fdisk mysql netstat ps pstree resources"
 LOGFILE="${BASEDIR}/recaplog.log"
 
+# Usage Function
+print_usage() {
+  grep -E '^#~' "${0}" | sed -e 's/^#~\s\?//' -e "s/_tool_/$( basename ${0} )/"
+}
 
 # Function to generate timestamps
 ts() {
@@ -90,7 +93,7 @@ delete_old_logs() {
   matched_files=$(
     find "${BASEDIR}" -maxdepth 2 -regextype posix-extended \
       -type f -mtime +${LOG_EXPIRY} -regex \
-      "^${BASEDIR}/(.*/)?[a-z]+_([a-z]+_)?[0-9]{8}(-[0-9]{6})?\.log(\.tar)?(\.gz)?$"
+      "^${BASEDIR}/(.*/)?[a-z]+_([a-z]+_)*[0-9]{8}(-[0-9]{6})?\.log(\.tar)?(\.gz)?$"
   )
   if [[ -n "${matched_files}" ]]; then
     count_files=$( wc -l <<<"${matched_files}" )
@@ -117,10 +120,27 @@ delete_old_logs() {
   fi
   log INFO "Deleting: ${count_dirs} empty directories."
   if [[ "${count_dirs}" -gt 0 ]]; then
-    while read emtpy_dir; do
-      rmdir "${emtpy_dir}"
+    while read empty_dir; do
+      rmdir "${empty_dir}"
     done <<< "${empty_dirs}"
   fi
+}
+
+# Generates a list of names from a date with the format "YYYYMMDD"
+declare -a reports=()
+get_report_names_of_day() {
+  local day="$1"
+  log INFO "Finding reports from: ${day}"
+  reports=(
+    $( ls -1 "${BASEDIR}" 2>/dev/null |
+         awk -F. \
+         '
+           /'${day}'-[0-9]{6}\.log$/ {sub("_'${day}'-[0-9]{6}","",$1); print $1}
+         ' |
+         sort -u
+     )
+  )
+  log INFO "Reports found: [ ${reports[@]} ]"
 }
 
 # Function to compress/move daily log files
@@ -137,8 +157,14 @@ pack_old_logs() {
   else
     log INFO "Not compressing old log files"
   fi
-  # Backing up only items defined in the config
-  for item in ${BACKUP_ITEMS}; do
+  # Backing up only items found in the YESTERDAYDATE
+  get_report_names_of_day "${YESTERDAYDATE}"
+  local -a items=${reports[@]}
+  if [[ -z ${items} ]]; then
+    log ERROR "Unable to archive unexisting reports."
+    return 0
+  fi
+  for item in ${items[@]}; do
     YESTERDAY_ITEM_DIR="${BASEDIR}/${item}_daily_${YESTERDAYDATE}"
     err=''
     log INFO "Packing ${item}..."
@@ -146,7 +172,7 @@ pack_old_logs() {
     output=$( ls -1 "${BASEDIR}/${item}_${YESTERDAYDATE}"-*.log 2>&1 )
     if [[ $? -ne 0 ]]; then
       output=$( tr -d '\n' <<< "${output}" )
-      log ERROR "An error ocurred while reading logs: '${output}', skipping..."
+      log ERROR "An error occurred while reading logs: '${output}', skipping..."
       continue
     fi
     log_count=$( wc -l <<< "${output}" )
@@ -164,7 +190,7 @@ pack_old_logs() {
       )
       err=$( tr -d '\n' <<< "${err}" )
       if [[ ! -z "${err}" ]]; then
-        log ERROR "An error ocurred while attempting to move logs: '${err}', "\
+        log ERROR "An error occurred while attempting to move logs: '${err}', "\
                   "skipping..."
         continue
       fi
@@ -190,7 +216,7 @@ pack_old_logs() {
     )
     err=$(tr -d '\n' <<< "${err}" )
     if [[ ! -z "${err}" ]]; then
-      log ERROR "An error ocurred while attempting to compress logs: '${err}'"\
+      log ERROR "An error occurred while attempting to compress logs: '${err}'"\
                 ", skipping..."
       continue
     fi
@@ -198,7 +224,7 @@ pack_old_logs() {
     rm_err=$( { rm -Rf "${YESTERDAY_ITEM_DIR}"; } 2>&1 >/dev/null )
     rm_err=$( tr -d '\n' <<< "${rm_err}" )
     if [[ ! -z "${rm_err}" ]]; then
-      log ERROR "An error ocurred while deleting logs '${rm_err}', skipping..."
+      log ERROR "An error occurred while deleting logs '${rm_err}', skipping..."
     fi
   done
 }
@@ -223,29 +249,46 @@ recaploglock() {
   fi
 }
 
+# Set options
+OPTIONS=hnvV
+LONG_OPTIONS=help,dry-run,verbose,version
+
+# Parse options and show usage if invalid options provided
+! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  print_usage
+  exit 1
+fi
+
+# Set the positional parameters to the parsed options
+eval set -- "${ALL_ARGS}"
+
 
 # Avoid external variables to be defined
 unset VERBOSE
 unset DRYRUN
 
-while getopts hnvV flag; do
-  case ${flag} in
-    n)
-      DRYRUN=1
-      VERBOSE=1
+while [[ ${#} -gt 0 ]]; do
+  case "${1}" in
+    -n|--dry-run)
+      DRYRUN=true
+      VERBOSE=true
+      shift
       ;;
-    v)
-      VERBOSE=1
+    -v|--verbose)
+      VERBOSE=true
+      shift
       ;;
-    V)
+    -V|--version)
       echo "${_VERSION}"
       exit 0
       ;;
-    h|*)
-      grep -E '^#~' $0 | sed -e 's/^#~\s\?//' \
-                             -e "s/_tool_/$( basename $0 )/"
+    -h|--help)
+      print_usage
       exit 1
       ;;
+    --)
+      shift; break ;;
  esac
 done
 
@@ -268,30 +311,14 @@ fi
 log INFO "${banner_start}"
 
 # Check for the configuration file.
-# The following creates awareness about the old config location in
-# /etc/recap, taking precendence the new config location /etc/recap.conf.
-if [[ -r /etc/recap &&
-      -r /etc/recap.conf ]]; then
-  log WARNING "Configuration files exist at old(/etc/recap) and"\
-              "new(/etc/recap.conf) locations. The file from the new"\
-              "location will be used."
-  log WARNING "Please move any missing configuration to /etc/recap.conf."
-  source /etc/recap.conf
-elif [[ -r /etc/recap &&
-        ! -r /etc/recap.conf ]]; then
-  log WARNING "Configuration file exists at old(/etc/recap) location."\
-              "The file will be read."\
-              "Please move your configuration file to /etc/recap.conf."\
-              "Next version of recap will not read /etc/recap"
-  source /etc/recap
-elif [[ ! -r /etc/recap.conf ]]; then
+if [[ ! -r /etc/recap.conf ]]; then
   log WARNING "No configuration file found. Expecting /etc/recap.conf."
   log WARNING "Proceeding with defaults."
 else
   source /etc/recap.conf
 fi
 
-# Aquire lock
+# Acquire lock
 recaploglock
 
 # recap the logs

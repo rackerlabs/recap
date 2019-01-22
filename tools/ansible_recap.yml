@@ -1,0 +1,113 @@
+---
+- name: Install recap from repo
+  hosts: all
+  become: "yes"
+  vars:
+    repo: https://github.com/rackerlabs/recap.git
+    ref: master
+    binpath: "/sbin"
+    destdir: ""
+    prefix: "/usr"
+    tmp_install_dir: /tmp/recap
+    install_deps:
+      - git
+      - make
+    systemd_unit_dir: "{{ destdir }}/usr/lib/systemd/system"
+  tasks:
+  - name: Set dependencies and timers
+    set_fact:
+      dependencies:
+        - bash
+        - coreutils
+        - gawk
+        - grep
+        - iotop
+        - "iproute{{'2' if ansible_os_family is match('Debian|Archlinux') else ''}}"
+        - elinks
+        - "{{ 'procps-ng' if ansible_os_family is match('Archlinux') else 'procps' }}"
+        - psmisc
+        - sysstat
+      timers:
+        - recap.timer
+        - recaplog.timer
+        - recap-onboot.timer
+
+  - name: Install package and build dependencies
+    package:
+      name: "{{ dependencies + install_deps }}"
+      state: present
+      update_cache: "yes"
+    when: uninstall is undefined
+
+  - name: Clone the repo
+    git:
+      repo: "{{ repo }}"
+      version: "{{ ref }}"
+      dest: "{{ tmp_install_dir }}"
+
+  - name: Installation
+    block:
+    - name: Install recap
+      make:
+        chdir: "{{ tmp_install_dir }}"
+        target: install
+        params:
+          BINPATH: "{{ binpath }}"
+          DESTDIR: "{{ destdir }}"
+          PREFIX: "{{ prefix }}"
+
+    - name: Enable systemd timers
+      systemd:
+        name: "{{ item }}"
+        enabled: "yes"
+        state: started
+        daemon_reload: "yes"
+      with_items: "{{ timers }}"
+      when: ansible_service_mgr == 'systemd'
+
+    - name: Run manually recap
+      shell: recap
+
+    - name: Get recap version
+      shell: recap --version
+      register: recap_version
+
+    - name: Print recap version
+      debug:
+        var: recap_version.stdout_lines[0]
+    when: uninstall is undefined
+
+  - name: Uninstall
+    block:
+    - name: Look for the timer units
+      stat:
+        path: "{{ systemd_unit_dir }}/{{ item }}"
+      register: timer_units
+      with_items: "{{ timers }}"
+      when: ansible_service_mgr == 'systemd'
+
+    - name: Disable systemd timers
+      systemd:
+        name: "{{ item.item }}"
+        state: stopped
+        enabled: "no"
+      with_items: "{{ timer_units.results }}"
+      when: >
+        ansible_service_mgr == 'systemd' and item.stat.exists
+
+    - name: Uninstall recap
+      make:
+        chdir: "{{ tmp_install_dir }}"
+        target: uninstall
+        params:
+          DESTDIR: "{{ destdir }}"
+          PREFIX: "{{ prefix }}"
+      notify: Reload systemd
+    when: uninstall is defined
+
+  handlers:
+  - name: Reload systemd
+    systemd:
+      daemon_reload: "yes"
+
+...
