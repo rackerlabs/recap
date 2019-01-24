@@ -53,15 +53,21 @@ dnf install recap
 yum install recap
 ```
 
-### Debian / Ubuntu
+### Debian
 
-At the moment there is no public repository for Debian nor Ubuntu, two options are available:
+Currently only available in [testing](https://packages.debian.org/source/testing/recap) and [unstable](https://packages.debian.org/source/unstable/recap). For other releases see the options to build a deb package or install from source.
 
-#### Build a package
+The official Debian files are available in this [repository](https://github.com/jkirk/recap)
 
-This repository https://github.com/raxpkg/recap contains the Debian files required to build a deb package
+### Ubuntu
 
-These are the steps:
+At the moment there is no public repository for Ubuntu, two options are available, build a deb package or install manually, see instructions down below.
+
+### Build a deb package
+
+This [repository](https://github.com/jkirk/recap)  contains the official Debian files required to build a deb package.
+
+These steps used to be used to build the deb package, use them as a guide:
 
 ```bash
 # Install all the packages required for building the package
@@ -77,7 +83,7 @@ cd recap
 
 # Get the Debian configs
 git init
-git remote add origin https://github.com/raxpkg/recap.git
+git remote add origin https://github.com/jkirk/recap.git
 git fetch --no-tags origin
 git checkout -qf FETCH_HEAD
 git submodule update --init --recursive
@@ -103,11 +109,6 @@ debuild -us -uc --lintian-opts --profile debian
 # Package will be created in ../recap_${latest_tag}-<RELEASE>_all.deb
 # RELEASE comes from the changelog in the Debian repository.
 ```
-
-#### Manual install
-
-Use the [manual installation](#manual) method.
-
 
 ### Manual
 
