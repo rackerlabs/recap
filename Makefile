@@ -69,7 +69,7 @@ uninstall: uninstall-base uninstall-man uninstall-doc uninstall-$(type)
 
 install-base:
 	@echo "Installing scripts..."
-	@sed -i.orig 's|^\s*\(declare\s\+-r\s\+LIBDIR=\).*$$|\1"$(DESTDIR)$(LIBDIR)/recap"|' src/recap
+	@sed -i.orig 's|^\s*\(declare\s\+-r\s\+LIBDIR=\).*$$|\1"$(LIBDIR)/recap"|' src/recap
 	@install -Dm0755 src/recap $(DESTDIR)$(BINDIR)/recap
 	@install -Dm0755 src/recaplog $(DESTDIR)$(BINDIR)/recaplog
 	@install -Dm0755 src/recaptool $(DESTDIR)$(BINDIR)/recaptool
