@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [2.0.1] - 2018-02-05
+- Fix bug related to DESTDIR included in recap script [(#195)][195] [(#198)][198].
+
 ## [2.0.0] - 2018-01-22
 - Add plugin support [(#155)][155].
   - Split recap functionality between core functions and plugins.
@@ -207,6 +210,8 @@ All notable changes to this project will be documented in this file.
 [170]: https://github.com/rackerlabs/recap/issues/170
 [174]: https://github.com/rackerlabs/recap/issues/174
 [175]: https://github.com/rackerlabs/recap/issues/175
+[195]: https://github.com/rackerlabs/recap/issues/195
+[198]: https://github.com/rackerlabs/recap/issues/198
 
 <!---
 # One-liners to help generate content for CHANGELOG.md
