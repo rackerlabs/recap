@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+#   Copyright (C) 2019 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+print_system_locks() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  local lslocks=$( type -p lslocks )
+  local options=${PLUGIN_OPTS_SYSTEM_LOCKS_OPTS:-"--notruncate"}
+  local timeout=${PLUGIN_OPTS_SYSTEM_LOCKS_TIMEOUT:-"5"}
+
+  if [[ -z "${lslocks}" ]]; then
+    echo "lslocks is unavailable, fallback to /proc/locks..." >> "${LOGFILE}"
+    timeout "${timeout}" \
+      cat /proc/locks $>> "${LOGFILE}"
+  else
+    timeout "${timeout}" \
+      "${lslocks}" "${options}" &>> "${LOGFILE}"
+  fi
+
+  log INFO "Ended '${plugin_name}' report"
+}
+
