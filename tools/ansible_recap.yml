@@ -13,6 +13,9 @@
       - git
       - make
     systemd_unit_dir: "{{ destdir }}/usr/lib/systemd/system"
+    enable_plugins: "no"
+    plugin_list:
+      - all
   tasks:
   - name: Set dependencies and timers
     set_fact:
@@ -55,6 +58,43 @@
           BINPATH: "{{ binpath }}"
           DESTDIR: "{{ destdir }}"
           PREFIX: "{{ prefix }}"
+
+    - name: Enabling plugins
+      block:
+      - name: Finding all plugins available
+        block:
+        - name: Find all plugins
+          find:
+            paths: "{{ prefix }}/lib/recap/plugins-available"
+          register: plugins_found
+
+        - name: Create plugin list with all plugins found
+          set_fact:
+            plugin_list: "{{ plugin_list + [ item.path | basename ] }}"
+          with_items: "{{ plugins_found.files }}"
+          when: plugins_found.matched
+
+        - name: Remove "all" from list
+          set_fact:
+            plugin_list: "{{ plugin_list | difference(['all']) }}"
+
+        when: "'all' in plugin_list"
+
+      - name: enable plugins in global config
+        lineinfile:
+          path: /etc/recap.conf
+          insertafter: '#USEPLUGINS="no"'
+          line: 'USEPLUGINS="yes"'
+          state: present
+
+      - name: enable list of plugins
+        file:
+          dest: "{{ prefix }}/lib/recap/plugins-enabled/{{ item }}"
+          src: "{{ prefix }}/lib/recap/plugins-available/{{ item }}"
+          state: link
+        with_items: "{{ plugin_list }}"
+
+      when: enable_plugins
 
     - name: Enable systemd timers
       systemd:
