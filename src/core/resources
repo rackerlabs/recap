@@ -110,20 +110,20 @@ print_top_10_cpu() {
   local LOGFILE="$1"
   log INFO "Starting 'top 10 cpu' report - ${LOGFILE##*/}"
   local pidstat_cpufield=0
-  #We need to know whether the version of pidstat is > 10.1.4, since that added a UID field
-  local version_strings="$( pidstat -V 2>&1 |
-                              awk '{if(NR==1){print $NF}}' ) 10.1.4"
-  local sorted_versions="$( echo ${version_strings} | tr ' ' '\n' |
-                              sort --version-sort | tr '\n' ' ' )"
-  if [[ "${version_strings}" == "${sorted_versions}" ]]; then
-    pidstat_cpufield=6
-  else
-    pidstat_cpufield=7
-  fi
+  # Systat versions have the CPU field in different places.
+  # Calculate dynamically the %CPU field
+  local pidstat_fields=( $(LC_ALL=C pidstat | sed -n '3p') )
+  for index in $(seq 0 ${#pidstat_fields[@]}); do
+    if [[ "${pidstat_fields[${index}]}" == "%CPU" ]]; then
+        # Array is 0 index, sorting is not, we add 1
+        pidstat_cpufield=$(( ${index} + 1 ))
+        break
+    fi
+  done
   echo "Top 10 cpu using processes" >> "${LOGFILE}"
   # capture header
-  pidstat | sed -n '3p' >> "${LOGFILE}"
-  pidstat -l 2 2 | grep -v '%system' |
+  LC_ALL=C pidstat | sed -n '3p' >> "${LOGFILE}"
+  LC_ALL=C pidstat -l 2 2 | grep -v '%system' |
     egrep ^Average: | sort -nr -k ${pidstat_cpufield} |
     head -11 >> "${LOGFILE}"
   log INFO "Ended 'top 10 cpu' report"
