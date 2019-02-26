@@ -29,7 +29,7 @@
 #~
 
 ## Version
-declare -r _VERSION='2.0.1'
+declare -r _VERSION='2.0.2'
 
 ## Default settings
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
