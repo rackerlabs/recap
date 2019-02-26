@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [2.0.2] - 2018-02-25
+- Dynamically find CPU field to sort top CPU report [(#203)][203]
+
 ## [2.0.1] - 2018-02-05
 - Fix bug related to DESTDIR included in recap script [(#195)][195] [(#198)][198].
 
@@ -212,6 +215,7 @@ All notable changes to this project will be documented in this file.
 [175]: https://github.com/rackerlabs/recap/issues/175
 [195]: https://github.com/rackerlabs/recap/issues/195
 [198]: https://github.com/rackerlabs/recap/issues/198
+[203]: https://github.com/rackerlabs/recap/issues/203
 
 <!---
 # One-liners to help generate content for CHANGELOG.md

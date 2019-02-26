@@ -31,7 +31,7 @@
 #~
 
 ## Version
-declare -r _VERSION='2.0.1'
+declare -r _VERSION='2.0.2'
 
 ## Default settings
 BASEDIR="/var/log/recap"

@@ -154,6 +154,8 @@ An ansible playbook could be used to install `recap` from a git repository. The 
 - `prefix` - The value of *PREFIX*, default: `/usr`.
 - `tmp_install_dir` - The location where the cloned repo will be placed, default: `/tmp/recap`.
 - `uninstall` - Then this is defined it will remove `recap`, default: *undefined*.
+- `enable_plugins` - To enable the global plugin configuration default: `false`.
+- `plugin_list` - A list of plugins to enable, from the `plugin-available` directory, default: `all`.
 
 #### Install (default)
 
@@ -179,6 +181,23 @@ Install recap with *BINPATH* in `/bin`:
 
 ```
 ansible-playbook tools/ansible_recap.yml -e binpath=/bin
+
+```
+
+Install recap with all plugins enabled:
+
+```
+ansible-playbook tools/ansible_recap.yml -e enable_plugins=true
+
+```
+
+Install recap with a list of plugins to enable:
+
+```
+ansible-playbook tools/ansible_recap.yml \
+  -e enable_plugins=true \
+  -e '{"plugin_list":[docker_top,redis]}'
+
 ```
 
 #### Uninstall
