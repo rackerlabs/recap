@@ -133,7 +133,7 @@ get_report_names_of_day() {
   log INFO "Finding reports from: ${day}"
   reports=(
     $( ls -1 "${BASEDIR}" 2>/dev/null |
-         awk -F. \
+         awk --posix -F. \
          '
            /'${day}'-[0-9]{6}\.log$/ {sub("_'${day}'-[0-9]{6}","",$1); print $1}
          ' |
