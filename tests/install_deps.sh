@@ -16,7 +16,7 @@ packages=(
           )
 
 case ${DISTRO} in
-  centos*)
+  centos*|fedora*)
     packages+=("iproute")
     yum install ${packages[@]} -y || exit $?
     ;;
