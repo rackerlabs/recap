@@ -33,6 +33,12 @@ matrix:
     - name: "Debian (buster)"
       env:
         - DISTRO='debian:buster'
+    - name: "Fedora (latest)"
+      env:
+        - DISTRO='fedora:latest'
+    - name: "Fedora (rawhide)"
+      env:
+        - DISTRO='fedora:rawhide'
 
 before_install:
   - docker pull ${DISTRO}
