@@ -549,6 +549,13 @@ HOSTNAME="$( hostnamectl --static 2>/dev/null ||
              hostname 2>/dev/null ||
              echo 'Unknown' )"
 
+# Workaround for ubuntu14 as --static has no effect when printing values
+if grep -q 'hostname:' <<<"${HOSTNAME}"; then
+  HOSTNAME=$( awk -F: \
+              '/hostname/ {gsub("\\s*","",$2)
+              print $2}' <<<"${HOSTNAME}" )
+fi
+
 # Start logging
 log INFO "${banner_start}"
 log INFO "-- bash info: ${BASH_VERSINFO[@]}"
