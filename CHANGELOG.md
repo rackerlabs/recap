@@ -3,13 +3,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
-## [2.0.2] - 2018-02-25
+## [2.1.0] - 2019-04-12
+- Remove signal `17` in `recaplog` [(#208)][208]
+- Use posix for better regex support in el6 [(#207)][207]
+- Fix hostname definition [(#213)][213]
+- Add system lock plugin [(#189)][189]
+
+## [2.0.2] - 2019-02-25
 - Dynamically find CPU field to sort top CPU report [(#203)][203]
 
-## [2.0.1] - 2018-02-05
+## [2.0.1] - 2019-02-05
 - Fix bug related to DESTDIR included in recap script [(#195)][195] [(#198)][198].
 
-## [2.0.0] - 2018-01-22
+## [2.0.0] - 2019-01-22
 - Add plugin support [(#155)][155].
   - Split recap functionality between core functions and plugins.
   - Plugins are not enabled by default on this version.
@@ -213,9 +219,13 @@ All notable changes to this project will be documented in this file.
 [170]: https://github.com/rackerlabs/recap/issues/170
 [174]: https://github.com/rackerlabs/recap/issues/174
 [175]: https://github.com/rackerlabs/recap/issues/175
+[189]: https://github.com/rackerlabs/recap/issues/189
 [195]: https://github.com/rackerlabs/recap/issues/195
 [198]: https://github.com/rackerlabs/recap/issues/198
 [203]: https://github.com/rackerlabs/recap/issues/203
+[207]: https://github.com/rackerlabs/recap/issues/207
+[208]: https://github.com/rackerlabs/recap/issues/208
+[213]: https://github.com/rackerlabs/recap/pull/213
 
 <!---
 # One-liners to help generate content for CHANGELOG.md
