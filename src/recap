@@ -545,7 +545,9 @@ if [[ "$(id -u)" != "0" ]]; then
 fi
 
 # Grab the server's host name
-HOSTNAME="$( hostname )"
+HOSTNAME="$( hostnamectl --static 2>/dev/null ||
+             hostname 2>/dev/null ||
+             echo 'Unknown' )"
 
 # Start logging
 log INFO "${banner_start}"
