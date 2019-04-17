@@ -18,12 +18,23 @@
 #
 #
 
-print_<plugin_name>() {
+print_system_locks() {
   local LOGFILE="$1"
   local plugin_name=${FUNCNAME[0]/print_/}
   log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
-  ## Write your plugin here, redirect output to ${LOGFILE}
-  # echo hello from <plugin_name> >> "${LOGFILE}"
-  ## End of your plugin
+  local lslocks=$( type -p lslocks )
+  local options=${PLUGIN_OPTS_SYSTEM_LOCKS_OPTS:-"--notruncate"}
+  local timeout=${PLUGIN_OPTS_SYSTEM_LOCKS_TIMEOUT:-"5"}
+
+  if [[ -z "${lslocks}" ]]; then
+    echo "lslocks is unavailable, fallback to /proc/locks..." >> "${LOGFILE}"
+    timeout "${timeout}" \
+      cat /proc/locks $>> "${LOGFILE}"
+  else
+    timeout "${timeout}" \
+      "${lslocks}" "${options}" &>> "${LOGFILE}"
+  fi
+
   log INFO "Ended '${plugin_name}' report"
 }
+

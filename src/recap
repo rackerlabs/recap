@@ -26,7 +26,7 @@
 #~
 
 ## Version
-declare -r _VERSION='2.0.2'
+declare -r _VERSION='2.1.0'
 
 ## Default settings(can *NOT* be overridden in config file)
 declare -r DATE=$( date +%F_%T )
@@ -545,7 +545,16 @@ if [[ "$(id -u)" != "0" ]]; then
 fi
 
 # Grab the server's host name
-HOSTNAME="$( hostname )"
+HOSTNAME="$( hostnamectl --static 2>/dev/null ||
+             hostname 2>/dev/null ||
+             echo 'Unknown' )"
+
+# Workaround for ubuntu14 as --static has no effect when printing values
+if grep -q 'hostname:' <<<"${HOSTNAME}"; then
+  HOSTNAME=$( awk -F: \
+              '/hostname/ {gsub("\\s*","",$2)
+              print $2}' <<<"${HOSTNAME}" )
+fi
 
 # Start logging
 log INFO "${banner_start}"

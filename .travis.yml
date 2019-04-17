@@ -1,5 +1,6 @@
 ---
 language: bash
+dist: xenial
 sudo: enabled
 branches:
   only:
@@ -33,6 +34,12 @@ matrix:
     - name: "Debian (buster)"
       env:
         - DISTRO='debian:buster'
+    - name: "Fedora (latest)"
+      env:
+        - DISTRO='fedora:latest'
+    - name: "Fedora (rawhide)"
+      env:
+        - DISTRO='fedora:rawhide'
 
 before_install:
   - docker pull ${DISTRO}
@@ -53,7 +60,10 @@ install:
 
 script:
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap --version'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recaplog --version'
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recap.sh
   - docker exec recap_on_${DISTRO/:/_} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
+  - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recaplog.sh
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
 
 ...
