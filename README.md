@@ -444,7 +444,7 @@ Options used by the tools generating the reports
 
   Required by: `USERESOURCES`
 
-  Default: `OPTS_IOTOP="-b -o -t -n 3"`
+  Default: `OPTS_IOTOP="-P -b -o -t -n 3"`
 
 - **OPTS_NETSTAT** - ss options
 
