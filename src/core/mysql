@@ -72,8 +72,8 @@ print_mysql_innodb_status() {
   local TMPDIR="${MYVALS[3]%/}"
   # if pid_file does not contain an absolute path, MySQL will create
   # the file inside the datadir:
-  if [[ $PID_FILE != /* ]]; then
-    PID_FILE="${MYVALS[5]%/}/$PID_FILE"
+  if [[ "${PID_FILE}" =~ ^[^/] ]]; then
+    PID_FILE="${MYVALS[5]%/}/${PID_FILE}"
   fi
 
   # Next, we grab a list of descriptors in the tmpdir:
