@@ -64,11 +64,17 @@ print_mysql_innodb_status() {
   local -a MYVALS=( $( IFS=$'\t' ${mysql_cmd} \
                          -Bse "SHOW VARIABLES LIKE 'pid_file'; \
                                SHOW VARIABLES LIKE 'tmpdir'; \
+                               SHOW VARIABLES LIKE 'datadir'; \
                                SHOW ENGINE INNODB STATUS;" \
                          2>/dev/null \
-                       | head -n 2 ) )
+                       | head -n 3 ) )
   local PID_FILE="${MYVALS[1]%/}"
   local TMPDIR="${MYVALS[3]%/}"
+  # if pid_file does not contain an absolute path, MySQL will create
+  # the file inside the datadir:
+  if [[ "${PID_FILE}" =~ ^[^/] ]]; then
+    PID_FILE="${MYVALS[5]%/}/${PID_FILE}"
+  fi
 
   # Next, we grab a list of descriptors in the tmpdir:
   if [[ -r "${PID_FILE}" &&
