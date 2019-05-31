@@ -4,11 +4,11 @@ This project uses gitflow, here some documentation about [how gitflow works](htt
 
 # Issues
 
-Bugs, RFE or others should be documented in the [issues](https://github.com/rackerlabs/recap/issues/).
+Bugs, RFE or others should be documented in the [issues](../../../issues).
 
 ## Guidelines
-1. Before opening an issue, search [open](https://github.com/rackerlabs/recap/issues?q=is%3Aopen+is%3Aissue) and [closed](https://github.com/rackerlabs/recap/issues?q=is%3Aissue+is%3Aclosed) issues to ensure the issue has not ben reported previously.
-1. Ensure the issue can be reproduced with the latest [`development`](https://github.com/rackerlabs/recap/tree/development) version.
+1. Before opening an issue, search [open](../../../issues?q=is%3Aopen+is%3Aissue) and [closed](../../../issues?q=is%3Aissue+is%3Aclosed) issues to ensure the issue has not ben reported previously.
+1. Ensure the issue can be reproduced with the latest [`development`](../../../tree/development) version.
 1. The issue should contain detailed instructions and when possible logs, as well as the expected result.
 1. Include details of the environment where it's running, e.g. Debian Jessie, CentOS 7.3, etc.
 1. For RFE explain *Why would this feature be useful?*
@@ -25,7 +25,7 @@ Code contributions are greatly appreciated, please make sure you follow the guid
 ## Pull requests will not be accepted that
 1. Are not made against the `development` branch
 1. Are made by editing files via the GitHub website
-1. Does not have a documented [issue](https://github.com/rackerlabs/recap/issues/) for it.
+1. Does not have a documented [issue](../../../issues) for it.
 
 # Coding Guidelines
 

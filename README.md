@@ -11,7 +11,7 @@
 
 ## Contribution
 
-Contribution guidelines can be found in [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
+Contribution guidelines can be found in [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ## Dependencies
 - bash >= 4
@@ -534,13 +534,13 @@ To enable plugins, the following is required to:
 
 - Any plugin variable defined **must** have a default value.
 
-- The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](https://github.com/rackerlabs/recap/blob/master/CONTRIBUTING.md)
+- The plugins are expected to follow some of the practices followed in `recap`. Please refer to [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 - A template of a plugin is provided in `doc/plugin_template`
 
 ## Changelog & Contributions
 
-Information about changes and contributors is documented in the [CHANGELOG.md](https://github.com/rackerlabs/recap/blob/master/CHANGELOG.md)
+Information about changes and contributors is documented in the [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 
