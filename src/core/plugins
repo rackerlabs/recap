@@ -1,0 +1,306 @@
+#!/bin/bash
+#
+#   Copyright (C) 2017 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+## Helper functions for array  manipulation
+
+# Find element in an array
+in_array() {
+  local element="${1}"
+  shift
+  local -a array=( ${@} )
+  
+  # Copy the array, removing the element
+  c_array=( ${array[@]//${element}} )
+
+  # If the arrays are the same, the element is not part of the array
+  if [[ ${#array[@]} == ${#c_array[@]} ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+# Removes dups from a csv string
+csv_remove_dups() {
+  local csv="${1}"
+  local -a array
+
+  array=$( echo "${csv}" | tr ',' '\n' | sort -u | tr '\n' ' ' )
+  array=( ${array% } )
+  echo ${array[@]}
+}
+
+
+## Helper functions for plugin cli actions
+
+# Obtain the list of plugins in a directory
+plugins_list() {
+  local plugin_dir="$1"
+  local p_names=( $( ls -1 "${plugin_dir}" | tr '\n' ' ') )
+  echo ${p_names[@]}
+}
+
+# Validate action (list, enable, disable)
+plugin_validate_action() {
+  case "${1}" in
+    "list"|"enable"|"disable")
+      return 0
+    ;;
+    *)
+      return 1
+    ;;
+  esac
+}
+
+# Obtain a list of plugin by status
+get_plugin_status() {
+  local list_status="${1}"
+  local -a plugins
+
+  case "${list_status}" in
+    "available")
+      plugins+=( $( plugins_list "${PLUGIN_A_DIR}" ) )
+    ;;
+    "enabled")
+      plugins+=( $( plugins_list "${PLUGIN_E_DIR}" ) )
+    ;;
+    "disabled")
+      plugins_a=( $( plugins_list "${PLUGIN_A_DIR}" ) )
+      plugins_e=( $( plugins_list "${PLUGIN_E_DIR}" ) )
+      # Loop through the available plugins
+      for p_a in ${plugins_a[@]}; do
+        # Copy the list of enabled plugins removing the available in turn
+        c_p_e=( ${plugins_e[@]//${p_a}} )
+        # If both arrays are the same then the looped plugin is disabled
+        if [[ ${#plugins_e[@]} == ${#c_p_e[@]} ]]; then
+            plugins+=( ${p_a} )
+        fi
+      done
+    ;;
+  esac
+
+  echo "${plugins[@]}"
+}
+
+# Prints the status of plugins
+print_plugins() {
+  local list_status="${1}"
+  local plugins
+
+  case "${list_status}" in
+    "available"|"enabled"|"disabled")
+      plugins=$( get_plugin_status "${list_status}" )
+    ;;
+    *)
+      echo -e "Error: Invalid list status argument: ${list_status}\n" >&2
+      print_usage
+      return 1
+    ;;
+  esac
+
+  if [[ ${#plugins} == 0 ]]; then
+    log ERROR "No ${list_status} plugins found."
+  else
+    plugins=$( echo "${plugins[@]}" | tr " " "," )
+    echo "Plugins ${list_status}: ${plugins%,}"
+    log INFO "Plugins ${list_status}: ${plugins%,}"
+  fi
+  return 0
+}
+
+# Validate plugin names. "all" is valid (represent all available)
+validate_plugin() {
+  local plugins="$1"
+  local -a plugins_a
+
+  # Validate "all", it is not valid to combine "all" with other plugins
+  if [[ "${plugins}" == "all" ]]; then
+    return 0
+  fi
+  
+  # Getting the list of available plugins
+  plugins_a=( $( get_plugin_status "available" ) )
+
+  # Create array with the provided plugins, remove dups
+  local -a p_v=( $( csv_remove_dups "${plugins}" ) )
+  
+  # Validate provided plugin with available
+  for p in ${p_v[@]}; do
+    if ! in_array ${p} ${plugins_a[@]}; then
+        return 1
+    fi
+  done
+
+  return 0
+}
+
+# Enable Plugin support in recap.conf
+enable_plugin_conf() {
+   local recap_conf="/etc/recap.conf"
+
+   # Only perform changes when not already defined
+   if [[ "${USEPLUGINS}" == "no" ]]; then
+     # Comment out explicitly disabled
+     if grep -q '^USEPLUGINS="no"' "${recap_conf}"; then
+        sed -i \
+          -e 's/^\(USEPLUGINS="no"*\)$/#\1/' \
+          "${recap_conf}"
+     fi
+     # Comment out all explicitly enabled, we enable them next
+     # This is to remove dups
+     if grep -q '^USEPLUGINS="yes"' "${recap_conf}"; then
+        sed -i \
+          -e 's/^\(USEPLUGINS="yes"*\)$/#\1/' \
+          "${recap_conf}"
+     fi
+
+     # Un-comment out if enabling is commented out
+     if grep -P -q '^#+USEPLUGINS="yes"' "${recap_conf}"; then
+        sed -E -i \
+          -e '0,/^#+USEPLUGINS="yes"/s//USEPLUGINS="yes"/' \
+          "${recap_conf}"
+
+     # Add after the first reference commented out
+     elif grep -P -q '^#+USEPLUGINS="no"' "${recap_conf}"; then
+        sed -E -i \
+          -e '0,/^#+USEPLUGINS="no"/{
+	       /^#+USEPLUGINS="no"/a USEPLUGINS="yes"
+	  }' "${recap_conf}"
+
+     # Add at the end, as no traces have been found
+     # Using sed, just to keep it consistent
+     else
+        sed -i \
+	  -e '$ a\#USEPLUGINS="no"\nUSEPLUGINS="yes"' \
+          "${recap_conf}"
+     fi
+     log INFO "Plugins enabled in ${recap_conf}"
+   fi
+}
+
+# Plugin Enable/Disable
+plugin_action() {
+  local action="${1}"
+  local plugins="${2}"
+
+  # Get the other (opposite) action
+  local -a other_action=( "enable" "disable" )
+  other_action=( ${other_action[@]//${action}} )
+
+  # Get plugins (disabled or enabled)
+  local p_a=( $( get_plugin_status "${other_action}d" ) )
+
+  # Cleanup provided plugins or get "all" plugins
+  local -a p_2a
+  local -a actioned
+  if [[ "${plugins}" == "all" ]]; then
+    p_2a=( $( get_plugin_status "available" ) )
+  else
+    p_2a=( $( csv_remove_dups "${plugins}" ) )
+  fi
+
+  # Enable or disable plugins that are currently disabled or enabled
+  for plugin in ${p_2a[@]}; do
+    if in_array ${plugin} ${p_a[@]}; then
+      local symlink="${PLUGIN_E_DIR}/${plugin}"
+
+      # Enable disabled plugin
+      if [[ "${action}" == "enable" ]]; then
+        local target="../$( basename ${PLUGIN_A_DIR} )/${plugin}"
+        {
+          ln -s "${target}" "${symlink}" ||
+            exit 1
+        }
+
+      # Disable enabled plugin
+      elif [[ "${action}" == "disable" ]]; then
+        {
+          rm "${symlink}" ||
+            exit 1
+        }
+      fi
+      actioned+=( ${plugin} )
+    fi
+  done
+
+  # Print what plugins where enabled/disabled if needed
+  if [[ ${#actioned[@]} > 0 ]]; then
+    actioned=$( echo ${actioned[@]} |tr ' ' ',' ) 
+    echo "${action^}d: ${actioned}"
+    log INFO "${action^}d: ${actioned}"
+  else
+    echo "Plugins already ${action}d"
+    log INFO "Plugins already ${action}d"
+  fi
+
+  if [[ "${action}" == "enable" ]]; then
+    enable_plugin_conf
+  fi
+}
+
+# Plugin CLI action
+plugin_cli_action() {
+  local action="${1}"
+  local opt="${2}"
+
+  case "${action}" in
+    "list")
+      # Get list of plugins, default to available
+      local list_status=${opt:-available}
+      if ! print_plugins "${list_status}"; then
+        exit 1
+      fi
+    ;;
+    "enable"|"disable")
+      # Validate list of given plugins
+      if ! validate_plugin "${opt}"; then
+        log ERROR "Invalid list of plugins provided"
+        exit 1
+      fi
+
+      plugin_action "${action}" "${opt}" 
+    ;;
+  esac
+}
+
+## Helper functions to use plugins
+
+# Plugin info
+plugins_info(){
+  for dir in "${PLUGIN_A_DIR}" "${PLUGIN_E_DIR}"; do
+    log INFO "Finding plugins in ${dir}"
+    plugins=( $( plugins_list "${dir}" ) )
+    if [[ ${#plugins[@]} == 0 ]]; then
+      log INFO "No plugins found."
+    else
+      log INFO "${#plugins[@]} plugins found: ${plugins[@]}"
+    fi
+  done
+}
+
+# Loads plugins
+plugins_load() {
+  local plugin_dir="$1"
+  log INFO "Loading plugins from: ${plugin_dir}"
+  while read plugin; do
+    log INFO "Loading plugin: ${plugin}"
+    source "${plugin_dir}/${plugin}"
+  done < <(ls -1 "${plugin_dir}" 2>/dev/null)
+}
