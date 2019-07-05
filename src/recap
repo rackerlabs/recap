@@ -205,7 +205,7 @@ create_output_file() {
   local OUTPUT_FILE="$1"
   if [[ -d "${OUTPUT_FILE}" ]]; then
     log ERROR "Target file already exists: ${OUTPUT_FILE}"
-    exit
+    exit 1
   else
     #print the data to the output file
     echo "${DATE}" > "${OUTPUT_FILE}"
@@ -217,7 +217,7 @@ check_output_file() {
   local OUTPUT_FILE="$1"
   if [[ ! -r "${OUTPUT_FILE}" ]]; then
     log ERROR "The output file does not exist: ${OUTPUT_FILE}"
-    exit
+    exit 1
   fi
 }
 
@@ -541,7 +541,7 @@ fi
 # Verify that script is being run as root
 if [[ "$(id -u)" != "0" ]]; then
   log ERROR "This script must be run as root."
-  exit
+  exit 1
 fi
 
 # Grab the server's host name
