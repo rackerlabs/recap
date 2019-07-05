@@ -19,10 +19,16 @@
 #
 #~ Usage: _tool_ [OPTION]
 #~ Options:
-#~   -h, --help       Print this help.
-#~   -B, --backup     Copy the last log file to the backups dir.
-#~   -S, --snapshot   Take a timestamped snapshot outside the regular rotation.
-#~   -V, --version    Print version and exit.
+#~   -h, --help              Print this help.
+#~   -B, --backup            Copy the last log file to the backups dir.
+#~   -p, --plugin [ACTIONS]  Perform plugin related actions.
+#~   -S, --snapshot          Take a snapshot in the snapshot dir.
+#~   -V, --version           Print version and exit.
+#~
+#~ Plugin Actions:
+#~  list [TYPE]           List 'available' (default),'enabled' or 'disabled' plugins
+#~  enable [NAME[,NAME]]  Enable a list of comma separated or 'all' plugins
+#~  disable [NAME[,NAME]] Disable a list of plugins (see: enable)
 #~
 
 ## Version
@@ -227,38 +233,8 @@ print_blankline() {
   echo " " >> "${LOGFILE}"
 }
 
-# Plugin names
-# Obtain the list of files/plugins on a directory
-plugins_list() {
-  local plugin_dir="$1"
-  local p_names=( $( ls -1 "${plugin_dir}" | tr '\n' ' ') )
-  echo ${p_names[@]}
-}
-
-# Plugin info
-plugins_info(){
-  for dir in "${PLUGIN_A_DIR}" "${PLUGIN_E_DIR}"; do
-    log INFO "Finding plugins in ${dir}"
-    plugins=( $( plugins_list "${dir}" ) )
-    if [[ ${#plugins[@]} == 0 ]]; then
-      log INFO "No plugins found."
-    else
-      log INFO "${#plugins[@]} plugins found: ${plugins[@]}"
-    fi
-  done
-}
-
-# Loads plugins
-plugins_load() {
-  local plugin_dir="$1"
-  log INFO "Loading plugins from: ${plugin_dir}"
-  while read plugin; do
-    log INFO "Loading plugin: ${plugin}"
-    source "${plugin_dir}/${plugin}"
-  done < <(ls -1 "${plugin_dir}" 2>/dev/null)
-}
-
 # Load core functions
+source ${COREDIR}/plugins
 source ${COREDIR}/ps
 source ${COREDIR}/fdisk
 source ${COREDIR}/mysql
@@ -477,11 +453,12 @@ check_disk_space() {
   log INFO "Ended check for disk space"
 }
 
+
 ## Main
 
 # Set options
-OPTIONS=VBhS
-LONG_OPTIONS=version,backup,help,snapshot
+OPTIONS=VBhSp:
+LONG_OPTIONS=version,backup,help,snapshot,plugin:
 
 # Parse options and show usage if invalid options provided
 ! ALL_ARGS=$(getopt --options=${OPTIONS} --longoptions=${LONG_OPTIONS} --name "$0" -- "$@")
@@ -491,11 +468,11 @@ if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
 fi
 
 # Set the positional parameters to the parsed options
-set -- ${ALL_ARGS}
+eval set -- "${ALL_ARGS}"
 
 # Act on the valid arguments provided
-while true; do
-  case "$1" in
+while [[ ${#} -gt 0 ]]; do
+  case "${1}" in
     -V|--version)
       echo "${_VERSION}"
       exit 0
@@ -509,6 +486,22 @@ while true; do
       # print usage
       print_usage
       exit 0
+      ;;
+    -p|--plugin)
+      # plugins actions
+      p_args=( ${*} )
+      shift ${#p_args[@]}
+
+      # Args come in the form: -p -- action options
+      PLUGIN_ACTION="${p_args[1]}"
+      PLUGIN_OPT="${p_args[@]:3}"
+
+      # Validate action
+      if ! plugin_validate_action "${PLUGIN_ACTION}"; then
+        echo -e "Error: Invalid plugin action\n" >&2
+        print_usage
+        exit 1
+      fi
       ;;
     -S|--snapshot)
       # take a snapshot outside of the regular output rotation
@@ -566,6 +559,13 @@ if [[ ! -r /etc/recap.conf ]]; then
   log WARNING "Proceeding with defaults."
 else
   source /etc/recap.conf
+fi
+
+# CLI Plugin Actions - (when PLUGIN_ACTION is defined)
+if $( { set -u; echo ${PLUGIN_ACTION}; } &>/dev/null ); then
+  log INFO "CLI Plugin action: ${PLUGIN_ACTION} (${PLUGIN_OPT})"
+  plugin_cli_action "${PLUGIN_ACTION}" "${PLUGIN_OPT}"
+  exit 0
 fi
 
 # Create lock
