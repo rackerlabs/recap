@@ -65,5 +65,13 @@ script:
   - docker exec recap_on_${DISTRO/:/_} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/run_recaplog.sh
   - docker exec recap_on_${DISTRO/:/_} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list enabled'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p enable all'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list enabled'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list disabled'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p disable all'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list disabled'
+  - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list enabled'
 
 ...
