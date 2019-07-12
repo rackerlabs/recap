@@ -25,9 +25,9 @@ in_array() {
   local element="${1}"
   shift
   local -a array=( ${@} )
-  
+
   # Copy the array, removing the element
-  c_array=( ${array[@]//${element}} )
+  local -a c_array=( ${array[@]//${element}} )
 
   # If the arrays are the same, the element is not part of the array
   if [[ ${#array[@]} == ${#c_array[@]} ]]; then
@@ -37,8 +37,8 @@ in_array() {
   fi
 }
 
-# Removes dups from a csv string
-csv_remove_dups() {
+# Transforms a csv into a space-separated list, also removs dups
+csv_to_list() {
   local csv="${1}"
   local -a array
 
@@ -57,8 +57,8 @@ plugins_list() {
   echo ${p_names[@]}
 }
 
-# Validate action (list, enable, disable)
-plugin_validate_action() {
+# Validate plugin action (list, enable, disable)
+validate_plugin_action() {
   case "${1}" in
     "list"|"enable"|"disable")
       return 0
@@ -69,8 +69,20 @@ plugin_validate_action() {
   esac
 }
 
-# Obtain a list of plugin by status
-get_plugin_status() {
+# Validate plugin status (available, enabled, disabled)
+validate_plugin_status() {
+  case "${1}" in
+    "available"|"enabled"|"disabled")
+      return 0
+    ;;
+    *)
+      return 1
+    ;;
+  esac
+}
+
+# Obtain a list of plugins by status
+get_plugin_by_status() {
   local list_status="${1}"
   local -a plugins
 
@@ -84,49 +96,23 @@ get_plugin_status() {
     "disabled")
       plugins_a=( $( plugins_list "${PLUGIN_A_DIR}" ) )
       plugins_e=( $( plugins_list "${PLUGIN_E_DIR}" ) )
-      # Loop through the available plugins
-      for p_a in ${plugins_a[@]}; do
-        # Copy the list of enabled plugins removing the available in turn
-        c_p_e=( ${plugins_e[@]//${p_a}} )
-        # If both arrays are the same then the looped plugin is disabled
-        if [[ ${#plugins_e[@]} == ${#c_p_e[@]} ]]; then
-            plugins+=( ${p_a} )
-        fi
-      done
+      # Get disabled plugins (available but not enabled)
+      plugins=(
+        $( comm \
+             -23 \
+             <( printf "%s\n" "${plugins_a[@]}" ) \
+             <( printf "%s\n" "${plugins_e[@]}" ) |
+               tr '\n' ' '
+        )
+      )
     ;;
   esac
 
   echo "${plugins[@]}"
 }
 
-# Prints the status of plugins
-print_plugins() {
-  local list_status="${1}"
-  local plugins
-
-  case "${list_status}" in
-    "available"|"enabled"|"disabled")
-      plugins=$( get_plugin_status "${list_status}" )
-    ;;
-    *)
-      echo -e "Error: Invalid list status argument: ${list_status}\n" >&2
-      print_usage
-      return 1
-    ;;
-  esac
-
-  if [[ ${#plugins} == 0 ]]; then
-    log ERROR "No ${list_status} plugins found."
-  else
-    plugins=$( echo "${plugins[@]}" | tr " " "," )
-    echo "Plugins ${list_status}: ${plugins%,}"
-    log INFO "Plugins ${list_status}: ${plugins%,}"
-  fi
-  return 0
-}
-
-# Validate plugin names. "all" is valid (represent all available)
-validate_plugin() {
+# Validate plugin name. "all" is valid (represent all available)
+validate_plugin_name() {
   local plugins="$1"
   local -a plugins_a
 
@@ -134,13 +120,13 @@ validate_plugin() {
   if [[ "${plugins}" == "all" ]]; then
     return 0
   fi
-  
+
   # Getting the list of available plugins
-  plugins_a=( $( get_plugin_status "available" ) )
+  plugins_a=( $( get_plugin_by_status "available" ) )
 
   # Create array with the provided plugins, remove dups
-  local -a p_v=( $( csv_remove_dups "${plugins}" ) )
-  
+  local -a p_v=( $( csv_to_list "${plugins}" ) )
+
   # Validate provided plugin with available
   for p in ${p_v[@]}; do
     if ! in_array ${p} ${plugins_a[@]}; then
@@ -155,45 +141,69 @@ validate_plugin() {
 enable_plugin_conf() {
    local recap_conf="/etc/recap.conf"
 
-   # Only perform changes when not already defined
-   if [[ "${USEPLUGINS}" == "no" ]]; then
-     # Comment out explicitly disabled
-     if grep -q '^USEPLUGINS="no"' "${recap_conf}"; then
-        sed -i \
-          -e 's/^\(USEPLUGINS="no"*\)$/#\1/' \
-          "${recap_conf}"
-     fi
-     # Comment out all explicitly enabled, we enable them next
-     # This is to remove dups
-     if grep -q '^USEPLUGINS="yes"' "${recap_conf}"; then
-        sed -i \
-          -e 's/^\(USEPLUGINS="yes"*\)$/#\1/' \
-          "${recap_conf}"
-     fi
-
-     # Un-comment out if enabling is commented out
-     if grep -P -q '^#+USEPLUGINS="yes"' "${recap_conf}"; then
-        sed -E -i \
-          -e '0,/^#+USEPLUGINS="yes"/s//USEPLUGINS="yes"/' \
-          "${recap_conf}"
-
-     # Add after the first reference commented out
-     elif grep -P -q '^#+USEPLUGINS="no"' "${recap_conf}"; then
-        sed -E -i \
-          -e '0,/^#+USEPLUGINS="no"/{
-	       /^#+USEPLUGINS="no"/a USEPLUGINS="yes"
-	  }' "${recap_conf}"
-
-     # Add at the end, as no traces have been found
-     # Using sed, just to keep it consistent
-     else
-        sed -i \
-	  -e '$ a\#USEPLUGINS="no"\nUSEPLUGINS="yes"' \
-          "${recap_conf}"
-     fi
-     log INFO "Plugins enabled in ${recap_conf}"
+   # Do nothing if already enabled
+   if [[ "${USEPLUGINS}" == "yes" ]]; then
+     return
    fi
+
+   # Comment out explicitly disabled
+   if grep -q '^USEPLUGINS="no"' "${recap_conf}"; then
+      sed -i \
+        -e 's/^\(USEPLUGINS="no"*\)$/#\1/' \
+        "${recap_conf}"
+   fi
+   # Comment out all explicitly enabled, we enable them next
+   # This is to remove dups
+   if grep -q '^USEPLUGINS="yes"' "${recap_conf}"; then
+      sed -i \
+        -e 's/^\(USEPLUGINS="yes"*\)$/#\1/' \
+        "${recap_conf}"
+   fi
+
+   # Un-comment out if enabling is commented out
+   if grep -P -q '^#+USEPLUGINS="yes"' "${recap_conf}"; then
+      sed -E -i \
+        -e '0,/^#+USEPLUGINS="yes"/s//USEPLUGINS="yes"/' \
+        "${recap_conf}"
+
+   # Add after the first reference commented out
+   elif grep -P -q '^#+USEPLUGINS="no"' "${recap_conf}"; then
+      sed -E -i \
+        -e '0,/^#+USEPLUGINS="no"/{
+         /^#+USEPLUGINS="no"/a USEPLUGINS="yes"
+    }' "${recap_conf}"
+
+   # Add at the end, as no traces have been found
+   # Using sed, just to keep it consistent
+   else
+      sed -i \
+    -e '$ a\#USEPLUGINS="no"\nUSEPLUGINS="yes"' \
+        "${recap_conf}"
+   fi
+   log INFO "Plugins enabled in ${recap_conf}"
 }
+
+# Enable Plugin
+enable_plugin() {
+  local plugin="${1}"
+  local symlink="${PLUGIN_E_DIR}/${plugin}"
+  local target="../$( basename ${PLUGIN_A_DIR} )/${plugin}"
+  {
+    ln -s "${target}" "${symlink}" ||
+      exit 1
+  }
+}
+
+# Disable Plugin
+disable_plugin() {
+  local plugin="${1}"
+  local symlink="${PLUGIN_E_DIR}/${plugin}"
+  {
+    rm "${symlink}" ||
+      exit 1
+  }
+}
+
 
 # Plugin Enable/Disable
 plugin_action() {
@@ -205,44 +215,36 @@ plugin_action() {
   other_action=( ${other_action[@]//${action}} )
 
   # Get plugins (disabled or enabled)
-  local p_a=( $( get_plugin_status "${other_action}d" ) )
+  local p_a=( $( get_plugin_by_status "${other_action}d" ) )
 
   # Cleanup provided plugins or get "all" plugins
   local -a p_2a
   local -a actioned
   if [[ "${plugins}" == "all" ]]; then
-    p_2a=( $( get_plugin_status "available" ) )
+    p_2a=( $( get_plugin_by_status "available" ) )
   else
-    p_2a=( $( csv_remove_dups "${plugins}" ) )
+    p_2a=( $( csv_to_list "${plugins}" ) )
   fi
 
   # Enable or disable plugins that are currently disabled or enabled
   for plugin in ${p_2a[@]}; do
     if in_array ${plugin} ${p_a[@]}; then
-      local symlink="${PLUGIN_E_DIR}/${plugin}"
-
       # Enable disabled plugin
       if [[ "${action}" == "enable" ]]; then
-        local target="../$( basename ${PLUGIN_A_DIR} )/${plugin}"
-        {
-          ln -s "${target}" "${symlink}" ||
-            exit 1
-        }
-
+        enable_plugin "${plugin}"
       # Disable enabled plugin
       elif [[ "${action}" == "disable" ]]; then
-        {
-          rm "${symlink}" ||
-            exit 1
-        }
+        disable_plugin "${plugin}"
       fi
-      actioned+=( ${plugin} )
+      actioned+=( "${plugin}" )
+    else
+      log INFO "Plugin ${plugin} skipped, already ${action}d."
     fi
   done
 
-  # Print what plugins where enabled/disabled if needed
+  # Print what plugins were enabled/disabled if needed
   if [[ ${#actioned[@]} > 0 ]]; then
-    actioned=$( echo ${actioned[@]} |tr ' ' ',' ) 
+    actioned=$( echo ${actioned[@]} |tr ' ' ',' )
     echo "${action^}d: ${actioned}"
     log INFO "${action^}d: ${actioned}"
   else
@@ -264,18 +266,32 @@ plugin_cli_action() {
     "list")
       # Get list of plugins, default to available
       local list_status=${opt:-available}
-      if ! print_plugins "${list_status}"; then
+
+      # Validate plugin status given
+      if ! validate_plugin_status "${list_status}"; then
+        echo -e "Error: Invalid plugin status\n" >&2
+        print_usage
         exit 1
+      fi
+
+      local -a plugins=( $( get_plugin_by_status "${list_status}") )
+
+      if [[ ${#plugins[@]} == 0 ]]; then
+        log ERROR "No ${list_status} plugins found."
+      else
+        plugins=$( echo "${plugins[@]}" | tr " " "," )
+        echo "Plugins ${list_status}: ${plugins%,}"
+        log INFO "Plugins ${list_status}: ${plugins%,}"
       fi
     ;;
     "enable"|"disable")
-      # Validate list of given plugins
-      if ! validate_plugin "${opt}"; then
+      # Validate plugin name given
+      if ! validate_plugin_name "${opt}"; then
         log ERROR "Invalid list of plugins provided"
         exit 1
       fi
 
-      plugin_action "${action}" "${opt}" 
+      plugin_action "${action}" "${opt}"
     ;;
   esac
 }

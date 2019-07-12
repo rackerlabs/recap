@@ -497,7 +497,7 @@ while [[ ${#} -gt 0 ]]; do
       PLUGIN_OPT="${p_args[@]:3}"
 
       # Validate action
-      if ! plugin_validate_action "${PLUGIN_ACTION}"; then
+      if ! validate_plugin_action "${PLUGIN_ACTION}"; then
         echo -e "Error: Invalid plugin action\n" >&2
         print_usage
         exit 1
