@@ -139,48 +139,21 @@ validate_plugin_name() {
 
 # Enable Plugin support in recap.conf
 enable_plugin_conf() {
-   local recap_conf="/etc/recap.conf"
+  local recap_conf="/etc/recap.conf"
 
-   # Do nothing if already enabled
-   if [[ "${USEPLUGINS}" == "yes" ]]; then
-     return
-   fi
+  # If already enabled, just return:
+  [[ "${USEPLUGINS}" == "yes" ]] && return
 
-   # Comment out explicitly disabled
-   if grep -q '^USEPLUGINS="no"' "${recap_conf}"; then
-      sed -i \
-        -e 's/^\(USEPLUGINS="no"*\)$/#\1/' \
-        "${recap_conf}"
-   fi
-   # Comment out all explicitly enabled, we enable them next
-   # This is to remove dups
-   if grep -q '^USEPLUGINS="yes"' "${recap_conf}"; then
-      sed -i \
-        -e 's/^\(USEPLUGINS="yes"*\)$/#\1/' \
-        "${recap_conf}"
-   fi
+  # If config already mentions USEPLUGINS, ensure they're all commented:
+  if grep -qP '^\s*USEPLUGINS=' "${recap_conf}"; then
+    # Comment all of 'em:
+    sed -i '/^\s*USEPLUGINS=/^/#/' "${recap_conf}"
+  fi
 
-   # Un-comment out if enabling is commented out
-   if grep -P -q '^#+USEPLUGINS="yes"' "${recap_conf}"; then
-      sed -E -i \
-        -e '0,/^#+USEPLUGINS="yes"/s//USEPLUGINS="yes"/' \
-        "${recap_conf}"
+  # Add one entry at the bottom to enable USEPLUGINS:
+  echo 'USEPLUGINS="yes"' >> "${recap_conf}"
 
-   # Add after the first reference commented out
-   elif grep -P -q '^#+USEPLUGINS="no"' "${recap_conf}"; then
-      sed -E -i \
-        -e '0,/^#+USEPLUGINS="no"/{
-         /^#+USEPLUGINS="no"/a USEPLUGINS="yes"
-    }' "${recap_conf}"
-
-   # Add at the end, as no traces have been found
-   # Using sed, just to keep it consistent
-   else
-      sed -i \
-    -e '$ a\#USEPLUGINS="no"\nUSEPLUGINS="yes"' \
-        "${recap_conf}"
-   fi
-   log INFO "Plugins enabled in ${recap_conf}"
+  log INFO "Plugins enabled in ${recap_conf}"
 }
 
 # Enable Plugin
