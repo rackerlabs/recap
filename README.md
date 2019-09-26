@@ -55,13 +55,34 @@ yum install recap
 
 ### Debian
 
-Currently only available in [testing](https://packages.debian.org/source/testing/recap) and [unstable](https://packages.debian.org/source/unstable/recap). For other releases see the options to build a deb package or install from source.
+Available in:
+- [stable - buster](https://packages.debian.org/source/stable/recap)
+- [testing - bullseye](https://packages.debian.org/source/testing/recap)
+- [unstable - sid](https://packages.debian.org/source/unstable/recap).
 
-The official Debian files are available in this [repository](https://github.com/jkirk/recap)
+```
+apt-get install recap
+```
+
+For additional information about the package go to the [Debian package tracker](https://tracker.debian.org/pkg/recap).
+
+
+The official Debian package files are available in this [repository](https://github.com/jkirk/recap)
+
 
 ### Ubuntu
 
-At the moment there is no public repository for Ubuntu, two options are available, build a deb package or install manually, see instructions down below.
+Available in:
+- [19.04 - Disco Dingo](https://launchpad.net/ubuntu/disco/+source/recap)
+- [19.10 - Eoan Ermine](https://launchpad.net/ubuntu/eoan/+source/recap)
+
+```
+apt-get install recap
+```
+
+For additional information about the package go to the [Ubuntu package
+information](https://launchpad.net/ubuntu/+source/recap)
+
 
 ### Build a deb package
 
