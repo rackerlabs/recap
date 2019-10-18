@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 - Modify iotop default [#218][218]
+- Add plugin cli support to `recap` [#217][217]
 
 ## [2.1.0] - 2019-04-12
 - Remove signal `17` in `recaplog` [(#208)][208]
@@ -227,6 +228,7 @@ All notable changes to this project will be documented in this file.
 [207]: https://github.com/rackerlabs/recap/issues/207
 [208]: https://github.com/rackerlabs/recap/issues/208
 [213]: https://github.com/rackerlabs/recap/pull/213
+[217]: https://github.com/rackerlabs/recap/issues/217
 [218]: https://github.com/rackerlabs/recap/issues/218
 
 <!---
