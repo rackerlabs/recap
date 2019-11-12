@@ -22,7 +22,7 @@ case ${DISTRO} in
     ;;
   centos*)
     packages+=("iproute")
-    if [[ ${DISTRO/*:/} >= 8 ]]; then
+    if [[ ${DISTRO/*:/} -ge 8 ]]; then
       dnf --assumeyes \
         --enablerepo=PowerTools \
         install ${packages[@]} ||
