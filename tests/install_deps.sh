@@ -31,7 +31,7 @@ case ${DISTRO} in
     ;;
   debian*|ubuntu*)
     packages+=(
-               "gawk")
+               "gawk"
                "procps"
                "psmisc"
                "iproute2"
