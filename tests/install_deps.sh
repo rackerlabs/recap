@@ -1,27 +1,41 @@
 #!/bin/bash
 
 DISTRO="$1"
+extra_args=""
 
 packages=(
-          "bash"
-          "coreutils"
-          "gawk"
-          "grep"
           "iotop"
           "elinks"
           "make"
-          "procps"
-          "psmisc"
           "sysstat"
           )
 
 case ${DISTRO} in
-  centos*|fedora*)
-    packages+=("iproute")
-    yum install ${packages[@]} -y || exit $?
+  fedora*)
+    packages+=(
+               "procps-ng"
+               "psmisc"
+               "iproute"
+    )
+    dnf install --assumeyes ${packages[@]} || exit $?
+    ;;
+  centos*)
+    packages+=(
+               "psmisc"
+               "iproute"
+    )
+    if [[ ${DISTRO/*:/} -ge 8 ]]; then
+      extra_args+="--enablerepo=PowerTools "
+    fi
+    yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
     ;;
   debian*|ubuntu*)
-    packages+=("iproute2")
+    packages+=(
+               "gawk"
+               "procps"
+               "psmisc"
+               "iproute2"
+    )
     apt-get update
     apt-get install ${packages[@]} -y || exit $?
     ;;
