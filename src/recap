@@ -99,10 +99,12 @@ declare -r default_DOTMYDOTCNF="/root/.my.cnf"
 declare -r default_MYSQL_PROCESS_LIST="table"
 declare -r default_USEINNODB="no"
 declare -r default_USEMYSQLPROCESSLIST="no"
+declare -r default_USEMYSQLFULLPROCESSLIST="no"
 DOTMYDOTCNF="${default_DOTMYDOTCNF}"
 MYSQL_PROCESS_LIST="${default_MYSQL_PROCESS_LIST}"
 USEINNODB="${default_USEINNODB}"
 USEMYSQLPROCESSLIST="${default_USEMYSQLPROCESSLIST}"
+USEMYSQLFULLPROCESSLIST="${default_USEMYSQLFULLPROCESSLIST}"
 
 # Default command options(can be overridden in config file)
 declare -r default_OPTS_DF="-x nfs"
@@ -373,6 +375,10 @@ run_mysql_report() {
     if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
       print_blankline "${ITEM_FILE}"
       print_mysql_procs "${ITEM_FILE}" "${MYCNF}"
+    fi
+    if [[ "${USEMYSQLFULLPROCESSLIST,,}" == "yes" ]]; then
+      print_blankline "${ITEM_FILE}"
+      print_mysql_procs "${ITEM_FILE}" "${MYCNF}" "FULL"
     fi
     if [[ "${USEINNODB,,}" == "yes" ]]; then
       # send df -h output to output file

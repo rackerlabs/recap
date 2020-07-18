@@ -94,11 +94,18 @@ print_mysql_innodb_status() {
   log INFO "Ended 'mysql innodb' report"
 }
 
-# Print the output of "mysqladmin processlist" to the mysql file
+# Print the output of "mysqladmin [full] processlist" to the mysql file
 print_mysql_procs() {
-  log INFO "Starting 'mysql processlist' report - ${LOGFILE##*/}"
   local LOGFILE="$1"
   local MYCNF="$2"
+  local FULL="$3"
+  local MY_V=""
+  local MY_PL="processlist"
+  if [[ -n "${FULL}" ]]; then
+    MY_PL="full processlist"
+    MY_V="-v"
+  fi
+  log INFO "Starting 'mysql ${MY_PL}' report - ${LOGFILE##*/}"
   local PLESK_FILE="/etc/psa/.psa.shadow"
   if [[ -r "${PLESK_FILE}" ]]; then
     echo "MySQL (plesk) processes" >> "${LOGFILE}"
@@ -106,7 +113,7 @@ print_mysql_procs() {
       mysqladmin \
         -uadmin \
         -p$( cat "${PLESK_FILE}" ) \
-        -v processlist \
+        ${MY_V} processlist \
         --connect-timeout=5 \
         >> "${LOGFILE}"
     fi
@@ -115,7 +122,7 @@ print_mysql_procs() {
         -uadmin \
         -p$( cat "${PLESK_FILE}" ) \
         --connect-timeout=5 \
-        -e "show full processlist\G" \
+        -e "show ${MY_PL}\G" \
         >> "${LOGFILE}"
     fi
   else
@@ -123,17 +130,17 @@ print_mysql_procs() {
     if [[ ${MYSQL_PROCESS_LIST} == "table" ]]; then
       mysqladmin \
         --defaults-file="${MYCNF}" \
-        -v processlist \
+        ${MY_V} processlist \
         --connect-timeout=5 \
         >> "${LOGFILE}"
     elif [[ ${MYSQL_PROCESS_LIST,,} == "vertical" ]]; then
       mysql \
         --defaults-file="${MYCNF}" \
         --connect-timeout=5 \
-        -e "show full processlist\G" \
+        -e "show ${MY_PL}\G" \
         >> "${LOGFILE}"
     fi
   fi
   print_blankline "${LOGFILE}"
-  log INFO "Ended 'mysql processlist' report"
+  log INFO "Ended 'mysql ${MY_PL}' report"
 }
