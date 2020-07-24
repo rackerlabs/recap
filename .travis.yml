@@ -28,6 +28,9 @@ matrix:
     - name: "Ubuntu 18.04 (bionic)"
       env:
         - DISTRO='ubuntu:18.04'
+    - name: "Ubuntu 20.04 (focal)"
+      env:
+        - DISTRO='ubuntu:20.04'
     - name: "Debian 8 (jessie)"
       env:
         - DISTRO='debian:8'
