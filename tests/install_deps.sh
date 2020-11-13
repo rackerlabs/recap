@@ -18,7 +18,11 @@ packages=(
 case ${DISTRO} in
   centos*|fedora*)
     packages+=("iproute")
-    yum install ${packages[@]} -y || exit $?
+    repo_opt=""
+    if [[ ${DISTRO#*:} -eq 8 ]]; then
+      repo_opt="--enablerepo=PowerTools"
+    fi
+    yum install ${repo_opt} ${packages[@]} -y || exit $?
     ;;
   debian*|ubuntu*)
     packages+=("iproute2")
