@@ -74,6 +74,11 @@ print_mysql_innodb_status() {
   if [[ "${PID_FILE}" =~ ^[^/] ]]; then
     PID_FILE="${MYVALS[5]%/}/${PID_FILE}"
   fi
+  # If tmpdir points to a symlink we need to use the destination folder
+  # because the temporary files under /proc will point to that folder:
+  if [[ -L "${TMPDIR}" ]]; then
+     TMPDIR="$(readlink -f "${TMPDIR}")"
+  fi
 
   # Next, we grab a list of descriptors in the tmpdir:
   if [[ -r "${PID_FILE}" &&
