@@ -25,7 +25,7 @@ case ${DISTRO} in
                "iproute"
     )
     if [[ ${DISTRO/*:/} -ge 8 ]]; then
-      extra_args+="--enablerepo=PowerTools "
+      extra_args+="--enablerepo=powertools "
     fi
     yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
     ;;
