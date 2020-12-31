@@ -10,9 +10,6 @@ branches:
 
 matrix:
   include:
-    - name: "CentOS 6"
-      env:
-        - DISTRO='centos:6'
     - name: "CentOS 7"
       env:
         - DISTRO='centos:7'
@@ -31,9 +28,6 @@ matrix:
     - name: "Ubuntu 20.04 (focal)"
       env:
         - DISTRO='ubuntu:20.04'
-    - name: "Debian 8 (jessie)"
-      env:
-        - DISTRO='debian:8'
     - name: "Debian 9 (stretch)"
       env:
         - DISTRO='debian:9'
