@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+#   Copyright (C) 2021 Rackspace, Inc.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+#
+
+print_fpm_status() {
+  local LOGFILE="$1"
+  local plugin_name=${FUNCNAME[0]/print_/}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+  ##
+  # Default settings:
+  local default_timeout=5
+  local default_socket='127.0.0.1:9000'
+  local default_path='/status'
+  local default_query='full'
+
+  # These values can be overriden in the config file, Examples:
+  # PLUGIN_OPTS_FPM_STATUS_SOCKET='/run/php-fpm/www.sock'
+  # PLUGIN_OPTS_FPM_STATUS_PATH='/fpm-status'
+  # PLUGIN_OPTS_FPM_STATUS_QUERY='json&full'
+  local fpm_status_socket=${PLUGIN_OPTS_FPM_STATUS_SOCKET:-${default_socket}}
+  local fpm_status_path=${PLUGIN_OPTS_FPM_STATUS_PATH:-${default_path}}
+  local fpm_status_query=${PLUGIN_OPTS_FPM_STATUS_QUERY:-${default_query}}
+
+  # Check if cgi-fcgi is available
+  cgi_fcgi=$( type -p cgi-fcgi )
+  if [[ -z ${cgi_fcgi} ]]; then
+    echo "cgi-fcgi is not installed" >> "${LOGFILE}"
+    log INFO "Ended '${plugin_name}' report"
+    return
+  fi
+
+  SCRIPT_NAME="${fpm_status_path}" \
+  SCRIPT_FILENAME=${SCRIPT_NAME} \
+  QUERY_STRING="${fpm_status_query}" \
+  REQUEST_METHOD=GET \
+    timeout ${default_timeout} \
+      ${cgi_fcgi} -bind -connect ${fpm_status_socket} \
+      2>/dev/null >> "${LOGFILE}"
+
+  ##
+  log INFO "Ended '${plugin_name}' report"
+}
