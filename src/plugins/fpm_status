@@ -45,8 +45,10 @@ print_fpm_status() {
     return
   fi
 
-  SCRIPT_NAME="${fpm_status_path}" SCRIPT_FILENAME=${SCRIPT_NAME} \
-  QUERY_STRING="${fpm_status_query}" REQUEST_METHOD=GET \
+  SCRIPT_NAME="${fpm_status_path}" \
+  SCRIPT_FILENAME=${SCRIPT_NAME} \
+  QUERY_STRING="${fpm_status_query}" \
+  REQUEST_METHOD=GET \
     timeout ${default_timeout} \
       ${cgi_fcgi} -bind -connect ${fpm_status_socket} \
       2>/dev/null >> "${LOGFILE}"
