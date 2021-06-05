@@ -61,7 +61,13 @@ The official Debian files are available in this [repository](https://github.com/
 
 ### Ubuntu
 
-At the moment there is no public repository for Ubuntu, two options are available, build a deb package or install manually, see instructions down below.
+`recap` is available since [Ubuntu 19.04 (disco)](https://packages.ubuntu.com/recap).
+
+```
+apt install recap
+```
+
+You also have the option to build a deb package or install manually, see instructions down below.
 
 ### Build a deb package
 
@@ -71,11 +77,11 @@ These steps used to be used to build the deb package, use them as a guide:
 
 ```bash
 # Install all the packages required for building the package
-apt-get update
-apt-get install debhelper devscripts git -y
+apt update
+apt install debhelper devscripts git -y
 
 ## For Ubuntu:
-apt-get install equivs -y
+apt install equivs -y
 
 # Create the working dir:
 mkdir recap
