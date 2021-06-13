@@ -94,7 +94,7 @@
           state: link
         with_items: "{{ plugin_list }}"
 
-      when: enable_plugins
+      when: enable_plugins|bool
 
     - name: Enable systemd timers
       systemd:

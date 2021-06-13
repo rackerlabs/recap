@@ -48,7 +48,7 @@ matrix:
         - REGISTRY=registry.fedoraproject.org
 
 before_install:
-  - docker pull ${DISTRO}
+  - docker pull ${REGISTRY}/${DISTRO}
 
 install:
   - |
@@ -79,5 +79,3 @@ script:
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p disable all'
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list disabled'
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list enabled'
-
-...
