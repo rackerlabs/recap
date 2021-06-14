@@ -24,7 +24,8 @@ case ${DISTRO} in
                "psmisc"
                "iproute"
     )
-    if [[ ${DISTRO/*:/} -ge 8 ]]; then
+    version=$(grep -Po "[0-9]+" <<<${DISTRO/*:/})
+    if [[ ${version} -ge 8 ]]; then
       extra_args+="--enablerepo=powertools "
     fi
     yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
