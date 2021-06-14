@@ -26,6 +26,9 @@ case ${DISTRO} in
     )
     version=$(grep -Po "[0-9]+" <<<${DISTRO/*:/})
     if [[ ${version} -ge 8 ]]; then
+      packages+=(
+        "procps-ng"
+      )
       extra_args+="--enablerepo=powertools "
     fi
     yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
