@@ -1,6 +1,6 @@
 ---
 language: bash
-dist: xenial
+dist: focal
 sudo: enabled
 branches:
   only:
@@ -13,36 +13,42 @@ matrix:
     - name: "CentOS 7"
       env:
         - DISTRO='centos:7'
+        - REGISTRY=quay.io/centos
     - name: "CentOS 8"
       env:
         - DISTRO='centos:8'
-    - name: "Ubuntu 14.04 (trusty)"
+        - REGISTRY=quay.io/centos
+    - name: "CentOS stream 8"
       env:
-        - DISTRO='ubuntu:14.04'
-    - name: "Ubuntu 16.04 (xenial)"
-      env:
-        - DISTRO='ubuntu:16.04'
+        - DISTRO='centos:stream8'
+        - REGISTRY=quay.io/centos
     - name: "Ubuntu 18.04 (bionic)"
       env:
         - DISTRO='ubuntu:18.04'
+        - REGISTRY=mirror.gcr.io/library
     - name: "Ubuntu 20.04 (focal)"
       env:
         - DISTRO='ubuntu:20.04'
+        - REGISTRY=mirror.gcr.io/library
     - name: "Debian 9 (stretch)"
       env:
-        - DISTRO='debian:9'
-    - name: "Debian (buster)"
+        - DISTRO='debian:stretch'
+        - REGISTRY=mirror.gcr.io/library
+    - name: "Debian 10 (buster)"
       env:
         - DISTRO='debian:buster'
+        - REGISTRY=mirror.gcr.io/library
     - name: "Fedora (latest)"
       env:
         - DISTRO='fedora:latest'
+        - REGISTRY=registry.fedoraproject.org
     - name: "Fedora (rawhide)"
       env:
         - DISTRO='fedora:rawhide'
+        - REGISTRY=registry.fedoraproject.org
 
 before_install:
-  - docker pull ${DISTRO}
+  - docker pull ${REGISTRY}/${DISTRO}
 
 install:
   - |
@@ -54,7 +60,7 @@ install:
       --network=host \
       --name recap_on_${DISTRO/:/_} \
       --mount type=bind,src="$(pwd)",dst=/recap \
-      ${DISTRO}
+      ${REGISTRY}/${DISTRO}
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/install_deps.sh ${DISTRO}
   - docker exec recap_on_${DISTRO/:/_} /recap/tests/test_install_recap.sh
 
@@ -73,5 +79,3 @@ script:
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p disable all'
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list disabled'
   - docker exec recap_on_${DISTRO/:/_} bash -c 'recap -p list enabled'
-
-...
