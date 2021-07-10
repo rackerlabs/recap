@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased] -
 - Modify iotop default [#218][218]
 - Add plugin cli support to `recap` [#217][217]
+- Add USEMYSQLFULLPROCESSLIST option to mysql plugin [#231][231]
 
 ## [2.1.0] - 2019-04-12
 - Remove signal `17` in `recaplog` [(#208)][208]

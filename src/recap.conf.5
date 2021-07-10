@@ -118,6 +118,12 @@ Can be set to yes or no depending on whether or not the output of "mysqladmin pr
 .IR ${BASEDIR}/mysql.log
 (default: no)
 
+.IP \fBUSEMYSQLFULLPROCESSLIST\fR
+.br
+Can be set to yes or no depending on whether or not the output of "mysqladmin -v processlist" command should be recorded. This report requires that USEMYSQL be set to "yes". This option makes use of MYSQL_PROCESS_LIST, to produce the output vertical or in a table. This output is written in
+.IR ${BASEDIR}/mysql.log
+(default: no)
+
 .IP \fBUSEINNODB\fR
 .br
 Can be set to yes or no depending on whether or not the output of "mysql show engine innodb status" and other variables(pid_files, tmpdir) command should be recorded. This report requires that USEMYSQL be set to "yes". This output is written in
@@ -131,12 +137,12 @@ Options used by the tools generating the reports
 
 .IP \fBDOTMYDOTCNF\fR
 .br
-Option required by USEMYSQL, USEMYSQLPROCESSLIST, USEINNODB, defines the path to the mysql client configuration file.
+Option required by USEMYSQL, USEMYSQLPROCESSLIST, USEMYSQLFULLPROCESSLIST, USEINNODB, defines the path to the mysql client configuration file.
 (default: "/root/.my.cnf")
 
 .IP \fBMYSQL_PROCESS_LIST\fR
 .br
-Format to display MySQL process list, options are "table" or "vertical". This requires that USEMYSQLPROCESSLIST be set "yes".
+Format to display MySQL process list, options are "table" or "vertical". This requires that USEMYSQLPROCESSLIST and/or USEMYSQLFULLPROCESSLIST to be set to "yes".
 (default: table).
 
 .IP \fBOPTS_LINKS\fR
