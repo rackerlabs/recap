@@ -11,7 +11,7 @@ packages=(
           )
 
 case ${DISTRO} in
-  fedora*)
+  centos*|fedora*)
     packages+=(
                "procps-ng"
                "psmisc"
@@ -19,19 +19,6 @@ case ${DISTRO} in
     )
     dnf install --assumeyes ${packages[@]} || exit $?
     ;;
-  centos*)
-    packages+=(
-               "psmisc"
-               "iproute"
-    )
-    version=$(grep -Po "[0-9]+" <<<${DISTRO/*_/})
-    if [[ ${version} -ge 8 ]]; then
-      packages+=(
-        "procps-ng"
-      )
-      extra_args+="--enablerepo=powertools "
-    fi
-    yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
     ;;
   debian*|ubuntu*)
     packages+=(
