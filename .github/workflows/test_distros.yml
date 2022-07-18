@@ -39,36 +39,29 @@ jobs:
           --tty
           --privileged
           --network=host
-          --name ${{ name }}
+          --name ${{ matrix.name }}
           --mount type=bind,src="$(pwd)",dst=/recap
-          ${{ registry }}
-        with:
-          registry: ${{ matrix.registry }}
-          name: ${{ matrix.name }}
+          ${{ matrix.registry }}
 
       - name: Install in container
         run: >
           podman exec
-          ${{ name }}
+          ${{ matrix.name }}
           bash -c '/recap/tests/install_deps.sh ${{ name }} && /recap/tests/test_install_recap.sh'
-        with:
-          name: ${{ matrix.name }}
 
       - name: Run Tests in container
         run: |
-          podman exec ${{ name }} bash -c 'recap --version'
-          podman exec ${{ name }} bash -c 'recaplog --version'
-          podman exec ${{ name }} /recap/tests/run_recap.sh
-          podman exec ${{ name }} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
-          podman exec ${{ name }} /recap/tests/run_recaplog.sh
-          podman exec ${{ name }} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
-          podman exec ${{ name }} bash -c 'recap -p list'
-          podman exec ${{ name }} bash -c 'recap -p list enabled'
-          podman exec ${{ name }} bash -c 'recap -p enable all'
-          podman exec ${{ name }} bash -c 'recap -p list enabled'
-          podman exec ${{ name }} bash -c 'recap -p list disabled'
-          podman exec ${{ name }} bash -c 'recap -p disable all'
-          podman exec ${{ name }} bash -c 'recap -p list disabled'
-          podman exec ${{ name }} bash -c 'recap -p list enabled'
-        with:
-          name: ${{ matrix.name }}
+          podman exec ${{ matrix.name }} bash -c 'recap --version'
+          podman exec ${{ matrix.name }} bash -c 'recaplog --version'
+          podman exec ${{ matrix.name }} /recap/tests/run_recap.sh
+          podman exec ${{ matrix.name }} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
+          podman exec ${{ matrix.name }} /recap/tests/run_recaplog.sh
+          podman exec ${{ matrix.name }} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          podman exec ${{ matrix.name }} bash -c 'recap -p enable all'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          podman exec ${{ matrix.name }} bash -c 'recap -p disable all'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
