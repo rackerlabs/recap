@@ -47,7 +47,7 @@ jobs:
         run: >
           podman exec
           ${{ matrix.name }}
-          bash -c '/recap/tests/install_deps.sh ${{ name }} && /recap/tests/test_install_recap.sh'
+          bash -c '/recap/tests/install_deps.sh ${{ matrix.name }} && /recap/tests/test_install_recap.sh'
 
       - name: Run Tests in container
         run: |
