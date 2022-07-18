@@ -24,7 +24,7 @@ case ${DISTRO} in
                "psmisc"
                "iproute"
     )
-    version=$(grep -Po "[0-9]+" <<<${DISTRO/*:/})
+    version=$(grep -Po "[0-9]+" <<<${DISTRO/*_/})
     if [[ ${version} -ge 8 ]]; then
       packages+=(
         "procps-ng"
