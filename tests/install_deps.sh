@@ -11,12 +11,25 @@ packages=(
           )
 
 case ${DISTRO} in
-  centos*|fedora*)
+  fedora*)
     packages+=(
                "procps-ng"
                "psmisc"
                "iproute"
     )
+    dnf install --assumeyes ${packages[@]} || exit $?
+    ;;
+  centos*)
+    packages+=(
+               "procps-ng"
+               "psmisc"
+               "iproute"
+    )
+    version=$(grep -Po "[0-9]+" <<<${DISTRO/*_/})
+    if [[ ${version} -ge 8 ]]; then
+      # elinks is not available in centos stream
+      packages=( ${packages[@]/elinks} )
+    fi
     dnf install --assumeyes ${packages[@]} || exit $?
     ;;
   debian*|ubuntu*)
