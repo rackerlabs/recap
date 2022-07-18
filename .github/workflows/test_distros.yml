@@ -24,7 +24,7 @@ jobs:
           - name: "debian_11"
             registry: mirror.gcr.io/library/debian:bullseye
           - name: "fedora_latest"
-            registry: registry.fedoraproject.org:fedora:latest
+            registry: quay.io/fedora/fedora:latest
 
     steps:
       - name: Checkout repository

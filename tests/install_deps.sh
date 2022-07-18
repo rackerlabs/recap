@@ -19,7 +19,6 @@ case ${DISTRO} in
     )
     dnf install --assumeyes ${packages[@]} || exit $?
     ;;
-    ;;
   debian*|ubuntu*)
     packages+=(
                "gawk"
