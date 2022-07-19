@@ -32,6 +32,7 @@ jobs:
 
       - name: Run container
         run: >
+          sudo
           podman run
           --pull always
           --detach
@@ -45,23 +46,24 @@ jobs:
 
       - name: Install in container
         run: >
+          sudo
           podman exec
           ${{ matrix.name }}
           bash -c '/recap/tests/install_deps.sh ${{ matrix.name }} && /recap/tests/test_install_recap.sh'
 
       - name: Run Tests in container
         run: |
-          podman exec ${{ matrix.name }} bash -c 'recap --version'
-          podman exec ${{ matrix.name }} bash -c 'recaplog --version'
-          podman exec ${{ matrix.name }} /recap/tests/run_recap.sh
-          podman exec ${{ matrix.name }} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
-          podman exec ${{ matrix.name }} /recap/tests/run_recaplog.sh
-          podman exec ${{ matrix.name }} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
-          podman exec ${{ matrix.name }} bash -c 'recap -p enable all'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
-          podman exec ${{ matrix.name }} bash -c 'recap -p disable all'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
-          podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap --version'
+          sudo podman exec ${{ matrix.name }} bash -c 'recaplog --version'
+          sudo podman exec ${{ matrix.name }} /recap/tests/run_recap.sh
+          sudo podman exec ${{ matrix.name }} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
+          sudo podman exec ${{ matrix.name }} /recap/tests/run_recaplog.sh
+          sudo podman exec ${{ matrix.name }} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p enable all'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p disable all'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
