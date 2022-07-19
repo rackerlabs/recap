@@ -19,10 +19,7 @@
 
 # Performs an http request(GET) to the defined URL
 
-print_http_status() {
-  local LOGFILE="$1"
-  local plugin_name=${FUNCNAME[0]/print_/}
-  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+use_elinks() {
   ##
   # Default settings:
   local default_args='-dump'
@@ -35,20 +32,52 @@ print_http_status() {
   local http_status_args=${PLUGIN_OPTS_HTTP_STATUS_ARGS:-${default_args}}
   local http_status_url=${PLUGIN_OPTS_HTTP_STATUS_URL:-${default_url}}
 
-  # Check if html dump tool is available
   http_tool=$( type -p elinks )
-  if [[ -z ${http_tool} ]]; then
-    echo "elinks is not installed" >> "${LOGFILE}"
-    log INFO "Ended '${plugin_name}' report"
-    return
-  fi
-
   timeout ${default_timeout} \
     ${http_tool} \
       ${http_status_args} \
       "${http_status_url}" \
       2>/dev/null >> "${LOGFILE}"
-
   ##
+}
+
+use_lynx() {
+  ##
+  # Default settings:
+  local default_args=''
+  local default_timeout=5
+  local default_url='http://localhost:80/server-status'
+
+  # These values can be overriden in the config file, Examples:
+  # PLUGIN_OPTS_HTTP_STATUS_ARGS=''
+  # PLUGIN_OPTS_HTTP_STATUS_URL='http://localhost/nginx_status'
+  local http_status_args=${PLUGIN_OPTS_HTTP_STATUS_ARGS:-${default_args}}
+  local http_status_url=${PLUGIN_OPTS_HTTP_STATUS_URL:-${default_url}}
+
+  http_tool=$( type -p lynx )
+  timeout ${default_timeout} \
+    curl \
+      ${http_status_args} \
+      "${http_status_url}" \
+      2>/dev/null >> "${LOGFILE}"
+  ##
+}
+
+print_http_status() {
+  export local LOGFILE="$1"
+  export local plugin_name=${FUNCNAME[0]/print_/}
+  log INFO "Starting '${plugin_name}' report - ${LOGFILE##*/}"
+
+  # Check if html dump tool is available
+  if ( type -p elinks )
+  then
+      use_elinks
+  elif ( type -p lynx )
+  then
+      use_lynx
+  else
+    echo "elinks and lynx are not installed" >> "${LOGFILE}"
+  fi
+
   log INFO "Ended '${plugin_name}' report"
 }
