@@ -120,7 +120,7 @@ Can be set to yes or no depending on whether or not the output of "mysqladmin pr
 
 .IP \fBUSEMYSQLFULLPROCESSLIST\fR
 .br
-Can be set to yes or no depending on whether or not the output of "mysqladmin -v processlist" command should be recorded. This report requires that USEMYSQL be set to "yes". This option makes use of MYSQL_PROCESS_LIST, to produce the output vertical or in a table. This output is written in
+Can be set to yes or no depending on whether or not the output of "mysqladmin -v processlist" command should be recorded. This report requires that USEMYSQL be set to "yes". This option takes priority over USEMYSQLPROCESSLIST. This option makes use of MYSQL_PROCESS_LIST, to produce the output vertical or in a table. This output is written in
 .IR ${BASEDIR}/mysql.log
 (default: no)
 

@@ -94,7 +94,7 @@ print_mysql_innodb_status() {
   log INFO "Ended 'mysql innodb' report"
 }
 
-# Print the output of "mysqladmin [full] processlist" to the mysql file
+# Print the output of "mysql [full] processlist" to the mysql file
 print_mysql_procs() {
   local LOGFILE="$1"
   local MYCNF="$2"

@@ -372,13 +372,12 @@ run_mysql_report() {
     print_mysql "${ITEM_FILE}" "${MYCNF}"
 
     # check to see if the optional mysql process list should be generated
-    if [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
-      print_blankline "${ITEM_FILE}"
-      print_mysql_procs "${ITEM_FILE}" "${MYCNF}"
-    fi
     if [[ "${USEMYSQLFULLPROCESSLIST,,}" == "yes" ]]; then
       print_blankline "${ITEM_FILE}"
       print_mysql_procs "${ITEM_FILE}" "${MYCNF}" "FULL"
+    elif [[ "${USEMYSQLPROCESSLIST,,}" == "yes" ]]; then
+      print_blankline "${ITEM_FILE}"
+      print_mysql_procs "${ITEM_FILE}" "${MYCNF}"
     fi
     if [[ "${USEINNODB,,}" == "yes" ]]; then
       # send df -h output to output file
