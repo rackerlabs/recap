@@ -21,17 +21,16 @@ case ${DISTRO} in
     ;;
   centos*)
     packages+=(
+               "procps-ng"
                "psmisc"
                "iproute"
     )
-    version=$(grep -Po "[0-9]+" <<<${DISTRO/*:/})
+    version=$(grep -Po "[0-9]+" <<<${DISTRO/*_/})
     if [[ ${version} -ge 8 ]]; then
-      packages+=(
-        "procps-ng"
-      )
-      extra_args+="--enablerepo=powertools "
+      # elinks is not available in centos stream
+      packages=( ${packages[@]/elinks} )
     fi
-    yum install --assumeyes ${extra_args} ${packages[@]} || exit $?
+    dnf install --assumeyes ${packages[@]} || exit $?
     ;;
   debian*|ubuntu*)
     packages+=(

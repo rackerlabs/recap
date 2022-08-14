@@ -1,0 +1,69 @@
+name: Test distros
+on:
+  pull_request:
+    branches:
+      - master
+      - development
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "centos_8"
+            registry: quay.io/centos/centos:stream8
+          - name: "centos_9"
+            registry: quay.io/centos/centos:stream9
+          - name: "ubuntu_22.04"
+            registry: mirror.gcr.io/library/ubuntu:22.04
+          - name: "ubuntu_20.04"
+            registry: mirror.gcr.io/library/ubuntu:20.04
+          - name: "debian_11"
+            registry: mirror.gcr.io/library/debian:bullseye
+          - name: "fedora_latest"
+            registry: quay.io/fedora/fedora:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run container
+        run: >
+          sudo
+          podman run
+          --pull always
+          --detach
+          --rm
+          --tty
+          --privileged
+          --network=host
+          --name ${{ matrix.name }}
+          --mount type=bind,src="$(pwd)",dst=/recap
+          ${{ matrix.registry }}
+
+      - name: Install in container
+        run: >
+          sudo
+          podman exec
+          ${{ matrix.name }}
+          bash -c '/recap/tests/install_deps.sh ${{ matrix.name }} && /recap/tests/test_install_recap.sh'
+
+      - name: Run Tests in container
+        run: |
+          sudo podman exec ${{ matrix.name }} bash -c 'recap --version'
+          sudo podman exec ${{ matrix.name }} bash -c 'recaplog --version'
+          sudo podman exec ${{ matrix.name }} /recap/tests/run_recap.sh
+          sudo podman exec ${{ matrix.name }} bash -c 'ls -tr /var/log/recap/*log | xargs tail -v -n+0'
+          sudo podman exec ${{ matrix.name }} /recap/tests/run_recaplog.sh
+          sudo podman exec ${{ matrix.name }} bash -c 'tail -v -n+0 /var/log/recap/recaplog.log'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p enable all'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p disable all'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list disabled'
+          sudo podman exec ${{ matrix.name }} bash -c 'recap -p list enabled'
