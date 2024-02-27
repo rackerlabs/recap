@@ -16,6 +16,7 @@ case ${DISTRO} in
                "procps-ng"
                "psmisc"
                "iproute"
+               "util-linux"
     )
     dnf install --assumeyes ${packages[@]} || exit $?
     ;;
