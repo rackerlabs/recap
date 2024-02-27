@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Create missing lock dir in container
+if [[ ! -e "/var/lock" ]]; then
+  mkdir $(readlink -f /var/lock)
+fi
+
 # Get full path to recap
 recap_path=$(type -p recap)
 
